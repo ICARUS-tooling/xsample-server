@@ -1,0 +1,82 @@
+
+plugins {	
+    id 'com.github.hierynomus.license' version '0.15.0'
+}
+
+apply plugin: 'java-library'
+apply plugin: 'war'
+apply plugin: 'eclipse-wtp'
+
+description = 'XSample server for provisioning excerpts from protected corpora.'
+group = 'de.unistuttgart.xsample'
+version = '0.1.0'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories { 
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+
+	// https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
+	providedCompile group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
+
+	// https://mvnrepository.com/artifact/javax.enterprise/cdi-api
+	providedCompile group: 'javax.enterprise', name: 'cdi-api', version: '2.0.SP1'
+
+	// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+	testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.0'
+	// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine
+	testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.7.0'
+	// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-params
+	testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.7.0'
+	// https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
+	testCompile group: 'org.junit.platform', name: 'junit-platform-launcher', version: '1.7.0'
+
+}
+
+eclipse {
+    wtp {
+        facet {
+            facet name: "java", version: "1.8"          // Java version
+            facet name: "jst.web", version: "4.0"       // Dynamic Web Application
+            facet name: "jst.jsf", version: "2.4"       // Java Server Faces
+            facet name: "wst.jsdt.web", version: "1.0"  // JavaScript
+        }
+    }
+}
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+	options.fork = true
+}
+
+// License formatting for file headers
+license {
+	ext.year = '2020-'+Calendar.getInstance().get(Calendar.YEAR)
+	ext.name = 'Markus Gärtner'
+	ext.email = 'markus.gaertner@ims.uni-stuttgart.de'
+	
+	header = rootProject.file('LICENSE_HEADER')
+	encoding = "UTF-8"
+	
+	includes(["**/*.java"])
+	
+	// pakage-info.java already has a documentation header, don't need conflicts here!
+	excludes(["**/generated-src/**", "**/package-info.java"])
+	
+	mapping {
+		// Per default the plugin uses full 'JAVADOC_STYLE' for license headers.
+		// We prefer normal multiline comment style to distinguish it from the
+		// documentation after package and import statements.
+		java = 'SLASHSTAR_STYLE'
+	}
+	
+	ignoreFailures = false
+	useDefaultMappings = true
+	dryRun = false
+	strictCheck = true
+}

@@ -1,0 +1,11 @@
+
+// For BuildScan starting from Gradle 6.x
+plugins {
+  id "com.gradle.enterprise" version "3.0"
+}
+
+
+/*
+ * Basic project structure
+ */
+rootProject.name = 'xsample-server'
