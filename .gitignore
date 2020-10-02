@@ -35,3 +35,6 @@ local.properties
 
 # Locally stored "Eclipse launch configurations"
 *.launch
+
+# Custom files to be ignored
+/secrets.gradle

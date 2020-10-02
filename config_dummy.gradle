@@ -1,0 +1,16 @@
+/*
+ * Contains the basic entries to be filled with proper config data
+ * and copied into file 'config.gradle' for the main build script
+ * to pick them up.
+ * 
+ */
+ 
+ext {
+	// Ensure a 'config' namespace for accessing the properties later
+	versions = [:]
+
+	config.payara.home = 'path/to/payara'
+	config.payara.hostname = 'localhost'
+	config.payara.username = 'admin'
+	config.payara.password = ''
+}
