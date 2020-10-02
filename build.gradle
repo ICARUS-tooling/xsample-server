@@ -1,7 +1,7 @@
 
 plugins {	
     id 'com.github.hierynomus.license' version '0.15.0'
-	id 'com.bmuschko.cargo' version '2.3'
+	id 'com.bmuschko.cargo' version '2.7.1'
 }
 
 apply plugin: 'java-library'
@@ -83,18 +83,18 @@ cargo {
      
     // Only necessary for local commands
     local {
-        homeDir = file(config.payara.home)
+        homeDir = file(config.payaraHome)
     }
      
     // Only necessary for remote commands
     remote {
-        hostname = config.payara.host
-        username = config.payara.username
-        password = config.payara.password
-        containerProperties {
-            // this is necessary only to pass blank password correctly to the cargo deployer because of a bug in the cargo gradle plugin
-            property 'cargo.remote.password', payaraPassword
-        }
+        hostname = config.payaraHost
+        username = config.payaraUsername
+        password = config.payaraPassword
+        // containerProperties {
+        //     // this is necessary only to pass blank password correctly to the cargo deployer because of a bug in the cargo gradle plugin
+        //     property 'cargo.remote.password', payaraPassword
+        // }
     }
 }
 

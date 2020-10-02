@@ -1,9 +1,9 @@
 ext {
 	// Ensure a 'config' namespace for accessing the properties later
-	versions = [:]
+	config = [:]
 
-	config.payara.home = 'D:/Tools/payara5'
-	config.payara.hostname = 'localhost'
-	config.payara.username = 'admin'
-	config.payara.password = ''
+	config.payaraHome = 'D:/Tools/payara5'
+	config.payaraHostname = 'localhost'
+	config.payaraUsername = 'admin'
+	config.payaraPassword = ''
 }
