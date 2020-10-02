@@ -37,6 +37,9 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.codehaus.cargo/cargo-ant
 	// see https://blog.payara.fish/deploying-to-payara-server-using-gradle
 	testCompile group: 'org.codehaus.cargo', name: 'cargo-ant', version: '1.8.2'
+	
+	// https://mvnrepository.com/artifact/javax.faces/javax.faces-api
+	// providedCompile group: 'javax.faces', name: 'javax.faces-api', version: '2.3'
 
 
 	// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
@@ -55,7 +58,7 @@ eclipse {
         facet {
             facet name: "java", version: "1.8"          // Java version
             facet name: "jst.web", version: "4.0"       // Dynamic Web Application
-            facet name: "jst.jsf", version: "2.4"       // Java Server Faces
+            facet name: "jst.jsf", version: "2.3"       // Java Server Faces
             facet name: "wst.jsdt.web", version: "1.0"  // JavaScript
         }
     }
