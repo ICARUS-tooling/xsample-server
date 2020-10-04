@@ -10,7 +10,7 @@ apply plugin: 'eclipse-wtp'
 
 description = 'XSample server for provisioning excerpts from protected corpora.'
 group = 'de.unistuttgart.xsample'
-version = '0.1.0'
+version = '0.1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -25,21 +25,39 @@ repositories {
 
 dependencies {
 
+	providedCompile group: 'jakarta.platform', name: 'jakarta.jakartaee-api', version: '8.0.0'
+
 	// https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api
 	providedCompile group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
 
 	// https://mvnrepository.com/artifact/javax.enterprise/cdi-api
-	providedCompile group: 'javax.enterprise', name: 'cdi-api', version: '2.0.SP1'
+	//providedCompile group: 'javax.enterprise', name: 'cdi-api', version: '2.0.SP1'
 
 	// https://mvnrepository.com/artifact/org.glassfish.main.deployment/deployment-client
 	providedCompile group: 'org.glassfish.main.deployment', name: 'deployment-client', version: '5.1.0'
+	
+	// https://mvnrepository.com/artifact/com.sun.faces/jsf-api
+	//compile group: 'com.sun.faces', name: 'jsf-api', version: '2.2.20'
+	// https://mvnrepository.com/artifact/com.sun.faces/jsf-impl
+	//compile group: 'com.sun.faces', name: 'jsf-impl', version: '2.2.20'
+	// https://mvnrepository.com/artifact/org.primefaces/primefaces
+	compile group: 'org.primefaces', name: 'primefaces', version: '8.0'	
+	// https://mvnrepository.com/artifact/org.omnifaces/omnifaces
+	//compile group: 'org.omnifaces', name: 'omnifaces', version: '4.0-M2'
+	// https://mvnrepository.com/artifact/org.webjars/font-awesome
+	compile group: 'org.webjars', name: 'font-awesome', version: '5.14.0'
+	// https://mvnrepository.com/artifact/org.primefaces.themes/all-themes
+	compile group: 'org.primefaces.themes', name: 'all-themes', version: '1.0.10'	
+	
+	// https://mvnrepository.com/artifact/javax.faces/javax.faces-api
+	// providedCompile group: 'javax.faces', name: 'javax.faces-api', version: '2.3'
+
+
+	// TESTING	
 
 	// https://mvnrepository.com/artifact/org.codehaus.cargo/cargo-ant
 	// see https://blog.payara.fish/deploying-to-payara-server-using-gradle
 	testCompile group: 'org.codehaus.cargo', name: 'cargo-ant', version: '1.8.2'
-	
-	// https://mvnrepository.com/artifact/javax.faces/javax.faces-api
-	// providedCompile group: 'javax.faces', name: 'javax.faces-api', version: '2.3'
 
 
 	// https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
