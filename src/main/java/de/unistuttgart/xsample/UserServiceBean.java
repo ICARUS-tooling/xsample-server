@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample.util;
+package de.unistuttgart.xsample;
 
 import static java.util.Objects.requireNonNull;
 

@@ -10,9 +10,8 @@
 
     <h:body>
         <ui:composition template="/xsample_template.xhtml">
-            <ui:param name="pageTitle" value="#{bundle['error.403.page.title']} - #{dataverseServiceBean.findRootDataverse().name}"/>
+            <ui:param name="pageTitle" value="#{bundle['error.403.page.title']}}"/>
             <ui:param name="showXsampleHeader" value="false"/>
-            <ui:param name="loginRedirectPage" value="dataverse.xhtml"/>
             <ui:param name="showMessagePanel" value="true"/>
             <ui:define name="body">
                 <div class="alert alert-danger" role="alert" style="margin-top:3em;">

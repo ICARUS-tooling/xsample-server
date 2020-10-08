@@ -12,11 +12,6 @@ import javax.inject.Named;
 
 import org.omnifaces.cdi.Param;
 
-import de.unistuttgart.xsample.util.Resource;
-import de.unistuttgart.xsample.util.ResourceServiceBean;
-import de.unistuttgart.xsample.util.User;
-import de.unistuttgart.xsample.util.UserServiceBean;
-
 /**
  * @author Markus Gärtner
  *
@@ -42,11 +37,13 @@ public class XsamplePage implements Serializable {
 	
 	@PostConstruct
 	public void init() {
-		//TODO handle missing params
-		System.out.printf("params: file=%d key=%s %n", file, key);
 		
-		user = userService.findByKey(key);
-		resource = resourceService.findByFile(file);
+		if(key!=null) {
+			user = userService.findByKey(key);
+		}
+		if(file!=null) {
+			resource = resourceService.findByFile(file);
+		}
 	}
 	
 	public Long getFile() { return file; }

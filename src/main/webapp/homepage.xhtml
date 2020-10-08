@@ -12,6 +12,8 @@
 	<h:body>
 		<ui:composition template="/xsample_template.xhtml">
 			<ui:param name="pageTitle" value="#{bundle['homepage.title']}" />
+			<ui:param name="showXsampleHeader" value="true" />
+            <ui:param name="showMessagePanel" value="true"/>
 			<ui:define name="body">
 				<div role="alert" style="margin-top: 3em;">
 					<h:outputText value="#{bundle['homepage.welcome']}" escape="false" />

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample.util;
+package de.unistuttgart.xsample;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

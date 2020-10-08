@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample.util;
+package de.unistuttgart.xsample;
 
 /**
  * @author Markus Gärtner
