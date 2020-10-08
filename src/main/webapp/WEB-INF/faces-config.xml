@@ -8,10 +8,21 @@
 	    <el-resolver>
 	        org.primefaces.application.exceptionhandler.PrimeExceptionHandlerELResolver
 	    </el-resolver>
+        <locale-config>
+            <default-locale>en</default-locale>
+            <!-- <supported-locale>de</supported-locale> -->
+        </locale-config>
 	</application>
 	<factory>
 	    <exception-handler-factory>
 	    	org.primefaces.application.exceptionhandler.PrimeExceptionHandlerFactory
 	    </exception-handler-factory>
 	</factory>
+	
+	<!-- Example on how to get utility classes added for using static methods in EL expressions -->
+	<managed-bean>
+	    <managed-bean-name>String</managed-bean-name>
+	    <managed-bean-class>java.lang.String</managed-bean-class>
+	    <managed-bean-scope>application</managed-bean-scope>
+	</managed-bean>
 </faces-config>

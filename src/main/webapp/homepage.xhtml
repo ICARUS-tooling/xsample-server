@@ -11,11 +11,14 @@
 
 	<h:body>
 		<ui:composition template="/xsample_template.xhtml">
-			<ui:param name="pageTitle" value="#{bundle['test.welcome']} - Welcome" />
+			<ui:param name="pageTitle" value="#{bundle['homepage.title']}" />
 			<ui:define name="body">
 				<div role="alert" style="margin-top: 3em;">
-					<h:outputText value="#{bundle['test.welcome.message']}" escape="false" />
+					<h:outputText value="#{bundle['homepage.welcome']}" escape="false" />
 				</div>
+				<h:form>
+					<p:commandButton value="#{bundle['fetch']}" action="#{dataverseFetchBean.fetchResource()}" />
+				</h:form>
 			</ui:define>
 		</ui:composition>
 	</h:body>
