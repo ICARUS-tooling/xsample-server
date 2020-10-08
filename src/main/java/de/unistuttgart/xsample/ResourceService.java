@@ -21,9 +21,9 @@ import org.slf4j.LoggerFactory;
  */
 @Stateless
 @Named
-public class ResourceServiceBean {
+public class ResourceService {
 	
-	private static final Logger log = LoggerFactory.getLogger(ResourceServiceBean.class);
+	private static final Logger log = LoggerFactory.getLogger(ResourceService.class);
 	
 	@PersistenceContext
 	private EntityManager em;

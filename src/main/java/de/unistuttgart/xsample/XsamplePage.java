@@ -8,6 +8,8 @@ import java.io.Serializable;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import javax.inject.Named;
 
 import org.omnifaces.cdi.Param;
@@ -31,18 +33,29 @@ public class XsamplePage implements Serializable {
 	private Resource resource;
 
     @EJB
-	private UserServiceBean userService;
+	private UserService userService;
     @EJB
-    private ResourceServiceBean resourceService;
+    private ResourceService resourceService;
+    @EJB
+    private BundleService bundleService;
 	
 	@PostConstruct
 	public void init() {
 		
 		if(key!=null) {
 			user = userService.findByKey(key);
+		} else {
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+					bundleService.get("homepage.noFile.summary"), 
+					bundleService.get("homepage.noFile.detail", "key")));
 		}
+		
 		if(file!=null) {
 			resource = resourceService.findByFile(file);
+		} else {
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+					bundleService.get("homepage.noUser.summary"), 
+					bundleService.get("homepage.noUser.detail", "key")));
 		}
 	}
 	

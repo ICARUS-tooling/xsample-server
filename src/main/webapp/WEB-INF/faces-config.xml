@@ -12,6 +12,10 @@
             <default-locale>en</default-locale>
             <!-- <supported-locale>de</supported-locale> -->
         </locale-config>
+        <resource-bundle>
+		    <base-name>propertyFiles.Bundle</base-name>
+		    <var>bundle</var>
+		</resource-bundle>
 	</application>
 	<factory>
 	    <exception-handler-factory>
