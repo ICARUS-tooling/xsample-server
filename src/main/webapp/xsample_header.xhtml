@@ -12,7 +12,7 @@
     
     <div id="header" jsf:rendered="#{showXsampleHeader}">
 		<div id="logo-box" style="centered">
-			<a href="/"> 
+			<a href="#{xsamplePage.serverRoute}/"> 
 				<h:graphicImage
 					rendered="true"
 					url="/resources/images/xsample-logo.svg"
@@ -21,7 +21,6 @@
 					width="500"/>
 			</a>
 		</div>
-		<!-- Navbar Panel -->
         
         <!-- Noscript Error -->
         <noscript>
@@ -31,20 +30,12 @@
                 </div>
             </div>
         </noscript>
-        <!-- Status Alert -->
-        <o:form class="form-inline">
-            <div id="status-alert" class="bg-warning" jsf:rendered="true">
-                <div class="alert container text-danger">
-                    <h:outputText rendered="true" value="-- status --" escape="false"/>
-                </div>
-            </div>
-        </o:form>
-        <!-- Header Panel -->
         
         <!-- Message Panel -->
         <p:fragment id="messagePanel" rendered="#{showMessagePanel}">
             <div class="container messagePanel">
-                <p:messages id="messages" showDetail="true" closable="true"/>
+                <p:messages id="messages" showDetail="true" closable="true" 
+                	globalOnly="true" skipDetailIfEqualsSummary="true" />
             </div>
         </p:fragment>
     </div>

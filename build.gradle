@@ -22,9 +22,9 @@ repositories {
     mavenLocal()
     mavenCentral()
     
-    maven {
-		url "https://jitpack.io"
-    }
+//    maven {
+//		url "https://jitpack.io"
+//    }
 }
 
 dependencies {
@@ -44,13 +44,16 @@ dependencies {
 	compile group: 'org.eclipse.persistence', name: 'org.eclipse.persistence.jpa', version: '2.7.7'
 	
 	// https://mvnrepository.com/artifact/org.slf4j/slf4j-api
-	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
+	//compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
 	// https://mvnrepository.com/artifact/org.slf4j/slf4j-jdk14
-	compile group: 'org.slf4j', name: 'slf4j-jdk14', version: '1.7.30'
+	//compile group: 'org.slf4j', name: 'slf4j-jdk14', version: '1.7.30'
 	
 	// https://github.com/swordapp/JavaClient2.0
-	compile group: 'com.github.swordapp', name: 'JavaClient2.0', version: 'master-SNAPSHOT'
+	//TODO actually not needed for directly fetching data? 
+	//compile group: 'com.github.swordapp', name: 'JavaClient2.0', version: 'master-SNAPSHOT'
 	
+	// https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
+	compile group: 'com.squareup.retrofit2', name: 'retrofit', version: '2.9.0'
 	
 	// https://mvnrepository.com/artifact/com.sun.faces/jsf-api
 	//compile group: 'com.sun.faces', name: 'jsf-api', version: '2.2.20'

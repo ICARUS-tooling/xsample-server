@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:jsf="http://xmlns.jcp.org/jsf">
+    <h:head>
+    </h:head>
+
+	<h:body>
+		<ui:composition template="/xsample_template.xhtml">
+			<ui:param name="pageTitle" value="#{bundle['homepage.title']}" />
+            <ui:param name="showMessagePanel" value="#{true}"/>
+            <ui:param name="showXsampleHeader" value="#{true}"/>
+			<ui:define name="body">  
+				<f:metadata>
+					<!-- Allows to generate messages before rendering -->
+				    <f:viewAction action="#{xsamplePage.init}" />
+				</f:metadata>
+			              
+				<div role="alert" style="margin-top: 3em;">
+					<h:outputText value="#{bundle['homepage.welcome']}" escape="false" />
+				</div>
+				<h3>Simple Excerpt</h3>
+				<h:form prependId="false">
+					<p:wizard flowListener="#{xsamplePage.onFlowProcess}">
+						<p:tab id="manifest" title="#{bundle['homepage.tabs.manifest.title']}">
+							<p:panel header="#{bundle['homepage.tabs.manifest.header']}">
+								<p:messages />
+								<p:panelGrid columns="2">                    
+									<h:outputText value="#{bundle['homepage.tabs.manifest.dataverse']}: *" />
+                    				<p:inputText value="#{xsamplePage.config.site}" required="true" label="#{bundle['homepage.tabs.manifest.dataverse']}"/>
+                    				               
+									<h:outputText value="#{bundle['homepage.tabs.manifest.file']}: *" />
+                    				<p:inputText value="#{xsamplePage.config.file}" required="true" label="#{bundle['homepage.tabs.manifest.file']}"/>               
+									
+									<h:outputText value="#{bundle['homepage.tabs.manifest.key']}: *" />
+                    				<p:inputText value="#{xsamplePage.config.key}" required="true" label="#{bundle['homepage.tabs.manifest.key']}"/>
+								</p:panelGrid>
+							</p:panel>
+						</p:tab>
+						
+						<p:tab id="data" title="#{bundle['homepage.tabs.data.title']}">
+							<p:panel header="#{bundle['homepage.tabs.data.header']}">
+								<h:outputText value="#{bundle['homepage.tabs.data.description']}"/>
+								<p:messages />
+								<p:commandButton value="#{bundle['homepage.tabs.data.fetch']}" action="#{dataverseFetchBean.fetchResource}" />
+							</p:panel>
+						</p:tab>
+						
+						<p:tab id="excerpt" title="Excerpt">
+							<p:panel header="Select Excerpt">
+								<h:inputHidden id="excerptStart" value="#{xsamplePage.config.start}" />
+								<h:inputHidden id="excerptEnd" value="#{xsamplePage.config.end}" />
+								<h:inputHidden id="excerptRange" value="#{xsamplePage.config.segments}" readonly="#{true}" />
+								<h:outputText id="excerptRangeText" style="margin-bottom: 2em" 
+									value="From #{xsamplePage.config.start} to #{xsamplePage.config.end}" />
+								<p:slider widgetVar="excerptRangeSelect" for="excerptStart,excerptEnd" 
+									display="excerptRangeText" onSlide="updateExcerpt(event, ui);" 
+									style="width: 700px; margin: 2em" range="true" displayTemplate="From {min} to {max}" 
+									minValue="1" maxValue="#{xsamplePage.config.segments}" />    
+								<h:outputLabel for="excerptPercent" value="Excerpt Size: " />
+								<h:outputText id="excerptPercent" style="margin-top: 2em" 
+									value="#{xsamplePage.config.percent}%" />
+								<br/>
+								<canvas id="excerptOutline" height="15" width="700"
+									style="border:1px solid #000000; margin: 2em; display: none;" />
+								
+							</p:panel>
+						</p:tab>
+						
+						<p:tab id="download" title="Download">
+						</p:tab>
+					</p:wizard>
+				</h:form>
+				
+				<script>
+					function updateExcerpt(_, ui) {
+						var begin = ui.values[0];
+						var end = ui.values[1];
+						var count = end - begin + 1;
+						var range = Number(document.getElementById('excerptRange').value);
+						var percent = Math.ceil(count / range * 100);
+						document.getElementById('excerptPercent').textContent = percent + "%";
+						updateOutline(begin, end, range);
+					}
+					
+					function updateOutline(begin, end, range) {
+						var c = document.getElementById('excerptOutline');
+						var ctx = c.getContext("2d");
+						ctx.fillStyle = "#3399ff";
+						ctx.fillRect(0, 0, c.width, c.height);
+						var count = end - begin + 1;
+						var percent = Math.ceil(count / range * 100);
+						var step = c.width / range;
+						var x = (begin-1) * step;
+						var width = count * step;
+						ctx.fillStyle = (percent>15) ? "#FF0000":"#00FF00";
+						ctx.fillRect(x, 0, width, c.height);
+						c.style.display = "block";
+						//console.log(ctx);
+					}
+				</script>
+			</ui:define>
+		</ui:composition>
+	</h:body>
+</html>

@@ -7,6 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
@@ -27,22 +28,21 @@ public class Resource {
 	@Id
 	@GeneratedValue
 	private Long id;
+	
+	@ManyToOne
+	private Dataverse dataverse;
 
-	public Long getFile() {
-		return file;
-	}
+	public Dataverse getDataverse() { return dataverse; }
 
-	public void setFile(Long file) {
-		this.file = file;
-	}
+	public void setDataverse(Dataverse dataverse) { this.dataverse = dataverse; }
 
-	public Long getId() {
-		return id;
-	}
+	public Long getFile() { return file; }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+	public void setFile(Long file) { this.file = file; }
+
+	public Long getId() { return id; }
+
+	public void setId(Long id) { this.id = id; }
 	
 	@Override
 	public String toString() { return String.format("Resource@[id=%d, file=%d]", id, file); }

@@ -13,5 +13,5 @@ public class Excerpt {
 
 	private Resource resource;
 
-	List<Fragment> fragments;
+	private List<Fragment> fragments;
 }

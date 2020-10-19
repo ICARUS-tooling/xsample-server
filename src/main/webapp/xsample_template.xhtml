@@ -10,38 +10,40 @@
       xmlns:c="http://java.sun.com/jsp/jstl/core"
       lang="#{xsampleSession.localeCode}"
       xml:lang="#{xsampleSession.localeCode}">
-    <h:head>
-        <f:facet name="first">
-            <title><h:outputText value="#{bundle['xsample']} - #{pageTitle}"/></title>
-	    	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-            <meta name="viewport" content="width=device-width, initial-scale=1"/>
-            <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-        </f:facet>
-        <link rel="icon" type="image/png" sizes="16x16" href="#{resource['images/fav/icon-16x16.png']}" />
-        <link rel="icon" type="image/png" sizes="32x32" href="#{resource['images/fav/icon-32x32.png']}" />
-        <meta name="theme-color" content="#ffffff"/>
-        <h:outputStylesheet library="webjars" name="font-awesome/5.14.0/css/all.min-jsf.css" />
-		<h:outputStylesheet library="webjars" name="font-awesome/5.14.0/css/v4-shims.min-jsf.css" />
-    </h:head>  
-
-    <h:body>                        
-        <ui:include src="xsample_header.xhtml">
-        	<ui:param name="showXsampleHeader" value="#{showXsampleHeader}" />
-        </ui:include>
-    	
-        <div id="content">
-            <ui:insert name="body">#{bundle.defaultBody}</ui:insert>
-        </div>
-                        
-        <ui:include src="xsample_footer.xhtml" />
-        
-        <p:ajaxStatus id="ajaxStatusPanel">
-            <f:facet name="start">
-                <h:graphicImage value="/resources/images/ajax-loading.gif" alt="#{bundle['loading']}" />
-            </f:facet>
-            <f:facet name="complete">
-                <!-- DO NOTHING -->
-            </f:facet>
-        </p:ajaxStatus>
-	</h:body>
+    <f:view locale="#{xsampleSession.localeCode}">
+	    <h:head>
+	        <f:facet name="first">
+	            <title><h:outputText value="#{bundle['xsample']} - #{pageTitle}"/></title>
+		    	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	            <meta name="viewport" content="width=device-width, initial-scale=1"/>
+	            <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	        </f:facet>
+	        <link rel="icon" type="image/png" sizes="16x16" href="#{resource['images/fav/icon-16x16.png']}" />
+	        <link rel="icon" type="image/png" sizes="32x32" href="#{resource['images/fav/icon-32x32.png']}" />
+	        <meta name="theme-color" content="#ffffff"/>
+	        <h:outputStylesheet library="webjars" name="font-awesome/5.14.0/css/all.min-jsf.css" />
+			<h:outputStylesheet library="webjars" name="font-awesome/5.14.0/css/v4-shims.min-jsf.css" />
+	    </h:head>  
+	
+	    <h:body>                        
+	        <ui:include src="xsample_header.xhtml">
+	        	<ui:param name="showXsampleHeader" value="#{showXsampleHeader}" />
+	        </ui:include>
+	    	
+	        <div id="content">
+	            <ui:insert name="body">#{bundle.defaultBody}</ui:insert>
+	        </div>
+	                        
+	        <ui:include src="xsample_footer.xhtml" />
+	        
+	        <p:ajaxStatus id="ajaxStatusPanel">
+	            <f:facet name="start">
+	                <h:graphicImage value="/resources/images/ajax-loading.gif" alt="#{bundle['loading']}" />
+	            </f:facet>
+	            <f:facet name="complete">
+	                <!-- DO NOTHING -->
+	            </f:facet>
+	        </p:ajaxStatus>
+		</h:body>
+	</f:view>
 </html>

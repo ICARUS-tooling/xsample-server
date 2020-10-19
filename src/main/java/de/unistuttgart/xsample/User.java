@@ -28,21 +28,13 @@ public class User {
 	@GeneratedValue
 	private Long id;
 
-	public String getKey() {
-		return key;
-	}
+	public String getKey() { return key; }
 
-	public void setKey(String key) {
-		this.key = key;
-	}
+	public void setKey(String key) { this.key = key; }
 
-	public Long getId() {
-		return id;
-	}
+	public Long getId() { return id; }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+	public void setId(Long id) { this.id = id; }
 	
 	@Override
 	public String toString() { return String.format("User@[id=%d, key=%s]", id, key); }
