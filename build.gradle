@@ -52,8 +52,13 @@ dependencies {
 	//TODO actually not needed for directly fetching data? 
 	//compile group: 'com.github.swordapp', name: 'JavaClient2.0', version: 'master-SNAPSHOT'
 	
+	// HTTP communication with Dataverse API
 	// https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
 	compile group: 'com.squareup.retrofit2', name: 'retrofit', version: '2.9.0'
+	
+	// PDF reading and manipulation
+	// https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox
+	compile group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.21'
 	
 	// https://mvnrepository.com/artifact/com.sun.faces/jsf-api
 	//compile group: 'com.sun.faces', name: 'jsf-api', version: '2.2.20'

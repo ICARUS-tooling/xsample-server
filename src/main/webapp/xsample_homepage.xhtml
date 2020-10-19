@@ -45,8 +45,23 @@
 						<p:tab id="data" title="#{bundle['homepage.tabs.data.title']}">
 							<p:panel header="#{bundle['homepage.tabs.data.header']}">
 								<h:outputText value="#{bundle['homepage.tabs.data.description']}"/>
+								<br/>
+								<p:commandButton value="#{bundle['homepage.tabs.data.fetch']}" 
+									action="#{dataverseFetchBean.fetchResource}" 
+									update="@parent"/>
 								<p:messages />
-								<p:commandButton value="#{bundle['homepage.tabs.data.fetch']}" action="#{dataverseFetchBean.fetchResource}" />
+								<p:dataTable id="dataInfo" var="prop" value="#{xsamplePage.config.properties}"
+										rendered="#{xsamplePage.config.hasFile}">
+									<f:facet name="header">
+										#{bundle['homepage.tabs.data.properties']}
+									</f:facet>
+									<p:column headerText="#{bundle['key']}">
+										<h:outputText value="#{prop.key}" />
+									</p:column>
+									<p:column headerText="#{bundle['value']}">
+										<h:outputText value="#{prop.value}" />
+									</p:column>
+								</p:dataTable>
 							</p:panel>
 						</p:tab>
 						
