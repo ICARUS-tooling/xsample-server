@@ -60,6 +60,10 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox
 	compile group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.21'
 	
+	// Collection implementations for primitive types
+	// https://mvnrepository.com/artifact/it.unimi.dsi/fastutil
+	compile group: 'it.unimi.dsi', name: 'fastutil', version: '8.4.2'
+	
 	// https://mvnrepository.com/artifact/com.sun.faces/jsf-api
 	//compile group: 'com.sun.faces', name: 'jsf-api', version: '2.2.20'
 	// https://mvnrepository.com/artifact/com.sun.faces/jsf-impl
