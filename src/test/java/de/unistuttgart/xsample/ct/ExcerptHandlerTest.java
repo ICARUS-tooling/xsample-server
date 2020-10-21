@@ -1,3 +1,19 @@
+/*
+ * XSample Server
+ * Copyright (C) 2020-2020 Markus Gï¿½rtner <markus.gaertner@ims.uni-stuttgart.de>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /**
  * 
  */
@@ -24,11 +40,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import de.unistuttgart.xsample.Fragment;
 import de.unistuttgart.xsample.XSampleTestUtils;
-import de.unistuttgart.xsample.util.DataInput;
-import de.unistuttgart.xsample.util.DataOutput;
+import de.unistuttgart.xsample.util.Payload;
+import it.unimi.dsi.fastutil.io.FastByteArrayInputStream;
+import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream;
 
 /**
- * @author Markus Gärtner
+ * @author Markus Gï¿½rtner
  *
  */
 interface ExcerptHandlerTest<H extends ExcerptHandler> {
@@ -39,15 +56,15 @@ interface ExcerptHandlerTest<H extends ExcerptHandler> {
 	
 	String[] supportedContentTypes();
 	
-	DataInput input(int size, String contentType, Charset encoding) throws IOException;
+	Payload input(int size, String contentType, Charset encoding) throws IOException;
 	
-	default DataInput input(int size) throws IOException {
+	default Payload input(int size) throws IOException {
 		return input(size, supportedContentTypes()[0], defaultEncoding());
 	}
 	
 	default Charset defaultEncoding() { return StandardCharsets.UTF_8; }
 	
-	void assertExcerpt(DataInput excerpt, long[] fragments) throws IOException;
+	void assertExcerpt(Payload excerpt, long[] fragments) throws IOException;
 	
 
 	/**
@@ -130,17 +147,23 @@ interface ExcerptHandlerTest<H extends ExcerptHandler> {
 						Stream.of(config).map(params -> dynamicTest(String.format(
 								"(%d-%d) out of %d pages", _int(params[1]),
 								_int(params[2]), _int(params[0])), () -> {
-							int size = params[0];
-							int from = params[1];
-							int to = params[2];
+							final int size = params[0];
+							final int from = params[1];
+							final int to = params[2];
+							final Charset encoding = defaultEncoding();
 							
 							try(H handler = create()) {
-								DataInput source = input(size, contentType, defaultEncoding());
+								Payload source = input(size, contentType, encoding);
 								handler.init(source);
-								Fragment[] fragments = new Fragment[]{Fragment.of(from, to)};
-								DataOutput excerpt = handler.excerpt(fragments);
 								
-								assertExcerpt(excerpt.bridge(), XSampleTestUtils.asIndices(fragments));
+								Fragment[] fragments = new Fragment[]{Fragment.of(from, to)};
+								FastByteArrayOutputStream out = new FastByteArrayOutputStream();
+								Payload output = Payload.forOutput(encoding, contentType, out);
+								handler.excerpt(fragments, output);
+								
+								FastByteArrayInputStream in = new FastByteArrayInputStream(out.array, 0, out.length);
+								Payload excerpt = Payload.forInput(encoding, contentType, in);
+								assertExcerpt(excerpt, XSampleTestUtils.asIndices(fragments));
 							}
 						}))));
 	}

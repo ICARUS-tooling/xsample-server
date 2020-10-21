@@ -1,9 +1,26 @@
+/*
+ * XSample Server
+ * Copyright (C) 2020-2020 Markus G�rtner <markus.gaertner@ims.uni-stuttgart.de>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /**
  * 
  */
 package de.unistuttgart.xsample;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,6 +33,14 @@ import javax.inject.Named;
 
 import org.omnifaces.util.Messages;
 
+import com.google.common.io.CountingInputStream;
+
+import de.unistuttgart.xsample.ct.EmptyResourceException;
+import de.unistuttgart.xsample.ct.ExcerptHandler;
+import de.unistuttgart.xsample.ct.ExcerptHandlers;
+import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
+import de.unistuttgart.xsample.util.FileInfo;
+import de.unistuttgart.xsample.util.Payload;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -95,17 +120,30 @@ public class DataverseFetchBean {
 				return;
 			}
 			
-			final byte[] data = body.bytes(); //TODO for now we load the data directly into memory. for bigger corpora we'd need to buffer it on disk.
-			
 			final String contentType = mediaType.type()+"/"+mediaType.subtype();
-			final String encoding = mediaType.charset(StandardCharsets.UTF_8).name();
+			final Charset encoding = mediaType.charset(StandardCharsets.UTF_8);
 			final String title = extractName(mediaType.toString());
-			final int segments = 1; //TODO delegate to actual handler for the given MIME type
+			final ExcerptHandler handler = ExcerptHandlers.forContentType(contentType);
 			
-			config.setFileData(title, contentType, encoding, data, segments);
+			final CountingInputStream countingStream = new CountingInputStream(body.byteStream());
+			final Payload input = Payload.forInput(encoding, contentType, countingStream);			
+			handler.init(input);
+			final long size = countingStream.getCount();
+			
+			final FileInfo fileInfo = new FileInfo(title, contentType, encoding, size);
+			
+			config.setFileData(fileInfo, handler);
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Failed to load file content", e);
 			Messages.addGlobalError(BundleUtil.get("homepage.tabs.data.error.load"));
+			return;
+		} catch (UnsupportedContentTypeException e) {
+			logger.log(Level.SEVERE, "Content type of file not supported", e);
+			Messages.addGlobalError(BundleUtil.get("homepage.tabs.data.error.mime"));
+			return;
+		} catch (EmptyResourceException e) {
+			logger.log(Level.SEVERE, "Source file empty", e);
+			Messages.addGlobalError(BundleUtil.get("homepage.tabs.data.error.empty"));
 			return;
 		}
 		

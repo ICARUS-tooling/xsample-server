@@ -1,3 +1,19 @@
+/*
+ * XSample Server
+ * Copyright (C) 2020-2020 Markus Gï¿½rtner <markus.gaertner@ims.uni-stuttgart.de>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /**
  * 
  */
@@ -10,11 +26,19 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
+import javax.faces.component.UIComponent;
+import javax.faces.context.FacesContext;
+
+import org.apache.pdfbox.io.IOUtils;
+
+import de.unistuttgart.xsample.ct.ExcerptHandler;
+import de.unistuttgart.xsample.util.FileInfo;
 import de.unistuttgart.xsample.util.Property;
 
 /**
- * @author Markus Gärtner
+ * @author Markus Gï¿½rtner
  *
  */
 public class XsampleExcerptConfig implements Serializable {
@@ -28,21 +52,14 @@ public class XsampleExcerptConfig implements Serializable {
 	/** The source URL of the dataverse the request originated from */
 	private String site;
 	
-	/** Display name of the source file */
-	private String title;
-	/** MIME type of the source file */
-	private String contentType;
-	/** Character encoding used for source file */
-	private String encoding;
-	/** Binary form of the source file */
-	private byte[] data;
-	/** Total number of segments available in source file */
-	private int segments;
+	private FileInfo fileInfo;
+	/** The handler responsible for managing the source file and creating excerpts from it */
+	private ExcerptHandler handler;
 	
 	/** Begin of user defined excerpt */
-	private int start;
+	private long start = 1;
 	/** End of user defined excerpt */
-	private int end;
+	private long end = 1;
 	
 	
 	public Long getFile() { return file; }
@@ -54,44 +71,45 @@ public class XsampleExcerptConfig implements Serializable {
 	public String getSite() { return site; }
 	public void setSite(String site) { this.site = site; }
 	
-	public int getStart() { return start; }
-	public void setStart(int excerptStart) { this.start = excerptStart; }
+	public long getStart() { return start; }
+	public void setStart(long excerptStart) { this.start = excerptStart; }
 
-	public int getEnd() { return end; }
-	public void setEnd(int excerptEnd) { this.end = excerptEnd; }
+	public long getEnd() { return end; }
+	public void setEnd(long excerptEnd) { this.end = excerptEnd; }
 	
-	public int getSegments() { return segments; }
-	public byte[] getData() { return data; }
-	public String getContentType() { return contentType; }
-	public String getEncoding() { return encoding; }
+	public FileInfo getFileInfo() { return fileInfo; }
+	public long getSegments() { return handler==null ? 0 : handler.segments(); }
+	public ExcerptHandler getHandler() { return handler; }
+	
+	// Validation method
+	
+	//TODO rethink approach
+	public void validateData(FacesContext fc, UIComponent comp, Object obj) {
+		System.out.println("validating");
+	}
 	
 	// Bulk modifications
 	
-	public void setFileData(String title, String contentType, String encoding, byte[] data, int segments) {
-		this.title = requireNonNull(title, "missing title");
-		this.contentType = requireNonNull(contentType, "missing content type");
-		this.encoding = requireNonNull(encoding, "missing encoding");
-		this.data = requireNonNull(data, "missing data");
-		this.segments = segments;
+	public void setFileData(FileInfo fileInfo, ExcerptHandler handler) {
+		this.fileInfo = requireNonNull(fileInfo);
+		this.handler = requireNonNull(handler);
 	}
 	
 	public void resetFileData() {
-		title = null;
-		contentType = null;
-		encoding = null;
-		data = null;
-		segments = 0;
+		fileInfo = null;
+		IOUtils.closeQuietly(handler);
+		handler = null;
 	}
 	
 	// Utility methods
 	
 	public int getPercent() {
-		return (int) Math.ceil((end-start+1.0) / segments * 100.0);
+		return (int) Math.ceil((end-start+1.0) / getSegments() * 100.0);
 	}
 	
-	public int getRange() { return end-start+1; }
+	public long getRange() { return end-start+1; }
 	
-	public boolean isHasFile() { return data!=null; }
+	public boolean isHasFile() { return handler!=null; }
 
 
 	private DecimalFormat decimalFormat = new DecimalFormat("#,###");
@@ -106,11 +124,11 @@ public class XsampleExcerptConfig implements Serializable {
 		}
 		
 		List<Property> props = new ArrayList<>();
-		props.add(new Property("Title", title));
-		props.add(new Property("Content Type", contentType));
-		props.add(new Property("Character Encoding", encoding));
-		props.add(new Property("Segments", formatDecimal(segments)));
-		props.add(new Property("Size", formatDecimal(data.length/1024)+"KB"));
+		props.add(new Property("Title", fileInfo.getTitle()));
+		props.add(new Property("Content Type", fileInfo.getContentType()));
+		props.add(new Property("Character Encoding", fileInfo.getEncoding().displayName(Locale.US)));
+		props.add(new Property("Segments", formatDecimal(getSegments())));
+		props.add(new Property("Size", formatDecimal(fileInfo.getSize()/1024)+"KB"));
 		return props;
 	}
 }

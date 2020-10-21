@@ -62,36 +62,44 @@
 										<h:outputText value="#{prop.value}" />
 									</p:column>
 								</p:dataTable>
+								<h:inputHidden validator="#{xsamplePage.config.validateData}" />
 							</p:panel>
 						</p:tab>
 						
-						<p:tab id="excerpt" title="Excerpt">
-							<p:panel header="Select Excerpt">
+						<p:tab id="excerpt" title="#{bundle['homepage.tabs.excerpt.title']}">
+							<p:panel header="#{bundle['homepage.tabs.excerpt.header']}">
 								<h:inputHidden id="excerptStart" value="#{xsamplePage.config.start}" />
 								<h:inputHidden id="excerptEnd" value="#{xsamplePage.config.end}" />
 								<h:inputHidden id="excerptRange" value="#{xsamplePage.config.segments}" readonly="#{true}" />
 								<h:outputText id="excerptRangeText" style="margin-bottom: 2em" 
-									value="From #{xsamplePage.config.start} to #{xsamplePage.config.end}" />
+									value="#{bundle['homepage.tabs.excerpt.from']} #{xsamplePage.config.start} #{bundle['homepage.tabs.excerpt.to']} #{xsamplePage.config.end}" />
 								<p:slider widgetVar="excerptRangeSelect" for="excerptStart,excerptEnd" 
 									display="excerptRangeText" onSlide="updateExcerpt(event, ui);" 
-									style="width: 700px; margin: 2em" range="true" displayTemplate="From {min} to {max}" 
+									style="width: 700px; margin: 2em" range="true" displayTemplate="#{bundle['homepage.tabs.excerpt.from']} {min} #{bundle['homepage.tabs.excerpt.to']} {max}" 
 									minValue="1" maxValue="#{xsamplePage.config.segments}" />    
-								<h:outputLabel for="excerptPercent" value="Excerpt Size: " />
+								<h:outputLabel for="excerptPercent" value="#{bundle['homepage.tabs.excerpt.size']}" />
 								<h:outputText id="excerptPercent" style="margin-top: 2em" 
 									value="#{xsamplePage.config.percent}%" />
 								<br/>
 								<canvas id="excerptOutline" height="15" width="700"
-									style="border:1px solid #000000; margin: 2em; display: none;" />
-								
+									style="border:1px solid #000000; margin: 2em; display: none" />	
 							</p:panel>
 						</p:tab>
 						
-						<p:tab id="download" title="Download">
+						<p:tab id="download" title="#{bundle['homepage.tabs.download.title']}">
+							<p:panel header="#{bundle['homepage.tabs.download.header']}">
+								<h:outputText value="#{bundle['homepage.tabs.download.description']}"/>
+								<br/>
+								<p:commandButton value="#{bundle['homepage.tabs.download.load']}" 
+									action="#{excerptDownloadBean.downloadExcerpt}" 
+									update="@parent" ajax="false" />
+								<p:messages />
+							</p:panel>
 						</p:tab>
 					</p:wizard>
 				</h:form>
 				
-				<script>
+				<script type="application/javascript">
 					function updateExcerpt(_, ui) {
 						var begin = ui.values[0];
 						var end = ui.values[1];

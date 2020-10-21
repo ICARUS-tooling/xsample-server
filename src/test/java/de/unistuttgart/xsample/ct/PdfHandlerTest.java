@@ -1,3 +1,19 @@
+/*
+ * XSample Server
+ * Copyright (C) 2020-2020 Markus Gï¿½rtner <markus.gaertner@ims.uni-stuttgart.de>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /**
  * 
  */
@@ -19,11 +35,12 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.text.PDFTextStripper;
 
-import de.unistuttgart.xsample.util.DataInput;
+import de.unistuttgart.xsample.util.Payload;
 import de.unistuttgart.xsample.util.XSampleUtils;
+import it.unimi.dsi.fastutil.io.FastByteArrayInputStream;
 
 /**
- * @author Markus Gärtner
+ * @author Markus Gï¿½rtner
  *
  */
 class PdfHandlerTest implements ExcerptHandlerTest<PdfHandler> {
@@ -55,14 +72,14 @@ class PdfHandlerTest implements ExcerptHandlerTest<PdfHandler> {
 	}
 
 	@Override
-	public DataInput input(int size, String contentType, Charset encoding) throws IOException {
+	public Payload input(int size, String contentType, Charset encoding) throws IOException {
 		byte[] data = doc(size);
-		return DataInput.virtual(encoding, contentType, data);
+		return Payload.forInput(encoding, contentType, new FastByteArrayInputStream(data));
 	}
 
 	@Override
-	public void assertExcerpt(DataInput excerpt, long[] fragments) throws IOException {
-		PDDocument doc = PDDocument.load(buffer(excerpt.content()));
+	public void assertExcerpt(Payload excerpt, long[] fragments) throws IOException {
+		PDDocument doc = PDDocument.load(buffer(excerpt.inputStream()));
 		assertThat(doc.getNumberOfPages()).as("Page count mismatch").isEqualTo(fragments.length);
 		
 		for (int i = 0; i < fragments.length; i++) {

@@ -17,17 +17,17 @@
 /**
  * 
  */
-package de.unistuttgart.xsample.ct;
+package de.unistuttgart.xsample.ct.spi;
+
+import java.util.Optional;
+
+import de.unistuttgart.xsample.ct.ExcerptHandler;
 
 /**
  * @author Markus G�rtner
  *
  */
-public class EmptyResourceException extends XsampleException {
+public interface ExcerptHandlerFactory {
 
-	private static final long serialVersionUID = 4064235005852844079L;
-
-	public EmptyResourceException(String message) {
-		super(message);
-	}
+	Optional<ExcerptHandler> create(String contentType);
 }
