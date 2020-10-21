@@ -32,7 +32,8 @@ public class XsampleServices {
 		SourceFileParam("file"),
 		ApiKeyParam("key"),
 		SourceDataverseParam("site"),
-		ServerRoute("/xsample-server")
+		ServerRoute("/xsample-server"),
+		ExcerptLimit("15.0"),
 		;
 		
 		private final String defaultValue;
@@ -94,7 +95,9 @@ public class XsampleServices {
 		return em.createNamedQuery("User.findAll").getResultList();
 	}
 	
-	public String getSetting(Key key) { return key.getDefaultValue(); }
+	public String getSetting(Key key) { 
+		return key.getDefaultValue(); //TODO replace with actual DB query once the settings backend is implemented 
+	}
 	
 	public int getIntSetting(Key key) { return Integer.parseInt(getSetting(key)); }
 	
