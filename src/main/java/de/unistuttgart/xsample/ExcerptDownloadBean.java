@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.omnifaces.util.Messages;
 
 import de.unistuttgart.xsample.ct.ExcerptHandler;
+import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.FileInfo;
 import de.unistuttgart.xsample.util.Payload;
 
@@ -53,7 +54,7 @@ public class ExcerptDownloadBean {
 			handler.excerpt(new Fragment[] {fragment}, output);
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Failed to create excerpt", e);
-			Messages.addGlobalError(BundleUtil.get("homepage.tabs.data.download.fetch"));
+			Messages.addGlobalError(BundleUtil.get("homepage.tabs.download.error"));
 			return;
 		}
 	    

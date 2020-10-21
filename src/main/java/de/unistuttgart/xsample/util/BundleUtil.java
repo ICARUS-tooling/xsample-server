@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.util;
 
 import java.text.MessageFormat;
 import java.util.Locale;
