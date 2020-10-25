@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus G�rtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,14 +31,13 @@ import java.util.Locale;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 
-import org.apache.pdfbox.io.IOUtils;
-
 import de.unistuttgart.xsample.ct.ExcerptHandler;
+import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.FileInfo;
 import de.unistuttgart.xsample.util.Property;
 
 /**
- * @author Markus G�rtner
+ * @author Markus Gärtner
  *
  */
 public class XsampleExcerptConfig implements Serializable {
@@ -56,9 +55,9 @@ public class XsampleExcerptConfig implements Serializable {
 	/** The handler responsible for managing the source file and creating excerpts from it */
 	private ExcerptHandler handler;
 	
-	/** Begin of user defined excerpt */
+	/** Begin of user defined excerpt. 1-based */
 	private long start = 1;
-	/** End of user defined excerpt */
+	/** End of user defined excerpt. 1-based */
 	private long end = 1;
 	
 	
@@ -78,8 +77,10 @@ public class XsampleExcerptConfig implements Serializable {
 	public void setEnd(long excerptEnd) { this.end = excerptEnd; }
 	
 	public FileInfo getFileInfo() { return fileInfo; }
-	public long getSegments() { return handler==null ? 0 : handler.segments(); }
+	public long getSegments() { return fileInfo==null ? 0 : fileInfo.getSegments(); }
+	
 	public ExcerptHandler getHandler() { return handler; }
+	public void setHandler(ExcerptHandler handler) { this.handler = handler; }
 	
 	// Validation method
 	
@@ -90,15 +91,12 @@ public class XsampleExcerptConfig implements Serializable {
 	
 	// Bulk modifications
 	
-	public void setFileData(FileInfo fileInfo, ExcerptHandler handler) {
+	public void setFileInfo(FileInfo fileInfo) {
 		this.fileInfo = requireNonNull(fileInfo);
-		this.handler = requireNonNull(handler);
 	}
 	
 	public void resetFileData() {
 		fileInfo = null;
-		IOUtils.closeQuietly(handler);
-		handler = null;
 	}
 	
 	// Utility methods
@@ -109,7 +107,7 @@ public class XsampleExcerptConfig implements Serializable {
 	
 	public long getRange() { return end-start+1; }
 	
-	public boolean isHasFile() { return handler!=null; }
+	public boolean isHasFile() { return fileInfo!=null; }
 
 
 	private DecimalFormat decimalFormat = new DecimalFormat("#,###");
@@ -124,11 +122,11 @@ public class XsampleExcerptConfig implements Serializable {
 		}
 		
 		List<Property> props = new ArrayList<>();
-		props.add(new Property("Title", fileInfo.getTitle()));
-		props.add(new Property("Content Type", fileInfo.getContentType()));
-		props.add(new Property("Character Encoding", fileInfo.getEncoding().displayName(Locale.US)));
-		props.add(new Property("Segments", formatDecimal(getSegments())));
-		props.add(new Property("Size", formatDecimal(fileInfo.getSize()/1024)+"KB"));
+		props.add(new Property(BundleUtil.get("title"), fileInfo.getTitle()));
+		props.add(new Property(BundleUtil.get("contentType"), fileInfo.getContentType()));
+		props.add(new Property(BundleUtil.get("encoding"), fileInfo.getEncoding().displayName(Locale.US)));
+		props.add(new Property(handler==null ? BundleUtil.get("segments") : handler.getSegmentLabel(), formatDecimal(getSegments())));
+		props.add(new Property(BundleUtil.get("size"), formatDecimal(fileInfo.getSize()/1024)+"KB"));
 		return props;
 	}
 }

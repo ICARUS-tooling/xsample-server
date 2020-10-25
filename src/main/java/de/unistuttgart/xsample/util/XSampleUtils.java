@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus G�rtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,17 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 
 /**
- * @author Markus G�rtner
+ * @author Markus Gärtner
  *
  */
 public class XSampleUtils {
@@ -35,6 +43,24 @@ public class XSampleUtils {
 	public static final String MIME_PDF = "application/pdf";
 	public static final String MIME_TXT = "text/plain";
 	public static final String MIME_EPUB = "application/epub+zip";
+
+	private static final IvParameterSpec iv = new IvParameterSpec(new SecureRandom().generateSeed(16));
+	
+	public static Cipher encrypt(SecretKey key) throws GeneralSecurityException {
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+		return cipher;
+	}
+	
+	public static Cipher decrypt(SecretKey key) throws GeneralSecurityException {
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		cipher.init(Cipher.DECRYPT_MODE, key, iv);
+		return cipher;
+	}
+	
+	public static SecretKey makeKey() throws NoSuchAlgorithmException {
+		return KeyGenerator.getInstance("AES").generateKey();
+	}
 
 	public static int unbox(Integer value) {
 		return value==null ? 0 : value.intValue();

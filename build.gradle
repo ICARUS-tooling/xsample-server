@@ -158,7 +158,7 @@ cargo {
 // License formatting for file headers
 license {
 	ext.year = '2020-'+Calendar.getInstance().get(Calendar.YEAR)
-	ext.name = 'Markus Gärtner'
+	ext.name = 'Markus GÃ¤rtner'
 	ext.email = 'markus.gaertner@ims.uni-stuttgart.de'
 	
 	header = rootProject.file('LICENSE_HEADER')

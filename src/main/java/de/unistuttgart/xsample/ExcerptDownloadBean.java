@@ -3,10 +3,18 @@
  */
 package de.unistuttgart.xsample;
 
+import static de.unistuttgart.xsample.util.XSampleUtils.decrypt;
+
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.security.GeneralSecurityException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.crypto.CipherInputStream;
 import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
@@ -18,7 +26,6 @@ import org.omnifaces.util.Messages;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.FileInfo;
-import de.unistuttgart.xsample.util.Payload;
 
 /**
  * @author Markus Gärtner
@@ -35,26 +42,40 @@ public class ExcerptDownloadBean {
 
 	public void downloadExcerpt() {
 		XsampleExcerptConfig config = xsamplePage.getConfig();
-		ExcerptHandler handler = config.getHandler();
 		FileInfo fileInfo = config.getFileInfo();
-		
-		Fragment fragment = Fragment.of(config.getStart(), config.getEnd());
-		
-		FacesContext fc = FacesContext.getCurrentInstance();
-		HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();
-		
-		response.reset();
-		response.setContentType(fileInfo.getContentType());
-//	    response.setContentLength(strictToInt(fileInfo.getSize())); // disabled since we don't know size of excerpt
-	    response.setHeader("Content-Disposition", "attachment; filename=\"XSample_" + fileInfo.getTitle() + "\"");
+		ExcerptHandler handler = config.getHandler();
 
-		try {
-			Payload output = Payload.forOutput(fileInfo.getEncoding(), 
-					fileInfo.getContentType(), response.getOutputStream());
-			handler.excerpt(new Fragment[] {fragment}, output);
+		FacesContext fc = FacesContext.getCurrentInstance();
+		
+		try {			
+			Fragment fragment = Fragment.of(config.getStart()-1, config.getEnd()-1);
+			
+			if(!Files.exists(fileInfo.getTempFile())) {
+				Messages.addGlobalWarn(BundleUtil.get("homepage.tabs.download.deleted"));
+				return;
+			}
+			
+			// Prepare basic response header
+			HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();			
+			response.reset();
+			response.setContentType(fileInfo.getContentType());
+//		    response.setContentLength(strictToInt(fileInfo.getSize())); // disabled since we don't know size of excerpt
+		    response.setHeader("Content-Disposition", "attachment; filename=\"XSample_" + fileInfo.getTitle() + "\"");
+		    
+		    // Prepare response content
+			try(InputStream raw = Files.newInputStream(fileInfo.getTempFile(), 
+					StandardOpenOption.READ, StandardOpenOption.DELETE_ON_CLOSE);
+					InputStream in = new CipherInputStream(raw, decrypt(fileInfo.getKey()))) {
+				OutputStream out = response.getOutputStream();
+				handler.excerpt(fileInfo, in, new Fragment[] {fragment}, out);
+			}
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Failed to create excerpt", e);
 			Messages.addGlobalError(BundleUtil.get("homepage.tabs.download.error"));
+			return;
+		} catch (GeneralSecurityException e) {
+			logger.log(Level.SEVERE, "Failed to prepare cipher", e);
+			Messages.addGlobalError(BundleUtil.get("homepage.error.cipher"));
 			return;
 		}
 	    

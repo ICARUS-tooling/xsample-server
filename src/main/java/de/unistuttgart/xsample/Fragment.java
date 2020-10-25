@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus G�rtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package de.unistuttgart.xsample;
 import java.util.stream.LongStream;
 
 /**
- * @author Markus G�rtner
+ * @author Markus Gärtner
  *
  */
 public class Fragment {
@@ -47,4 +47,8 @@ public class Fragment {
 	public void setTo(long to) { this.to = to; }
 	
 	public LongStream stream() { return LongStream.rangeClosed(from, to); }
+	
+	@Override
+	public String toString() { return "["+from+","+to+"]"; }
+	
 }

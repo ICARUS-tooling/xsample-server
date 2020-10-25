@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus G�rtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,56 +20,45 @@
 package de.unistuttgart.xsample.ct;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
 import de.unistuttgart.xsample.Fragment;
-import de.unistuttgart.xsample.util.Payload;
+import de.unistuttgart.xsample.util.BundleUtil;
+import de.unistuttgart.xsample.util.FileInfo;
 
 /**
- * @author Markus G�rtner
+ * @author Markus Gärtner
  *
  */
 public class PlaintextHandler implements ExcerptHandler {
 	
 	//TODO currently we're not really unicode aware here
-	
-	private StringBuilder data;
-	
-	private void checkData() {
-		if(data==null)
-			throw new IllegalStateException("No text data available");
-	}
 
 	@Override
-	public void close() throws IOException {
-		data = null;
-	}
-
-	@Override
-	public void init(Payload input) throws IOException, UnsupportedContentTypeException, EmptyResourceException {
-		ReadableByteChannel ch = Channels.newChannel(input.inputStream());
-		Reader reader = Channels.newReader(ch, input.encoding().newDecoder(), -1);
+	public void analyze(FileInfo file, InputStream in) throws IOException, UnsupportedContentTypeException, EmptyResourceException {
+		ReadableByteChannel ch = Channels.newChannel(in);
+		Reader reader = Channels.newReader(ch, file.getEncoding().newDecoder(), -1);
+		StringBuilder sb = new StringBuilder();
 		char[] buffer = new char[1<<13];
 		int read;
 		while((read = reader.read(buffer)) > 0) {
-			data.append(buffer, 0, read);
+			sb.append(buffer, 0, read);
 		}
-	}
-
-	@Override
-	public long segments() {
-		checkData();
-		return data.length();
+		file.setSegments(sb.length());
 	}
 
 	/**
 	 * @see de.unistuttgart.xsample.ct.ExcerptHandler#excerpt(de.unistuttgart.xsample.Fragment[])
 	 */
 	@Override
-	public void excerpt(Fragment[] fragments, Payload output) throws IOException {
+	public void excerpt(FileInfo file, InputStream in, Fragment[] fragments, OutputStream out) throws IOException {
 		// TODO Auto-generated method stub
 	}
 
+	@Override
+	public String getSegmentLabel() { return BundleUtil.get("characters"); }
 }

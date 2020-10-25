@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus G�rtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,19 +19,18 @@
  */
 package de.unistuttgart.xsample.ct;
 
-import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import de.unistuttgart.xsample.Fragment;
-import de.unistuttgart.xsample.util.DataInput;
-import de.unistuttgart.xsample.util.DataOutput;
-import de.unistuttgart.xsample.util.Payload;
-
+import de.unistuttgart.xsample.util.FileInfo;
+ 
 /**
- * @author Markus G�rtner
+ * @author Markus Gärtner
  *
  */
-public interface ExcerptHandler extends Closeable {
+public interface ExcerptHandler {
 
 	/**
 	 * Initialize the handler with the given {@link DataInput input}.
@@ -43,15 +42,7 @@ public interface ExcerptHandler extends Closeable {
 	 * is not supported by this handler
 	 * @throws EmptyResourceException if the data source represents an empty file
 	 */
-	void init(Payload input) throws IOException, UnsupportedContentTypeException, EmptyResourceException;
-	
-	/** 
-	 * Returns the number of segments available in the underlying resource.
-	 * 
-	 * @throws IllegalStateException if {@link #init(DataInput)} hasn't been called
-	 *  yet or failed in some way.
-	 */
-	long segments();
+	void analyze(FileInfo file, InputStream in) throws IOException, UnsupportedContentTypeException, EmptyResourceException;
 	
 	/**
 	 * Splits the underlying resource based on the specified fragments and stores
@@ -59,12 +50,12 @@ public interface ExcerptHandler extends Closeable {
 	 * 
 	 * @param fragments specification of the actual excerpt to generate
 	 * @param output the destination for the excerpt generation
-	 * @throws IllegalStateException if {@link #init(DataInput)} hasn't been called
 	 *  yet or failed in some way.
 	 * @throws IOException
 	 */
-	void excerpt(Fragment[] fragments, Payload output) throws IOException;
-	
+	void excerpt(FileInfo file, InputStream in, Fragment[] fragments, OutputStream out) throws IOException;
 	
 	//TODO add methods for fetching localized strings related to segment names etc
+	
+	String getSegmentLabel();
 }

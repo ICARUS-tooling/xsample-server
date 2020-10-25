@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus G�rtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,30 +21,43 @@ package de.unistuttgart.xsample.util;
 
 import static java.util.Objects.requireNonNull;
 
+import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+
+import javax.crypto.SecretKey;
 
 /**
- * @author Markus G�rtner
+ * @author Markus Gärtner
  *
  */
-public class FileInfo {
+public class FileInfo implements Serializable {
 
+	private static final long serialVersionUID = -8926296993866371029L;
+	
 	/** Display name of the source file */
 	private String title;
 	/** MIME type of the source file */
 	private String contentType;
 	/** Character encoding used for source file */
 	private Charset encoding;
-	/** Size in bytes of the yource file */
+	/** Size in bytes of the source file */
 	private long size;
+	/** Number of segments that can be extracted. */
+	private long segments;
+	
+	/** Temporary file on the server, encrypted with {@link #key}.  */
+	private Path tempFile;
+	/** Key for encrypting/decrypting temporary file. */
+	private SecretKey key;
 	
 	public FileInfo() { /* no-op */ }
 	
-	public FileInfo(String title, String contentType, Charset encoding, long size) {
-		setTitle(title);
+	public FileInfo(String contentType, Charset encoding) {
 		setContentType(contentType);
 		setEncoding(encoding);
-		setSize(size);
+		
 	}
 	public String getTitle() {
 		return title;
@@ -61,7 +74,7 @@ public class FileInfo {
 		this.contentType = contentType;
 	}
 	public Charset getEncoding() {
-		return encoding;
+		return encoding==null ? StandardCharsets.UTF_8 : encoding;
 	}
 	public void setEncoding(Charset encoding) {
 		requireNonNull(encoding);
@@ -72,5 +85,23 @@ public class FileInfo {
 	}
 	public void setSize(long size) {
 		this.size = size;
+	}
+	public long getSegments() {
+		return segments;
+	}
+	public void setSegments(long segments) {
+		this.segments = segments;
+	}
+	public Path getTempFile() {
+		return tempFile;
+	}
+	public void setTempFile(Path tempFile) {
+		this.tempFile = requireNonNull(tempFile);
+	}
+	public SecretKey getKey() {
+		return key;
+	}
+	public void setKey(SecretKey key) {
+		this.key = key;
 	}
 }

@@ -2,7 +2,7 @@
  * Bundles the content-type specific components and extension interfaces of
  * the XSample server.
  * 
- * @author Markus Gärtner
+ * @author Markus GÃ¤rtner
  *
  */
 package de.unistuttgart.xsample.ct;

@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus G�rtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@
 package de.unistuttgart.xsample.ct;
 
 import static de.unistuttgart.xsample.util.XSampleUtils._int;
-import static de.unistuttgart.xsample.util.XSampleUtils.buffer;
 import static de.unistuttgart.xsample.util.XSampleUtils.strictToInt;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -35,12 +35,10 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.text.PDFTextStripper;
 
-import de.unistuttgart.xsample.util.Payload;
 import de.unistuttgart.xsample.util.XSampleUtils;
-import it.unimi.dsi.fastutil.io.FastByteArrayInputStream;
 
 /**
- * @author Markus G�rtner
+ * @author Markus Gärtner
  *
  */
 class PdfHandlerTest implements ExcerptHandlerTest<PdfHandler> {
@@ -50,10 +48,11 @@ class PdfHandlerTest implements ExcerptHandlerTest<PdfHandler> {
 
 	@Override
 	public String[] supportedContentTypes() { return new String[]{ XSampleUtils.MIME_PDF }; }
-	
-	private byte[] doc(int pages) throws IOException {		
+
+	@Override
+	public byte[] input(int size, String contentType, Charset encoding) throws IOException {		
 		try(PDDocument doc = new PDDocument()) {
-			for(int i=0; i<pages; i++) {
+			for(int i=0; i<size; i++) {
 				PDPage page = new PDPage();
 				try(PDPageContentStream stream = new PDPageContentStream(doc, page)) {
 					stream.beginText();
@@ -70,16 +69,10 @@ class PdfHandlerTest implements ExcerptHandlerTest<PdfHandler> {
 			return out.toByteArray();
 		}
 	}
-
+	
 	@Override
-	public Payload input(int size, String contentType, Charset encoding) throws IOException {
-		byte[] data = doc(size);
-		return Payload.forInput(encoding, contentType, new FastByteArrayInputStream(data));
-	}
-
-	@Override
-	public void assertExcerpt(Payload excerpt, long[] fragments) throws IOException {
-		PDDocument doc = PDDocument.load(buffer(excerpt.inputStream()));
+	public void assertExcerpt(byte[] original, InputStream in, long[] fragments) throws IOException {
+		PDDocument doc = PDDocument.load(in);
 		assertThat(doc.getNumberOfPages()).as("Page count mismatch").isEqualTo(fragments.length);
 		
 		for (int i = 0; i < fragments.length; i++) {
@@ -94,5 +87,4 @@ class PdfHandlerTest implements ExcerptHandlerTest<PdfHandler> {
 				.isEqualTo(origIndex);
 		}		
 	}
-
 }
