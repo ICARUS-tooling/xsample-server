@@ -38,3 +38,4 @@ local.properties
 
 # Custom files to be ignored
 /secrets.gradle
+/config.gradle

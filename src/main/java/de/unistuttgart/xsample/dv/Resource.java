@@ -17,12 +17,13 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.dv;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
@@ -31,27 +32,34 @@ import javax.persistence.NamedQuery;
  *
  */
 @Entity
-@NamedQueries({ 
-	@NamedQuery(name = "Dataverse.findAll", query = "SELECT d FROM Dataverse d ORDER BY d.id"),
-	@NamedQuery(name = "Dataverse.findByUrl", query = "SELECT d FROM Dataverse d WHERE d.url = :url"), 
+@NamedQueries({
+	@NamedQuery(name = "Resource.findAll", query = "SELECT r FROM Resource r ORDER BY r.id"),
+	@NamedQuery(name = "Resource.findByFile", query = "SELECT r FROM Resource r WHERE r.file = :file"), 
 })
-public class Dataverse {
+public class Resource {
+
+	@Column
+	private Long file;
 
 	@Id
 	@GeneratedValue
 	private Long id;
+	
+	@ManyToOne
+	private Dataverse dataverse;
 
-	@Column(nullable = false, unique = true)
-	private String url;
+	public Dataverse getDataverse() { return dataverse; }
+
+	public void setDataverse(Dataverse dataverse) { this.dataverse = dataverse; }
+
+	public Long getFile() { return file; }
+
+	public void setFile(Long file) { this.file = file; }
 
 	public Long getId() { return id; }
 
 	public void setId(Long id) { this.id = id; }
-
-	public String getUrl() { return url; }
-
-	public void setUrl(String url) { this.url = url; }
-
+	
 	@Override
-	public String toString() { return String.format("Dataverse@[id=%d, url=%s]", id, url); }
+	public String toString() { return String.format("Resource@[id=%d, file=%d]", id, file); }
 }

@@ -32,6 +32,8 @@ import javax.inject.Named;
 import org.primefaces.event.FlowEvent;
 
 import de.unistuttgart.xsample.XsampleServices.Key;
+import de.unistuttgart.xsample.dv.Resource;
+import de.unistuttgart.xsample.dv.User;
 
 /**
  * @author Markus Gärtner

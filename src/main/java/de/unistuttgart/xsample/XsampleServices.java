@@ -29,6 +29,9 @@ import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import de.unistuttgart.xsample.dv.Resource;
+import de.unistuttgart.xsample.dv.User;
+
 
 
 /**

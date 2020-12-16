@@ -55,6 +55,8 @@ dependencies {
 	// HTTP communication with Dataverse API
 	// https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
 	compile group: 'com.squareup.retrofit2', name: 'retrofit', version: '2.9.0'
+	// https://mvnrepository.com/artifact/com.squareup.retrofit2/converter-gson
+	compile group: 'com.squareup.retrofit2', name: 'converter-gson', version: '2.9.0'
 	
 	// PDF reading and manipulation
 	// https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox

@@ -49,6 +49,7 @@ import de.unistuttgart.xsample.ct.EmptyResourceException;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.ExcerptHandlers;
 import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
+import de.unistuttgart.xsample.dv.DataverseClient;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.FileInfo;
 import okhttp3.MediaType;

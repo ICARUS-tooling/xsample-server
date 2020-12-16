@@ -21,6 +21,8 @@ package de.unistuttgart.xsample;
 
 import java.util.List;
 
+import de.unistuttgart.xsample.dv.Resource;
+
 /**
  * @author Markus Gärtner
  *

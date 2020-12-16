@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.dv;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
