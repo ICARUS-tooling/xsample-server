@@ -47,7 +47,7 @@ public class XsamplePage implements Serializable {
 	
 	private static final Logger logger = Logger.getLogger(XsamplePage.class.getCanonicalName());
 
-	private XsampleExcerptConfig config = new XsampleExcerptConfig();
+	private ExcerptConfig config = new ExcerptConfig();
 
 	private User user;
 	private Resource resource;
@@ -87,8 +87,8 @@ public class XsamplePage implements Serializable {
 //		}
 	} 
 	
-	public XsampleExcerptConfig getConfig() { return config; }
-	public void setConfig(XsampleExcerptConfig config) { this.config = config; }
+	public ExcerptConfig getConfig() { return config; }
+	public void setConfig(ExcerptConfig config) { this.config = config; }
 	
 	public String onFlowProcess(FlowEvent event) {
 		return event.getNewStep();

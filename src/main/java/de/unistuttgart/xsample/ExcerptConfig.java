@@ -40,7 +40,7 @@ import de.unistuttgart.xsample.util.Property;
  * @author Markus Gärtner
  *
  */
-public class XsampleExcerptConfig implements Serializable {
+public class ExcerptConfig implements Serializable {
 
 	private static final long serialVersionUID = -3897121271961387495L;
 	

@@ -19,10 +19,9 @@
  */
 package de.unistuttgart.xsample.dv;
 
-import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
@@ -33,25 +32,32 @@ import javax.persistence.NamedQuery;
 @Entity(name = "Users")
 @NamedQueries({ 
 	@NamedQuery(name = "User.findAll", query = "SELECT u FROM Users u ORDER BY u.id"),
-	@NamedQuery(name = "User.findByKey", query = "SELECT u FROM Users u WHERE u.key = :key"), 
+	@NamedQuery(name = "User.find", query = "SELECT u FROM Users u WHERE u.id.dataverseUrl = :url AND u.id.persistentUserId = :id"), 
 })
 public class User {
-
-	@Column(nullable = false, length = 36, unique = true)
-	private String key;
-
-	@Id
-	@GeneratedValue
-	private Long id;
-
-	public String getKey() { return key; }
-
-	public void setKey(String key) { this.key = key; }
-
-	public Long getId() { return id; }
-
-	public void setId(Long id) { this.id = id; }
+	
+	@ManyToOne
+	private Dataverse dataverse;
+	
+	@EmbeddedId
+	private UserId id;
 	
 	@Override
-	public String toString() { return String.format("User@[id=%d, key=%s]", id, key); }
+	public String toString() { return String.format("User@[id=%s]", id); }
+
+	public Dataverse getDataverse() {
+		return dataverse;
+	}
+
+	public void setDataverse(Dataverse dataverse) {
+		this.dataverse = dataverse;
+	}
+
+	public UserId getId() {
+		return id;
+	}
+
+	public void setId(UserId id) {
+		this.id = id;
+	}
 }

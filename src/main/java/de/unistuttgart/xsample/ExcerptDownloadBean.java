@@ -41,7 +41,7 @@ public class ExcerptDownloadBean {
 	XsamplePage xsamplePage;
 
 	public void downloadExcerpt() {
-		XsampleExcerptConfig config = xsamplePage.getConfig();
+		ExcerptConfig config = xsamplePage.getConfig();
 		FileInfo fileInfo = config.getFileInfo();
 		ExcerptHandler handler = config.getHandler();
 

@@ -3,7 +3,7 @@
  */
 package de.unistuttgart.xsample.dv;
 
-import de.unistuttgart.xsample.XsampleExcerptConfig;
+import de.unistuttgart.xsample.ExcerptConfig;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -22,7 +22,7 @@ import retrofit2.http.Streaming;
  */
 public interface DataverseClient {
 	
-	public static DataverseClient forConfig(XsampleExcerptConfig config) {		
+	public static DataverseClient forConfig(ExcerptConfig config) {		
 		final Retrofit retrofit = new Retrofit.Builder()
 				.baseUrl(config.getSite())
 				.addConverterFactory(GsonConverterFactory.create())

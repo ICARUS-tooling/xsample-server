@@ -29,8 +29,10 @@ import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import de.unistuttgart.xsample.dv.Dataverse;
 import de.unistuttgart.xsample.dv.Resource;
 import de.unistuttgart.xsample.dv.User;
+import de.unistuttgart.xsample.dv.UserId;
 
 
 
@@ -66,6 +68,8 @@ public class XsampleServices {
 		public String getDefaultValue() { return defaultValue; }
 	}
 	
+	// DB LOOKUP METHODS
+	
 	public Resource findResourceByFile(Long file) {
 		requireNonNull(file);
 		
@@ -90,18 +94,42 @@ public class XsampleServices {
 		return em.createNamedQuery("Resource.findAll").getResultList();
 	}
 	
-	public User findUserByKey(String key) {
-		requireNonNull(key);
+	public Dataverse findDataverseByUrl(String url) {
+		requireNonNull(url);
 		
-		List<User> users = em.createNamedQuery("User.findByKey")
-					.setParameter("key", key)
+		List<Dataverse> dataverses = em.createNamedQuery("Dataverse.findByUrl")
+					.setParameter("url", url)
+					.getResultList();
+		
+		Dataverse dataverse;
+		if(dataverses.isEmpty()) {
+			log.finer("creating Dataverse for url: "+url);
+			dataverse = new Dataverse();
+			dataverse.setUrl(url);
+			em.merge(dataverse);
+		} else {
+			dataverse = dataverses.get(0);
+		}
+		
+		return dataverse;
+	}
+	
+	public User findDataverseUser(Dataverse dataverse, String userId) {
+		requireNonNull(dataverse);
+		requireNonNull(userId);
+		final String url = requireNonNull(dataverse.getUrl());
+		
+		List<User> users = em.createNamedQuery("User.find")
+					.setParameter("url", url)
+					.setParameter("id", userId)
 					.getResultList();
 
 		User user;
 		if(users.isEmpty()) {
-			log.finer("creating User for key: "+key);
+			log.finer(String.format("creating User for dataverse '%s' and id '%s'", url, userId));
 			user = new User();
-			user.setKey(key);
+			user.setId(new UserId(url, userId));
+			user.setDataverse(dataverse);
 			em.merge(user);
 		} else {
 			user = users.get(0);
@@ -113,6 +141,8 @@ public class XsampleServices {
 	public List<User> findAllUsers() {
 		return em.createNamedQuery("User.findAll").getResultList();
 	}
+	
+	// SETTINGS METHODS
 	
 	public String getSetting(Key key) { 
 		return key.getDefaultValue(); //TODO replace with actual DB query once the settings backend is implemented 
