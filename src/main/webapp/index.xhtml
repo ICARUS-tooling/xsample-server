@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:jsf="http://xmlns.jcp.org/jsf">
+    <h:head>
+    </h:head>
+
+	<h:body> 
+		<f:metadata>
+		    <f:viewAction action="#{xsamplePage.init}" />
+		</f:metadata>
+		<ui:composition template="/xsample_template.xhtml">
+			<ui:param name="pageTitle" value="#{bundle['app.title']}" />
+            <ui:param name="showMessagePanel" value="#{true}"/>
+            <ui:param name="showXsampleHeader" value="#{true}"/>
+			<ui:define name="body"> 
+				<div jsf:id="content">
+			        <ui:include src="#{xsamplePage.page}.xhtml"/>
+			    </div>
+			</ui:define>
+		</ui:composition>
+	</h:body>
+</html>

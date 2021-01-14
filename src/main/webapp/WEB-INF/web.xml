@@ -71,7 +71,7 @@
 	</context-param>
 	
 	<welcome-file-list>
-		<welcome-file>xsample_homepage.xhtml</welcome-file>
+		<welcome-file>index.xhtml</welcome-file>
 	</welcome-file-list>
 
 	<mime-mapping>

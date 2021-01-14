@@ -92,7 +92,7 @@ public class DataverseFetchBean {
 	public void fetchResource() {
 		System.out.println("fetching");
 		
-		final ExcerptConfig config = xsamplePage.getConfig();		
+		final ExcerptConfig config = new ExcerptConfig() /*xsamplePage.getConfig()*/;		
 		final DataverseClient client = DataverseClient.forConfig(config);
 		
 		final Call<ResponseBody> request = client.downloadFile(config.getFile().longValue(), config.getKey());

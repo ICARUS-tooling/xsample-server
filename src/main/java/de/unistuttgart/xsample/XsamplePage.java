@@ -19,19 +19,25 @@
  */
 package de.unistuttgart.xsample;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.Serializable;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
+import javax.transaction.Transactional;
 
-import org.primefaces.event.FlowEvent;
+import org.omnifaces.util.Messages;
 
 import de.unistuttgart.xsample.XsampleServices.Key;
+import de.unistuttgart.xsample.dv.Dataverse;
 import de.unistuttgart.xsample.dv.Resource;
 import de.unistuttgart.xsample.dv.User;
 
@@ -47,17 +53,28 @@ public class XsamplePage implements Serializable {
 	
 	private static final Logger logger = Logger.getLogger(XsamplePage.class.getCanonicalName());
 
-	private ExcerptConfig config = new ExcerptConfig();
-
 	private User user;
 	private Resource resource;
-	
-	private String serverRoute;
 
     @EJB
-	private XsampleServices xsampleServices;
+	private XsampleServices xsampleServices;    
+    
+    private XsampleConfig config = new XsampleConfig();
 	
+	private String page = "welcome";
+	
+	private String localeCode = "en";
+	
+	private final AtomicBoolean loaded = new AtomicBoolean();
+
+	@Transactional
 	public void init() {
+		//TODO remove for production use
+		if(loaded.compareAndSet(false, true)) {
+			Dataverse dv = xsampleServices.findDataverseByUrl("http://193.196.55.101:8080");
+			dv.setMasterKey("c286eef4-cd9f-4572-8930-a5e2c06bf1a9");
+		}
+		
 		Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
 		Optional.ofNullable(params.get(xsampleServices.getSetting(Key.SourceFileParam)))
 			.map(Long::valueOf).ifPresent(config::setFile);
@@ -66,37 +83,43 @@ public class XsamplePage implements Serializable {
 		Optional.ofNullable(params.get(xsampleServices.getSetting(Key.SourceDataverseParam)))
 			.ifPresent(config::setSite);
 		
-		serverRoute = xsampleServices.getSetting(Key.ServerRoute);
-		
-//		if(config.site==null) {
-//			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-//					BundleUtil.get("homepage.noSite.summary"), 
-//					BundleUtil.get("homepage.noSite.detail", "site")));
-//		}
-//		
-//		if(file==null) {
-//			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-//					BundleUtil.get("homepage.noUser.summary"), 
-//					BundleUtil.get("homepage.noUser.detail", "file")));
-//		}
-//		
-//		if(key==null) {
-//			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-//					BundleUtil.get("homepage.noFile.summary"), 
-//					BundleUtil.get("homepage.noFile.detail", "key")));
-//		}
+		config.setServerRoute(xsampleServices.getSetting(Key.ServerRoute));
 	} 
 	
-	public ExcerptConfig getConfig() { return config; }
-	public void setConfig(ExcerptConfig config) { this.config = config; }
-	
-	public String onFlowProcess(FlowEvent event) {
-		return event.getNewStep();
+	public void checkAndContinue() {
+		//TODO check file and continue depending on setup
+		
+		String page = null;
+		switch (config.getType()) {
+		case STATIC: page = "download"; break;
+		case WINDOW: page = "window"; break;
+		case QUERY: page = "query"; break;
+
+		default:
+			Messages.addGlobalError("Unknown excerpt type: %s", config.getType());
+			break;
+		}
+		
+		if(page!=null) {
+			setPage(page);
+		}
 	}
 
+	public String getPage() { return page; }
+	public void setPage(String page) { this.page = requireNonNull(page); }	
+	
+	public XsampleConfig getConfig() { return config; }
+	public void setConfig(XsampleConfig config) { this.config = config; }
+
+	public String getLocaleCode() { return localeCode; }
+
+	public void setLocaleCode(String localeCode) {
+		requireNonNull(localeCode);
+		this.localeCode = localeCode;
+		FacesContext.getCurrentInstance().getViewRoot().setLocale(new Locale(localeCode));
+	}
+	
 	public User getUser() { return user; }
 	
 	public Resource getResource() { return resource; }
-	
-	public String getServerRoute() { return serverRoute; }
 }

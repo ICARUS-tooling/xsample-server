@@ -82,7 +82,7 @@ public class XsampleServices {
 			log.finer("creating Resource for file: "+file);
 			resource = new Resource();
 			resource.setFile(file);
-			em.merge(resource);
+			resource = em.merge(resource);
 		} else {
 			resource = resources.get(0);
 		}
@@ -106,7 +106,7 @@ public class XsampleServices {
 			log.finer("creating Dataverse for url: "+url);
 			dataverse = new Dataverse();
 			dataverse.setUrl(url);
-			em.merge(dataverse);
+			dataverse = em.merge(dataverse);
 		} else {
 			dataverse = dataverses.get(0);
 		}
@@ -130,7 +130,7 @@ public class XsampleServices {
 			user = new User();
 			user.setId(new UserId(url, userId));
 			user.setDataverse(dataverse);
-			em.merge(user);
+			user = em.merge(user);
 		} else {
 			user = users.get(0);
 		}

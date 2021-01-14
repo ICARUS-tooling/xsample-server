@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
+
+	<h:head>	
+    	<h:outputStylesheet name="css/primeflex.css"/>
+	</h:head>
+
+	<div class="p-grid">
+		<div class="p-col">
+			<p:panelGrid columns="2">
+				<h:outputText value="#{bundle['welcome.dataverse']}: *" />
+				<p:inputText value="#{xsamplePage.config.site}" required="true"
+					label="#{bundle['welcome.dataverse']}" />
+
+				<h:outputText value="#{bundle['welcome.file']}: *" />
+				<p:inputText value="#{xsamplePage.config.file}" required="true"
+					label="#{bundle['welcome.file']}" />
+
+				<h:outputText value="#{bundle['welcome.key']}: *" />
+				<p:inputText value="#{xsamplePage.config.key}" required="true"
+					label="#{bundle['welcome.key']}" />
+			</p:panelGrid>
+		</div>
+		<div class="p-col">
+			<h:outputText value="#{bundle['welcome.excerptType']}:" />
+			<p:selectOneRadio layout="pageDirection"
+				value="#{xsamplePage.config.type}">
+				<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']}"
+					itemValue="STATIC" />
+				<f:selectItem itemLabel="#{bundle['welcome.excerptType.window']}"
+					itemValue="WINDOW" />
+				<f:selectItem itemLabel="#{bundle['welcome.excerptType.query']}"
+					itemValue="QUERY" />
+			</p:selectOneRadio>
+			<p:selectBooleanCheckbox value="#{xsamplePage.config.includeAnnotations}"
+				itemLabel="#{bundle['welcome.includeAnnotations']}" />
+		</div>
+	</div>
+	<h:commandButton value="#{bundle['welcome.continue']}" action="#{xsamplePage.checkAndContinue}">
+	    <f:ajax render=":content"/>
+	</h:commandButton>
+</ui:composition>
