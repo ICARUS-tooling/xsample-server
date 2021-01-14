@@ -29,4 +29,8 @@
 	    <managed-bean-class>java.lang.String</managed-bean-class>
 	    <managed-bean-scope>application</managed-bean-scope>
 	</managed-bean>
+	
+	<navigation-rule>
+		<from-view-id></from-view-id>
+	</navigation-rule>
 </faces-config>

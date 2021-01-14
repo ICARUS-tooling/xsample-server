@@ -40,6 +40,9 @@ public class Dataverse {
 	@Id
 	@GeneratedValue
 	private Long id;
+	
+	@Column(length = 36, nullable = false, unique = true)
+	private String masterKey;
 
 	@Column(nullable = false, unique = true)
 	private String url;
@@ -51,6 +54,10 @@ public class Dataverse {
 	public String getUrl() { return url; }
 
 	public void setUrl(String url) { this.url = url; }
+
+	public String getMasterKey() { return masterKey; }
+
+	public void setMasterKey(String masterKey) { this.masterKey = masterKey; }
 
 	@Override
 	public String toString() { return String.format("Dataverse@[id=%d, url=%s]", id, url); }

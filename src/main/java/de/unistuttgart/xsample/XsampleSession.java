@@ -24,9 +24,14 @@ import static java.util.Objects.requireNonNull;
 import java.io.Serializable;
 import java.util.Locale;
 
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.inject.Named;
+import javax.persistence.EntityManager;
+
+import de.unistuttgart.xsample.dv.Dataverse;
 
 /**
  * @author Markus Gärtner
@@ -40,11 +45,22 @@ public class XsampleSession implements Serializable {
 	
 	private String localeCode = "en";
 
+    @EJB
+	private EntityManager em;
+
 	public String getLocaleCode() { return localeCode; }
 
 	public void setLocaleCode(String localeCode) {
 		requireNonNull(localeCode);
 		this.localeCode = localeCode;
 		FacesContext.getCurrentInstance().getViewRoot().setLocale(new Locale(localeCode));
+	}
+	
+	@PostConstruct
+	private void prepareDummyData() {
+		Dataverse dv = new Dataverse();
+		dv.setUrl("http://193.196.55.101:8080");
+		dv.setMasterKey("c286eef4-cd9f-4572-8930-a5e2c06bf1a9");
+		em.persist(dv);
 	}
 }
