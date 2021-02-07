@@ -29,14 +29,14 @@ import de.unistuttgart.xsample.dv.Dataverse;
 import de.unistuttgart.xsample.dv.DataverseUser;
 
 /**
- * Raw information regarding the excerpt to be created.
+ * Input information regarding the excerpt to be created.
  * 
  * @author Markus Gärtner
  *
  */
 @Named
 @ViewScoped
-public class XsampleExcerptInfo implements Serializable {
+public class XsampleExcerptInput implements Serializable {
 
 	private static final long serialVersionUID = 142653554299182977L;
 

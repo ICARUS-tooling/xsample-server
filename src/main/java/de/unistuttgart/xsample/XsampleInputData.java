@@ -25,6 +25,8 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
 /**
+ * Raw input data sent to the XSample server.
+ * 
  * @author Markus Gärtner
  *
  */

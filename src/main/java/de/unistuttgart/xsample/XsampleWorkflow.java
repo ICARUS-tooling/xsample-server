@@ -24,15 +24,10 @@ import static java.util.Objects.requireNonNull;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-import javax.annotation.Nullable;
-import javax.ejb.Asynchronous;
-import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
-import javax.transaction.Transactional;
 
 import de.unistuttgart.xsample.util.BundleUtil;
 
@@ -51,54 +46,14 @@ public class XsampleWorkflow implements Serializable {
 	/** Status of the analysis process */
 	private Status status = Status.LOADING;
 	
-	private String page = "welcome";
+	/** Content page to load. Initially set to {@link WelcomePage#PAGE}. */
+	private String page = WelcomePage.PAGE;
 
 	public String getPage() { return page; }
 	public void setPage(String page) { this.page = requireNonNull(page); }	
 
 	public Status getStatus() { return status; }
 	public void setStatus(Status status) { this.status = requireNonNull(status); }
-	
-	private Task task;
-	
-	@Asynchronous
-	@Transactional
-	public void execute(Task task) {
-		if(hasTask())
-			throw new UnsupportedOperationException("Already got a taks pending");
-		
-		this.task = requireNonNull(task);
-		
-		task.execute();
-	}
-	
-	public <T> void cleanupTask(Class<T> type, @Nullable Consumer<? super T> action) {
-		if(!hasTask())
-			throw new UnsupportedOperationException("No pending task to clean up");
-		
-		Task task = this.task;
-		
-		if(!type.isInstance(task))
-			throw new IllegalStateException(String.format(
-					"Type mismatch for current task: expected '%s' - but got '%s'", 
-					type.getName(), task.getClass().getName()));
-		
-		this.task = DUMMY_TASK;
-		
-		if(action!=null) {
-			action.accept(type.cast(task));
-		}
-	}
-	
-	public void syncTask() {
-		if(hasTask()) {
-			FacesContext fc = FacesContext.getCurrentInstance();
-			task.consumeMessages(m -> fc.addMessage("msg", m));
-		}
-	}
-	
-	public boolean hasTask() { return task!=DUMMY_TASK; }
-	public boolean isTaskActive() { return task.isActive(); }
 	
 	public enum Flag {
 		FILE_VALID,

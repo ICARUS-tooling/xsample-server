@@ -75,14 +75,14 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 /**
+ * Handler for initial verification of input data and settings.
+ * 
  * @author Markus Gärtner
  *
  */
 @Named
 @RequestScoped
-public class InputVerificationBean implements Serializable {
-	
-	private static final long serialVersionUID = -1050406652003320992L;
+public class InputVerificationBean {
 
 	private static final Logger logger = Logger.getLogger(InputVerificationBean.class.getCanonicalName());
 
@@ -93,7 +93,7 @@ public class InputVerificationBean implements Serializable {
 	XsampleInputData inputData;
 	
 	@Inject
-	XsampleExcerptInfo excerptInfo;
+	XsampleExcerptInput excerptInput;
 	
 	@Inject
 	XsampleWorkflow workflow;
@@ -191,7 +191,7 @@ public class InputVerificationBean implements Serializable {
 	private boolean checkNotNull(Object value, String errorKey) {
 		boolean valid = value!=null;
 		if(!valid) {
-			message(FacesMessage.SEVERITY_ERROR,BundleUtil.get(errorKey));
+			message(FacesMessage.SEVERITY_ERROR, errorKey);
 		}
 		return valid;
 	}
@@ -205,7 +205,7 @@ public class InputVerificationBean implements Serializable {
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.unknownDataverse", address);
 			return false;
 		}				
-		excerptInfo.setServer(dataverse.get());
+		excerptInput.setServer(dataverse.get());
 		
 		// Now check that it is a valid URL and initialize our client wrapper
 		URL url;
@@ -247,9 +247,9 @@ public class InputVerificationBean implements Serializable {
 					key, info.getStatus()));
 			return false;
 		}
-		final Dataverse server = excerptInfo.getServer();
+		final Dataverse server = excerptInput.getServer();
 		final DataverseUser user = xsampleServices.findDataverseUser(server, info.getData().getPersistentUserId());
-		excerptInfo.setDataverseUser(user);
+		excerptInput.setDataverseUser(user);
 		
 		return true;
 	}
@@ -257,7 +257,7 @@ public class InputVerificationBean implements Serializable {
 	/** Load file metadata and check that it is a type we can handle */
 	boolean checkFileType(Context context) {
 		final long fileId = inputData.getFile().longValue();
-		final String key = excerptInfo.getServer().getMasterKey();
+		final String key = excerptInput.getServer().getMasterKey();
 		final DataverseClient client = requireNonNull(context.client);
 		
 		Response<FileMetadata> response;
@@ -282,7 +282,7 @@ public class InputVerificationBean implements Serializable {
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.incompatibleResource");
 			return false;
 		}
-		excerptInfo.setInputType(inputType);
+		excerptInput.setInputType(inputType);
 		
 		return true;
 	}
@@ -313,7 +313,7 @@ public class InputVerificationBean implements Serializable {
 	/** Load the entire source file */
 	boolean loadFile(Context context) {
 		final long fileId = inputData.getFile().longValue();
-		final String key = excerptInfo.getServer().getMasterKey();
+		final String key = excerptInput.getServer().getMasterKey();
 		final DataverseClient client = requireNonNull(context.client);
 		
 		final Call<ResponseBody> request = client.downloadFile(fileId, key);
@@ -347,10 +347,10 @@ public class InputVerificationBean implements Serializable {
 			InputType inputType = InputType.forMimeType(contentType);
 			if(inputType==null) {
 				message(FacesMessage.SEVERITY_WARN,"welcome.msg.noMimeType");
-			} else if(!Objects.equals(inputType, excerptInfo.getInputType())) {
+			} else if(!Objects.equals(inputType, excerptInput.getInputType())) {
 				message(FacesMessage.SEVERITY_WARN,"welcome.msg.mimeTypeMismatch");
 				// Dataverse always wins
-				excerptInfo.setInputType(inputType);
+				excerptInput.setInputType(inputType);
 			}
 			
 			final FileInfo fileInfo = new FileInfo();
@@ -359,7 +359,7 @@ public class InputVerificationBean implements Serializable {
 			fileInfo.setEncoding(mediaType.charset(StandardCharsets.UTF_8));
 			fileInfo.setTitle(extractName(mediaType.toString()));
 
-			final ExcerptHandler handler = ExcerptHandlers.forInputType(excerptInfo.getInputType());
+			final ExcerptHandler handler = ExcerptHandlers.forInputType(excerptInput.getInputType());
 			
 			// Ensure an encrypted copy of the resource
 			final Path tempFile = Files.createTempFile("xsample_", ".tmp");
@@ -378,7 +378,7 @@ public class InputVerificationBean implements Serializable {
 			fileInfo.setKey(secret);
 			
 			// Update info in current config
-			excerptInfo.setFileInfo(fileInfo);
+			excerptInput.setFileInfo(fileInfo);
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Failed to load file content", e);
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.loadFailed");
@@ -404,7 +404,7 @@ public class InputVerificationBean implements Serializable {
 	boolean checkQuota(Context context) {
 		final Long fileId = inputData.getFile();
 		final Resource resource = xsampleServices.findResourceByFile(fileId);
-		final DataverseUser user = excerptInfo.getDataverseUser();
+		final DataverseUser user = excerptInput.getDataverseUser();
 		final List<Excerpt> excerpts = xsampleServices.findExcerpts(user, resource);
 		
 		if(!excerpts.isEmpty()) {

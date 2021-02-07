@@ -36,12 +36,15 @@ import de.unistuttgart.xsample.util.Property;
 @RequestScoped
 public class WelcomePage {
 	
+	public static final String PAGE = "welcome";
+	
 	@Inject
 	XsampleWorkflow workflow;
 	
 	@Inject
-	XsampleExcerptInfo excerptInfo;
+	XsampleExcerptInput excerptInput;
 	
+	/** Returns text for current status or empty string */
 	public String getStatusInfo() {
 		if(isShowOutline()) {
 			return "";
@@ -50,10 +53,12 @@ public class WelcomePage {
 		return workflow.getStatus().getLabel();
 	}
 	
+	/** Indicate that the outline for valid files should be shown */
 	public boolean isShowOutline() {
 		return workflow.getStatus().isFlagSet(Flag.FILE_VALID);
 	}
 	
+	/** Produce table data for current main file */
 	public List<Property> getFileProperties() {
 		if(!isShowOutline()) {
 			return Collections.emptyList();
@@ -61,11 +66,11 @@ public class WelcomePage {
 		
 		List<Property> properties = new ArrayList<>();
 		
-		InputType inputType = excerptInfo.getInputType();
+		InputType inputType = excerptInput.getInputType();
 		
 		properties.add(new Property("type", inputType.name()));
 		
-		FileInfo info = excerptInfo.getFileInfo();
+		FileInfo info = excerptInput.getFileInfo();
 		
 		properties.add(new Property("name", info.getTitle()));
 		properties.add(new Property("content-type", info.getContentType()));
@@ -76,7 +81,10 @@ public class WelcomePage {
 		return properties;
 	}
 	
+	/** Callback for button to continue workflow */
 	public void onContinue() {
+		//TODO add proper handling
 		
+		workflow.setPage(DownloadPage.PAGE);
 	}
 }

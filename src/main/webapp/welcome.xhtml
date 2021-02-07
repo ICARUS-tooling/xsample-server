@@ -53,9 +53,8 @@
 				
 				<f:facet name="footer">
 					<p:commandButton value="#{bundle['welcome.continue']}"
-						action="#{xsampleController.welcomeProgress}"
-						oncomplete="PF('dlg').show()">
-					    <f:ajax execute="@form" render=":content"/>
+						action="#{welcomePage.onContinue}">
+					    <f:ajax render=":content"/>
 					</p:commandButton>
 				</f:facet>
 			</p:panel>
