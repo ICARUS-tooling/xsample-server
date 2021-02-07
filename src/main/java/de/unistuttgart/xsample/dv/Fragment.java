@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,20 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.dv;
 
 import java.util.stream.LongStream;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Markus Gärtner
  *
  */
+@Entity
 public class Fragment {
 	
 	public static Fragment of(long from, long to) {
@@ -37,16 +43,32 @@ public class Fragment {
 	public static Fragment of(long value) {
 		return of(value, value);
 	}
-	
+
+	@Id
+	@GeneratedValue
+	private Long id;
+
+	@Column
 	private long from;
+	@Column
 	private long to;
 	
 	public long getFrom() { return from; }
 	public void setFrom(long from) { this.from = from; }
+	
 	public long getTo() { return to; }
 	public void setTo(long to) { this.to = to; }
+
+	public Long getId() { return id; }
+	public void setId(Long id) { this.id = id; }
 	
 	public LongStream stream() { return LongStream.rangeClosed(from, to); }
+	
+	public long size() {
+		assert from>=0 : "invalid begin";
+		assert to>=from : "invalid end"; 
+		return to-from+1; 
+	}
 	
 	@Override
 	public String toString() { return "["+from+","+to+"]"; }

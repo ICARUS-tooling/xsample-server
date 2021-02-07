@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ package de.unistuttgart.xsample.ct.spi;
 
 import java.util.Optional;
 
+import de.unistuttgart.xsample.InputType;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 
 /**
@@ -29,5 +30,5 @@ import de.unistuttgart.xsample.ct.ExcerptHandler;
  */
 public interface ExcerptHandlerFactory {
 
-	Optional<ExcerptHandler> create(String contentType);
+	Optional<ExcerptHandler> create(InputType type);
 }

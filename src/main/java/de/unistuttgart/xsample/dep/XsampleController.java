@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.dep;
 
 import static de.unistuttgart.xsample.util.XSampleUtils.decrypt;
 
@@ -39,10 +39,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.omnifaces.util.Messages;
 
+import de.unistuttgart.xsample.XsampleServices;
+import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.FileInfo;
-import de.unistuttgart.xsample.dep.ExcerptConfig;
-import de.unistuttgart.xsample.dep.XsampleData;
 import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.util.BundleUtil;
 
@@ -52,15 +52,57 @@ import de.unistuttgart.xsample.util.BundleUtil;
  */
 @Named
 @RequestScoped
-public class ExcerptDownloadBean {
+@Deprecated
+public class XsampleController {
+	
+	private static final Logger logger = Logger.getLogger(XsampleController.class.getCanonicalName());
 
-	private static final Logger logger = Logger.getLogger(ExcerptDownloadBean.class.getCanonicalName());
+	@Inject
+	private XsampleData xsampleData;
 	
 	@Inject
-	XsampleData xsampleData;
+	private XsampleServices xsampleServices;
 
-	public void downloadExcerpt() {
-		ExcerptConfig excerpt = xsampleData.getExcerpt();
+	public void onLoad() {
+		XsampleConfig config = xsampleData.getConfig();
+		config.setServerRoute(xsampleServices.getSetting(Key.ServerName));
+	} 
+	
+	public void welcomeProgress() {
+		//TODO check file and continue depending on setup
+		
+		XsampleConfig config = xsampleData.getConfig();
+		
+		String page = null;
+		
+		switch (config.getType()) {
+		case STATIC: {
+			ExcerptConfig excerpt = xsampleData.getExcerpt();
+			//TODO configure excerpt
+			downloadExcerpt(excerpt);
+		} break;
+		case WINDOW: page = "window"; break;
+		case QUERY: page = "query"; break;
+
+		default:
+			Messages.addGlobalError("Unknown excerpt type: %s", config.getType());
+			break;
+		}
+		
+		if(page!=null) {
+			xsampleData.setPage(page);
+		}
+	}
+	
+	public void windowProgress() {
+		System.out.println("slice requested");
+	}
+	
+	public void queryProgress() {
+		System.out.println("query requested");
+	}
+	
+	static void downloadExcerpt(ExcerptConfig excerpt) {
 		FileInfo fileInfo = excerpt.getFileInfo();
 		ExcerptHandler handler = excerpt.getHandler();
 

@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,9 +31,9 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 
-import de.unistuttgart.xsample.Fragment;
+import de.unistuttgart.xsample.InputType;
+import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.util.BundleUtil;
-import de.unistuttgart.xsample.util.FileInfo;
 import de.unistuttgart.xsample.util.XSampleUtils;
 
 /**
@@ -41,6 +41,9 @@ import de.unistuttgart.xsample.util.XSampleUtils;
  *
  */
 public class PdfHandler implements ExcerptHandler {
+
+	@Override
+	public InputType getType() { return InputType.PDF; }
 
 	@Override
 	public void analyze(FileInfo file, InputStream in) throws IOException, UnsupportedContentTypeException, EmptyResourceException {

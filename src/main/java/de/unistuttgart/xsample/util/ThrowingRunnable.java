@@ -17,17 +17,13 @@
 /**
  * 
  */
-package de.unistuttgart.xsample.ct;
+package de.unistuttgart.xsample.util;
 
 /**
  * @author Markus Gärtner
  *
  */
-public class EmptyResourceException extends XsampleException {
+public interface ThrowingRunnable {
 
-	private static final long serialVersionUID = 4064235005852844079L;
-
-	public EmptyResourceException(String message) {
-		super(message);
-	}
+	void run() throws Exception;
 }

@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,13 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
-
-import java.util.List;
-
-import de.unistuttgart.xsample.dv.Resource;
+package de.unistuttgart.xsample.util;
 
 /**
  * @author Markus Gärtner
  *
  */
-public class Excerpt {
+public interface BooleanRunnable {
 
-	private Resource resource;
-
-	private List<Fragment> fragments;
+	boolean run();
 }

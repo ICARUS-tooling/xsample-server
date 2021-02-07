@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,15 +26,18 @@ import java.io.Reader;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
-import de.unistuttgart.xsample.Fragment;
+import de.unistuttgart.xsample.InputType;
+import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.util.BundleUtil;
-import de.unistuttgart.xsample.util.FileInfo;
 
 /**
  * @author Markus Gärtner
  *
  */
 public class PlaintextHandler implements ExcerptHandler {
+
+	@Override
+	public InputType getType() { return InputType.TXT; }
 	
 	//TODO currently we're not really unicode aware here
 
@@ -52,7 +55,7 @@ public class PlaintextHandler implements ExcerptHandler {
 	}
 
 	/**
-	 * @see de.unistuttgart.xsample.ct.ExcerptHandler#excerpt(de.unistuttgart.xsample.Fragment[])
+	 * @see de.unistuttgart.xsample.ct.ExcerptHandler#excerpt(de.unistuttgart.xsample.dv.Fragment[])
 	 */
 	@Override
 	public void excerpt(FileInfo file, InputStream in, Fragment[] fragments, OutputStream out) throws IOException {

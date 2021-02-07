@@ -19,44 +19,56 @@
  */
 package de.unistuttgart.xsample.dv;
 
-import javax.persistence.Column;
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 
 /**
  * @author Markus Gärtner
  *
  */
 @Entity
-@NamedQueries({
-	@NamedQuery(name = "Resource.findAll", query = "SELECT r FROM Resource r ORDER BY r.id"),
-	@NamedQuery(name = "Resource.findByFile", query = "SELECT r FROM Resource r WHERE r.file = :file"), 
+@NamedQueries({ 
+	@NamedQuery(name = "Excerpt.find", query = "SELECT e FROM Excerpt e WHERE e.dataverseUser = :user AND e.resource = :resource"), 
 })
-public class Resource {
-	
-	@Column
-	private Long file;
+public class Excerpt {
 
 	@Id
 	@GeneratedValue
 	private Long id;
+	
+	@ManyToOne(optional = false)
+	private DataverseUser dataverseUser;
 
 	@ManyToOne(optional = false)
-	private Dataverse dataverse;
+	private Resource resource;
 
-	public Dataverse getDataverse() { return dataverse; }
-	public void setDataverse(Dataverse dataverse) { this.dataverse = dataverse; }
-
-	public Long getFile() { return file; }
-	public void setFile(Long file) { this.file = file; }
+	@OneToMany
+	private List<Fragment> fragments;
 
 	public Long getId() { return id; }
 	public void setId(Long id) { this.id = id; }
+
+	public DataverseUser getDataverseUser() { return dataverseUser; }
+	public void setDataverseUser(DataverseUser dataverseUser) { this.dataverseUser = dataverseUser; }
+
+	public Resource getResource() { return resource; }
+	public void setResource(Resource resource) { this.resource = resource; }
+
+	public List<Fragment> getFragments() { return fragments; }
+	public void setFragments(List<Fragment> fragments) { this.fragments = fragments; }
 	
-	@Override
-	public String toString() { return String.format("Resource@[id=%d, file=%d]", id, file); }
+	public long size() {
+		if(fragments.isEmpty()) {
+			return 0;
+		}
+		//TODO not overflow conscious!!
+		return fragments.stream().mapToLong(Fragment::size).sum();
+	}
 }

@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,13 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.dep;
 
 import static de.unistuttgart.xsample.util.XSampleUtils.buffer;
 import static de.unistuttgart.xsample.util.XSampleUtils.encrypt;
 import static de.unistuttgart.xsample.util.XSampleUtils.makeKey;
-import static de.unistuttgart.xsample.util.XSampleUtils.strictToInt;
-import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -45,18 +42,21 @@ import javax.inject.Named;
 
 import org.omnifaces.util.Messages;
 
+import de.unistuttgart.xsample.XsampleInputData;
 import de.unistuttgart.xsample.ct.EmptyResourceException;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.ExcerptHandlers;
+import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
 import de.unistuttgart.xsample.dv.DataverseClient;
 import de.unistuttgart.xsample.util.BundleUtil;
-import de.unistuttgart.xsample.util.FileInfo;
+import de.unistuttgart.xsample.util.CountingSplitStream;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@Deprecated
 @Named
 @RequestScoped
 public class DataverseFetchBean {
@@ -64,7 +64,10 @@ public class DataverseFetchBean {
 	private static final Logger logger = Logger.getLogger(DataverseFetchBean.class.getCanonicalName());
 	
 	@Inject
-	XsamplePage xsamplePage;
+	XsampleData xsampleData;
+	
+	@Inject
+	XsampleInputData inputData;
 
 	private static final String TOKEN = "([a-zA-Z0-9-!#$%&'*+.^_`{|}~]+)";
 	private static final String QUOTED = "\"([^\"]*)\"";
@@ -92,10 +95,11 @@ public class DataverseFetchBean {
 	public void fetchResource() {
 		System.out.println("fetching");
 		
-		final ExcerptConfig config = new ExcerptConfig() /*xsamplePage.getConfig()*/;		
-		final DataverseClient client = DataverseClient.forConfig(config);
+		final ExcerptConfig excerpt = xsampleData.getExcerpt();
+		final DataverseClient client = DataverseClient.forServer(null); //FIXME fetch correct url
 		
-		final Call<ResponseBody> request = client.downloadFile(config.getFile().longValue(), config.getKey());
+		final Call<ResponseBody> request = client.downloadFile(
+				inputData.getFile().longValue(), inputData.getKey());
 	
 		Response<ResponseBody> response;		
 		try {
@@ -126,7 +130,7 @@ public class DataverseFetchBean {
 			fileInfo.setEncoding(mediaType.charset(StandardCharsets.UTF_8));
 			fileInfo.setTitle(extractName(mediaType.toString()));
 
-			final ExcerptHandler handler = ExcerptHandlers.forContentType(fileInfo.getContentType());
+			final ExcerptHandler handler = ExcerptHandlers.forInputType(null) /*ExcerptHandlers.forContentType(fileInfo.getContentType())*/;
 			
 			// Ensure an encrypted copy of the resource
 			final Path tempFile = Files.createTempFile("xsample_", ".tmp");
@@ -145,8 +149,8 @@ public class DataverseFetchBean {
 			fileInfo.setKey(key);
 			
 			// Update info in current config
-			config.setFileInfo(fileInfo);
-			config.setHandler(handler);
+			excerpt.setFileInfo(fileInfo);
+			excerpt.setHandler(handler);
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Failed to load file content", e);
 			Messages.addGlobalError(BundleUtil.get("homepage.tabs.data.error.load"));
@@ -168,88 +172,5 @@ public class DataverseFetchBean {
 		Messages.addGlobalInfo(BundleUtil.get("homepage.tabs.data.done"));
 		
 		System.out.println("fetched");
-	}
-	
-	static class CountingSplitStream extends InputStream {
-
-		/** Total bytes read  */
-		private long count = 0;
-  
-		/** Original source */
-		private final InputStream in;
-		/** Destinatio nfor cloned input data */
-		private final OutputStream out;
-		
-		public CountingSplitStream(InputStream in, OutputStream out) {
-			this.in = requireNonNull(in);
-			this.out = requireNonNull(out);
-		}
-
-		public long getCount() { return count; }
-
-		@Override
-		public int read() throws IOException {
-			int b = in.read();
-			if(b!=-1) {
-				count++;
-				out.write(b);
-			}
-			return b;
-		}
-
-		@Override
-		public int read(byte[] b, int off, int len) throws IOException {
-//			System.out.printf("read b=%d off=%d len=%d%n",b.length,off, len);
-			int read = in.read(b, off, len);
-			if(read>0) {
-				count += read;
-				out.write(b, off, read);
-			}
-			return read;
-		}
-
-		@Override
-		public long skip(long n) throws IOException {
-//			System.out.printf("skip n=%d%n",n);
-	        long remaining = n;
-	        int nr;
-
-	        if (n <= 0) {
-	            return 0;
-	        }
-
-	        int size = strictToInt(Math.min(2048, remaining));
-	        byte[] skipBuffer = new byte[size];
-	        while (remaining > 0) {
-	            nr = read(skipBuffer, 0, (int)Math.min(size, remaining));
-	            if (nr < 0) {
-	                break;
-	            }
-	            remaining -= nr;
-	            out.write(skipBuffer, 0, nr);
-	        }
-
-	        return n - remaining;
-		}
-
-		@Override
-		public int available() throws IOException {
-			return in.available();
-		}
-
-		@Override
-		public synchronized void mark(int readlimit) {
-	        /* no-op */
-		}
-
-		@Override
-		public synchronized void reset() throws IOException {
-	        throw new IOException("mark/reset not supported");
-		}
-
-		@Override
-		public boolean markSupported() { 
-			return false;
-		}
 	}
 }

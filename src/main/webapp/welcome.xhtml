@@ -4,43 +4,68 @@
 	xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
-
-	<h:head>	
-    	<h:outputStylesheet name="css/primeflex.css"/>
-	</h:head>
-
-	<div class="p-grid">
-		<div class="p-col">
-			<p:panelGrid columns="2">
-				<h:outputText value="#{bundle['welcome.dataverse']}: *" />
-				<p:inputText value="#{xsamplePage.config.site}" required="true"
-					label="#{bundle['welcome.dataverse']}" />
-
-				<h:outputText value="#{bundle['welcome.file']}: *" />
-				<p:inputText value="#{xsamplePage.config.file}" required="true"
-					label="#{bundle['welcome.file']}" />
-
-				<h:outputText value="#{bundle['welcome.key']}: *" />
-				<p:inputText value="#{xsamplePage.config.key}" required="true"
-					label="#{bundle['welcome.key']}" />
-			</p:panelGrid>
-		</div>
-		<div class="p-col">
-			<h:outputText value="#{bundle['welcome.excerptType']}:" />
-			<p:selectOneRadio layout="pageDirection"
-				value="#{xsamplePage.config.type}">
-				<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']}"
-					itemValue="STATIC" />
-				<f:selectItem itemLabel="#{bundle['welcome.excerptType.window']}"
-					itemValue="WINDOW" />
-				<f:selectItem itemLabel="#{bundle['welcome.excerptType.query']}"
-					itemValue="QUERY" />
-			</p:selectOneRadio>
-			<p:selectBooleanCheckbox value="#{xsamplePage.config.includeAnnotations}"
-				itemLabel="#{bundle['welcome.includeAnnotations']}" />
-		</div>
+	
+	<div>
+		<h:form id="input">
+	        <p:messages id="msg" closable="false" showSummary="true" showDetail="false" />
+			<h:outputText id="status" value="#{welcomePage.statusInfo}" />
+			<p:remoteCommand name="loadResource" action="#{inputVerificationBean.verifyInput}" 
+				update="status msg :excerpt" />
+		</h:form>
 	</div>
-	<h:commandButton value="#{bundle['welcome.continue']}" action="#{xsamplePage.checkAndContinue}">
-	    <f:ajax render=":content"/>
-	</h:commandButton>
+	
+	<div>
+		<h:form id="excerpt">
+			<p:panel id="outline" rendered="#{welcomePage.showOutline}">
+				<f:facet name="header">
+					<h:outputText value="#{bundle['welcome.infoHeader']}" />
+				</f:facet>
+				<div class="p-grid">
+					<div class="p-col">
+						<p:dataTable var="property" value="#{welcomePage.fileProperties}">
+							<f:facet name="header">
+								<h:outputText value="#{bundle['welcome.fileInfoHeader']}" />
+							</f:facet>
+							<p:column headerText="#{bundle['property']}">
+								<h:outputText value="#{property.key}" />
+							</p:column>
+							<p:column headerText="#{bundle['value']}">
+								<h:outputText value="#{property.value}" />
+							</p:column>
+						</p:dataTable>
+						<!-- TODO: display info from original file in case we have a manifest -->
+					</div>
+					<div class="p-col">
+						<h:outputText value="#{bundle['welcome.excerptType']}:" />
+						<p:selectOneRadio layout="pageDirection"
+							value="#{xsampleData.config.type}">
+							<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']}"
+								itemValue="STATIC" />
+							<f:selectItem itemLabel="#{bundle['welcome.excerptType.window']}"
+								itemValue="WINDOW" />
+							<f:selectItem itemLabel="#{bundle['welcome.excerptType.query']}"
+								itemValue="QUERY" />
+						</p:selectOneRadio>
+						<p:selectBooleanCheckbox value="#{xsampleData.config.includeAnnotations}"
+							itemLabel="#{bundle['welcome.includeAnnotations']}" />
+					</div>
+				</div>
+				
+				<f:facet name="footer">
+					<p:commandButton value="#{bundle['welcome.continue']}"
+						action="#{xsampleController.welcomeProgress}"
+						oncomplete="PF('dlg').show()">
+					    <f:ajax execute="@form" render=":content"/>
+					</p:commandButton>
+				</f:facet>
+			</p:panel>
+	    </h:form>
+	</div>
+
+	<script type="text/javascript">
+		$('document').ready(function(){
+			loadResource();
+		});
+     </script>
+
 </ui:composition>

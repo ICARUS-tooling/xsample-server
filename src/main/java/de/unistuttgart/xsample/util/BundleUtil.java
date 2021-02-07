@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,23 +44,51 @@ public class BundleUtil {
 		if(bundle==null) {
 			synchronized (BundleUtil.class) {
 				if(bundle==null) {
-					Locale locale = FacesContext.getCurrentInstance().getViewRoot().getLocale();
+					Locale locale = getCurrentLocale();
 					bundle = ResourceBundle.getBundle(baseName, locale);
 				}
 			}
 		}
 		return bundle;
 	}
+
+    private static Locale getCurrentLocale() {
+        if (FacesContext.getCurrentInstance() == null) {
+            String localeEnvVar = System.getenv().get("LANG");
+            if (localeEnvVar != null) {
+                if (localeEnvVar.indexOf('.') > 0) {
+                    localeEnvVar = localeEnvVar.substring(0, localeEnvVar.indexOf('.'));
+                }
+                if (!"en_US".equals(localeEnvVar)) {
+                    logger.fine("BundleUtil: LOCALE code from the environmental variable is "+localeEnvVar);
+                    return new Locale(localeEnvVar);
+                }
+            }
+
+            return new Locale("en");
+        } else if (FacesContext.getCurrentInstance().getViewRoot() == null) {
+            return FacesContext.getCurrentInstance().getExternalContext().getRequestLocale();
+        } else if (FacesContext.getCurrentInstance().getViewRoot().getLocale().getLanguage().equals("en_US")) {
+            return new Locale("en");
+        }
+
+        return FacesContext.getCurrentInstance().getViewRoot().getLocale();
+
+    }
 	
-	public static String get(String key, Object...params) {
-		String text;
-		
+	public static String get(String key) {
+		String text;		
 		try {
 			text = bundle().getString(key);
 		} catch(MissingResourceException e) {
 			logger.warning("Missing localization entry for key: "+key);
 			return key;
 		}
+		return text;
+	}
+	
+	public static String format(String key, Object...params) {
+		String text = get(key);
 		if(params.length>0) {
 			text = MessageFormat.format(text, params);
 		}

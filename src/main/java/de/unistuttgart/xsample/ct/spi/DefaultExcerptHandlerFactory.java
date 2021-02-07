@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,15 @@ package de.unistuttgart.xsample.ct.spi;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import de.unistuttgart.xsample.InputType;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.PdfHandler;
 import de.unistuttgart.xsample.ct.PlaintextHandler;
-import de.unistuttgart.xsample.util.XSampleUtils;
 
 /**
  * @author Markus Gärtner
@@ -37,16 +37,16 @@ import de.unistuttgart.xsample.util.XSampleUtils;
  */
 public class DefaultExcerptHandlerFactory implements ExcerptHandlerFactory {
 	
-	private static final Map<String, Supplier<ExcerptHandler>> handlers = new HashMap<>();
+	private static final Map<InputType, Supplier<ExcerptHandler>> handlers = new EnumMap<>(InputType.class);
 	static {
-		handlers.put(XSampleUtils.MIME_PDF, PdfHandler::new);
-		handlers.put(XSampleUtils.MIME_TXT, PlaintextHandler::new);
+		handlers.put(InputType.PDF, PdfHandler::new);
+		handlers.put(InputType.TXT, PlaintextHandler::new);
 	}
 
 	@Override
-	public Optional<ExcerptHandler> create(String contentType) {
-		requireNonNull(contentType);
-		return Optional.ofNullable(handlers.get(contentType)).map(Supplier::get);
+	public Optional<ExcerptHandler> create(InputType type) {
+		requireNonNull(type);
+		return Optional.ofNullable(handlers.get(type)).map(Supplier::get);
 	}
 
 }

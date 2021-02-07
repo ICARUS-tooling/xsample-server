@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ package de.unistuttgart.xsample.dv;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -32,33 +31,30 @@ import javax.persistence.NamedQuery;
  */
 @Entity
 @NamedQueries({ 
-	@NamedQuery(name = "Dataverse.findAll", query = "SELECT d FROM Dataverse d ORDER BY d.id"),
+	@NamedQuery(name = "Dataverse.findAll", query = "SELECT d FROM Dataverse d ORDER BY d.url"),
 	@NamedQuery(name = "Dataverse.findByUrl", query = "SELECT d FROM Dataverse d WHERE d.url = :url"), 
 })
 public class Dataverse {
 
-	@Id
-	@GeneratedValue
-	private Long id;
-	
 	@Column(length = 36, nullable = false, unique = true)
 	private String masterKey;
 
-	@Column(nullable = false, unique = true)
+	@Id
 	private String url;
-
-	public Long getId() { return id; }
-
-	public void setId(Long id) { this.id = id; }
+	
+	public Dataverse() { /* no-op */ }
+	
+	public Dataverse(String url, String masterKey) {
+		setUrl(url);
+		setMasterKey(masterKey);
+	}
 
 	public String getUrl() { return url; }
-
 	public void setUrl(String url) { this.url = url; }
 
 	public String getMasterKey() { return masterKey; }
-
 	public void setMasterKey(String masterKey) { this.masterKey = masterKey; }
 
 	@Override
-	public String toString() { return String.format("Dataverse@[id=%d, url=%s]", id, url); }
+	public String toString() { return "Dataverse@"+url; }
 }

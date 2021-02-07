@@ -1,9 +1,0 @@
-ext {
-	// Ensure a 'config' namespace for accessing the properties later
-	config = [:]
-
-	config.payaraHome = 'D:/Tools/payara5'
-	config.payaraHostname = 'localhost'
-	config.payaraUsername = 'admin'
-	config.payaraPassword = ''
-}

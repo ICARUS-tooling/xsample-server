@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,24 +17,20 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.dep;
 
 import java.io.Serializable;
+
+import de.unistuttgart.xsample.ExcerptType;
 
 /**
  * @author Markus Gärtner
  *
  */
+@Deprecated
 public class XsampleConfig implements Serializable {
 	
 	private static final long serialVersionUID = -7477220400939108522L;
-	
-	/** The file id as supplied by the external-tools URL */
-	private Long file;	
-	/** The user's API key as supplied by the external-tools URL */
-	private String key;
-	/** The source URL of the dataverse the request originated from */
-	private String site;
 	
 	/** Type of excerpt generation, legal values are 'static', 'window' and 'query'. */
 	private ExcerptType type = ExcerptType.STATIC; 
@@ -45,15 +41,6 @@ public class XsampleConfig implements Serializable {
 	
 	public String getServerRoute() { return serverRoute; }
 	public void setServerRoute(String serverRoute) { this.serverRoute = serverRoute; }
-	
-	public Long getFile() { return file; }
-	public void setFile(Long file) { this.file = file; }
-	
-	public String getKey() { return key; }
-	public void setKey(String key) { this.key = key; }
-	
-	public String getSite() { return site; }
-	public void setSite(String site) { this.site = site; }
 	
 	public ExcerptType getType() { return type; }
 	public void setType(ExcerptType type) { this.type = type; }

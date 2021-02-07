@@ -17,17 +17,24 @@
 /**
  * 
  */
-package de.unistuttgart.xsample.ct;
+package de.unistuttgart.xsample;
+
+import javax.ejb.Asynchronous;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 
 /**
  * @author Markus Gärtner
  *
  */
-public class EmptyResourceException extends XsampleException {
+@Stateless
+public class XsampleTasks {
+	
+	@EJB
+	XsampleServices xsampleServices;
 
-	private static final long serialVersionUID = 4064235005852844079L;
-
-	public EmptyResourceException(String message) {
-		super(message);
+	@Asynchronous
+	public static void verifyInput() {
+		
 	}
 }

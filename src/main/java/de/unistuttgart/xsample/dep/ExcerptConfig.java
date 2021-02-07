@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.dep;
 
 import static java.util.Objects.requireNonNull;
 
@@ -32,24 +32,19 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 
 import de.unistuttgart.xsample.ct.ExcerptHandler;
+import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.util.BundleUtil;
-import de.unistuttgart.xsample.util.FileInfo;
 import de.unistuttgart.xsample.util.Property;
 
 /**
  * @author Markus Gärtner
  *
  */
+@Deprecated
 public class ExcerptConfig implements Serializable {
 
 	private static final long serialVersionUID = -3897121271961387495L;
 	
-	/** The file id as supplied by the external-tools URL */
-	private Long file;	
-	/** The user's API key as supplied by the external-tools URL */
-	private String key;
-	/** The source URL of the dataverse the request originated from */
-	private String site;
 	
 	private FileInfo fileInfo;
 	/** The handler responsible for managing the source file and creating excerpts from it */
@@ -59,16 +54,6 @@ public class ExcerptConfig implements Serializable {
 	private long start = 1;
 	/** End of user defined excerpt. 1-based */
 	private long end = 1;
-	
-	
-	public Long getFile() { return file; }
-	public void setFile(Long file) { this.file = file; }
-	
-	public String getKey() { return key; }
-	public void setKey(String key) { this.key = key; }
-	
-	public String getSite() { return site; }
-	public void setSite(String site) { this.site = site; }
 	
 	public long getStart() { return start; }
 	public void setStart(long excerptStart) { this.start = excerptStart; }

@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,35 +29,25 @@ import javax.persistence.NamedQuery;
  * @author Markus Gärtner
  *
  */
-@Entity(name = "Users")
+@Entity
 @NamedQueries({ 
-	@NamedQuery(name = "User.findAll", query = "SELECT u FROM Users u ORDER BY u.id"),
-	@NamedQuery(name = "User.find", query = "SELECT u FROM Users u WHERE u.id.dataverseUrl = :url AND u.id.persistentUserId = :id"), 
+	@NamedQuery(name = "DataverseUser.findAll", query = "SELECT u FROM DataverseUser u ORDER BY u.id"),
+	@NamedQuery(name = "DataverseUser.find", query = "SELECT u FROM DataverseUser u WHERE u.id.dataverseUrl = :url AND u.id.persistentUserId = :id"), 
 })
-public class User {
+public class DataverseUser {
 	
-	@ManyToOne
+	@ManyToOne(optional = false)
 	private Dataverse dataverse;
 	
 	@EmbeddedId
 	private UserId id;
 	
 	@Override
-	public String toString() { return String.format("User@[id=%s]", id); }
+	public String toString() { return String.format("DataverseUser@[id=%s]", id); }
 
-	public Dataverse getDataverse() {
-		return dataverse;
-	}
+	public Dataverse getDataverse() { return dataverse; }
+	public void setDataverse(Dataverse dataverse) { this.dataverse = dataverse; }
 
-	public void setDataverse(Dataverse dataverse) {
-		this.dataverse = dataverse;
-	}
-
-	public UserId getId() {
-		return id;
-	}
-
-	public void setId(UserId id) {
-		this.id = id;
-	}
+	public UserId getId() { return id; }
+	public void setId(UserId id) { this.id = id; }
 }

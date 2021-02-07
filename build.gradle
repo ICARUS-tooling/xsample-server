@@ -74,9 +74,10 @@ dependencies {
 	// https://mvnrepository.com/artifact/com.sun.faces/jsf-impl
 	//compile group: 'com.sun.faces', name: 'jsf-impl', version: '2.2.20'
 	// https://mvnrepository.com/artifact/org.primefaces/primefaces
-	compile group: 'org.primefaces', name: 'primefaces', version: '8.0'	
+	compile group: 'org.primefaces', name: 'primefaces', version: '10.0.0-RC1'
+	implementation group: 'org.primefaces.extensions', name: 'resources-ckeditor', version: '10.0.0-RC1'
 	// https://mvnrepository.com/artifact/org.omnifaces/omnifaces
-	compile group: 'org.omnifaces', name: 'omnifaces', version: '3.8'
+	compile group: 'org.omnifaces', name: 'omnifaces', version: '3.10.1'
 	// https://mvnrepository.com/artifact/org.webjars/font-awesome
 	compile group: 'org.webjars', name: 'font-awesome', version: '5.14.0'
 	// https://mvnrepository.com/artifact/org.primefaces.themes/all-themes

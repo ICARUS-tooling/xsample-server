@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2020 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,17 +23,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import de.unistuttgart.xsample.Fragment;
-import de.unistuttgart.xsample.util.FileInfo;
+import de.unistuttgart.xsample.InputType;
+import de.unistuttgart.xsample.dv.Fragment;
  
 /**
+ * Stateless handler for various file types supported by the XSample workflow.
+ * 
  * @author Markus Gärtner
  *
  */
 public interface ExcerptHandler {
+	
+	/** The basic resource/mime type the handler is meant to deal with. */
+	InputType getType();
 
 	/**
-	 * Initialize the handler with the given {@link DataInput input}.
+	 * Initialize the handler with the given {@link InputStream input}.
+	 * Store any metadata gathered during analysis in the provided {@link FileInfo} object.
 	 * 
 	 * @param source
 	 * @return
@@ -46,7 +52,7 @@ public interface ExcerptHandler {
 	
 	/**
 	 * Splits the underlying resource based on the specified fragments and stores
-	 * the result in the given {@link DataOutput output}.
+	 * the result in the given {@link OutputStream output}.
 	 * 
 	 * @param fragments specification of the actual excerpt to generate
 	 * @param output the destination for the excerpt generation
