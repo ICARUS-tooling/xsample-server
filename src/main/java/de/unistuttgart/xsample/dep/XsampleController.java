@@ -31,10 +31,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.crypto.CipherInputStream;
-import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 
 import org.omnifaces.util.Messages;
@@ -50,8 +48,8 @@ import de.unistuttgart.xsample.util.BundleUtil;
  * @author Markus Gärtner
  *
  */
-@Named
-@RequestScoped
+//@Named
+//@RequestScoped
 @Deprecated
 public class XsampleController {
 	

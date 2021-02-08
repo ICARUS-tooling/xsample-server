@@ -83,10 +83,4 @@ public class XsampleWorkflow implements Serializable {
 		
 		public boolean isFlagSet(Flag flag) { return flags.contains(flag); }
 	}
-	
-	private static final Task DUMMY_TASK = new Task() {
-
-		@Override
-		protected boolean doBackground() { throw new UnsupportedOperationException("DUMMY TASK"); }
-	};
 }

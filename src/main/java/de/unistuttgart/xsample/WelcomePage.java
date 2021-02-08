@@ -19,13 +19,17 @@ package de.unistuttgart.xsample;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import de.unistuttgart.xsample.XsampleWorkflow.Flag;
 import de.unistuttgart.xsample.ct.FileInfo;
+import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.Property;
 
 /**
@@ -35,6 +39,8 @@ import de.unistuttgart.xsample.util.Property;
 @Named
 @RequestScoped
 public class WelcomePage {
+	
+	private static final Logger logger = Logger.getLogger(WelcomePage.class.getCanonicalName());
 	
 	public static final String PAGE = "welcome";
 	
@@ -56,6 +62,10 @@ public class WelcomePage {
 	/** Indicate that the outline for valid files should be shown */
 	public boolean isShowOutline() {
 		return workflow.getStatus().isFlagSet(Flag.FILE_VALID);
+	}
+	
+	public boolean isHasAnnotations() {
+		return isShowOutline() && !excerptInput.getInputType().isRaw();
 	}
 	
 	/** Produce table data for current main file */
@@ -84,7 +94,26 @@ public class WelcomePage {
 	/** Callback for button to continue workflow */
 	public void onContinue() {
 		//TODO add proper handling
+
+		String page = null;
+		ExcerptType excerptType = excerptInput.getExcerptType();
+		switch (excerptType) {
+		case STATIC: page = DownloadPage.PAGE; break;
+		case WINDOW: page = WindowPage.PAGE; break;
+		case QUERY: page = QueryPage.PAGE; break;
+		default:
+			break;
+		}
 		
-		workflow.setPage(DownloadPage.PAGE);
+		if(page==null) {
+			String text = BundleUtil.format("welcome.msg.unknownPage", excerptType);
+			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
+			FacesContext.getCurrentInstance().addMessage("navMsg", msg);
+			return;
+		}
+		
+		logger.fine("Navigating to subpage "+page);
+		
+		workflow.setPage(page);
 	}
 }

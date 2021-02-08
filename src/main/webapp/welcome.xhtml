@@ -5,18 +5,18 @@
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
 	
+	<h:form>
+	
 	<div>
-		<h:form id="input">
-	        <p:messages id="msg" closable="false" showSummary="true" showDetail="false" />
+	        <p:messages id="msg" closable="false" showSummary="true" showDetail="false" redisplay="false" />
 			<h:outputText id="status" value="#{welcomePage.statusInfo}" />
 			<p:remoteCommand name="loadResource" action="#{inputVerificationBean.verifyInput}" 
-				update="status msg :excerpt" />
-		</h:form>
+				update="status msg outline" />
 	</div>
 	
 	<div>
-		<h:form id="excerpt">
-			<p:panel id="outline" rendered="#{welcomePage.showOutline}">
+		<p:outputPanel id="outline">
+			<p:panel rendered="#{welcomePage.showOutline}">
 				<f:facet name="header">
 					<h:outputText value="#{bundle['welcome.infoHeader']}" />
 				</f:facet>
@@ -33,33 +33,38 @@
 								<h:outputText value="#{property.value}" />
 							</p:column>
 						</p:dataTable>
-						<!-- TODO: display info from original file in case we have a manifest -->
 					</div>
 					<div class="p-col">
-						<h:outputText value="#{bundle['welcome.excerptType']}:" />
-						<p:selectOneRadio layout="pageDirection"
-							value="#{xsampleData.config.type}">
-							<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']}"
-								itemValue="STATIC" />
-							<f:selectItem itemLabel="#{bundle['welcome.excerptType.window']}"
-								itemValue="WINDOW" />
-							<f:selectItem itemLabel="#{bundle['welcome.excerptType.query']}"
-								itemValue="QUERY" />
-						</p:selectOneRadio>
-						<p:selectBooleanCheckbox value="#{xsampleData.config.includeAnnotations}"
-							itemLabel="#{bundle['welcome.includeAnnotations']}" />
+						<!-- TODO: display info from original file in case we have a manifest -->
 					</div>
 				</div>
 				
+				<div>
+					<h:outputText value="#{bundle['welcome.excerptType']}:" />
+					<p:selectOneRadio layout="pageDirection"
+						value="#{xsampleExcerptInput.excerptType}">
+						<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']}"
+							itemValue="STATIC" />
+						<f:selectItem itemLabel="#{bundle['welcome.excerptType.window']}"
+							itemValue="WINDOW" />
+						<f:selectItem itemLabel="#{bundle['welcome.excerptType.query']}"
+							itemValue="QUERY" />
+					</p:selectOneRadio>
+					<p:selectBooleanCheckbox rendered="#{welcomePage.hasAnnotations}" 
+						value="#{xsampleExcerptInput.includeAnnotations}"
+						itemLabel="#{bundle['welcome.includeAnnotations']}" />
+				</div>
+				
 				<f:facet name="footer">
-					<p:commandButton value="#{bundle['welcome.continue']}"
-						action="#{welcomePage.onContinue}">
-					    <f:ajax render=":content"/>
-					</p:commandButton>
+	        		<p:messages id="navMsg" showSummary="true" showDetail="false" redisplay="false" />
+					<p:commandButton value="#{bundle['welcome.continue']}" 
+						action="#{welcomePage.onContinue}" update=":content" />
 				</f:facet>
 			</p:panel>
-	    </h:form>
+		</p:outputPanel>
 	</div>
+	
+	</h:form>
 
 	<script type="text/javascript">
 		$('document').ready(function(){

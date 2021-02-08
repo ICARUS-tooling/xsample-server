@@ -19,6 +19,8 @@
  */
 package de.unistuttgart.xsample;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.Serializable;
 
 import javax.faces.view.ViewScoped;
@@ -40,11 +42,18 @@ public class XsampleExcerptInput implements Serializable {
 
 	private static final long serialVersionUID = 142653554299182977L;
 
+	/** Wrapper for remote server to download data from */
 	private Dataverse server;
+	/** User to be used for tracking excerpt quota */
 	private DataverseUser dataverseUser;
-	private ExcerptType excerptType;
+	/** Type of excerpt generation, legal values are 'static', 'window' and 'query'. */
+	private ExcerptType excerptType = ExcerptType.STATIC;
+	/** Type info for raw input file, e.g. 'MANIFEST', 'PDF' */
 	private InputType inputType;
-	private FileInfo fileInfo;
+	/** Physical info about primary source file */
+	private FileInfo fileInfo;	
+	/** Flag to indicate that annotations should be made part of the final excerpt */
+	private boolean includeAnnotations = false;
 	
 	public Dataverse getServer() { return server; }
 	public void setServer(Dataverse server) { this.server = server; }
@@ -53,11 +62,15 @@ public class XsampleExcerptInput implements Serializable {
 	public void setDataverseUser(DataverseUser dataverseUser) { this.dataverseUser = dataverseUser; }
 	
 	public ExcerptType getExcerptType() { return excerptType; }
-	public void setExcerptType(ExcerptType type) { this.excerptType = type; }
+	public void setExcerptType(ExcerptType type) { this.excerptType = requireNonNull(type); }
 	
 	public InputType getInputType() { return inputType; }
 	public void setInputType(InputType inputType) { this.inputType = inputType; }
 	
 	public FileInfo getFileInfo() { return fileInfo; }
 	public void setFileInfo(FileInfo fileInfo) { this.fileInfo = fileInfo; }
+
+	public boolean isIncludeAnnotations() { return includeAnnotations; }
+	public void setIncludeAnnotations(boolean includeAnnotations) { this.includeAnnotations = includeAnnotations; }
+
 }

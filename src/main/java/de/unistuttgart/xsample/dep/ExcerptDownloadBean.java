@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.dep;
 
 import static de.unistuttgart.xsample.util.XSampleUtils.decrypt;
 
@@ -31,18 +31,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.crypto.CipherInputStream;
-import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 
 import org.omnifaces.util.Messages;
 
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.FileInfo;
-import de.unistuttgart.xsample.dep.ExcerptConfig;
-import de.unistuttgart.xsample.dep.XsampleData;
 import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.util.BundleUtil;
 
@@ -50,8 +46,9 @@ import de.unistuttgart.xsample.util.BundleUtil;
  * @author Markus Gärtner
  *
  */
-@Named
-@RequestScoped
+//@Named
+//@RequestScoped
+@Deprecated
 public class ExcerptDownloadBean {
 
 	private static final Logger logger = Logger.getLogger(ExcerptDownloadBean.class.getCanonicalName());

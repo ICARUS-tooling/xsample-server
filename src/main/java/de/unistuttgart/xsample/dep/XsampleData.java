@@ -25,8 +25,6 @@ import java.io.Serializable;
 import java.util.Locale;
 
 import javax.faces.context.FacesContext;
-import javax.faces.view.ViewScoped;
-import javax.inject.Named;
 
 import de.unistuttgart.xsample.dv.DataverseUser;
 import de.unistuttgart.xsample.dv.Resource;
@@ -35,8 +33,8 @@ import de.unistuttgart.xsample.dv.Resource;
  * @author Markus Gärtner
  *
  */
-@Named
-@ViewScoped
+//@Named
+//@ViewScoped
 @Deprecated
 public class XsampleData implements Serializable {
 

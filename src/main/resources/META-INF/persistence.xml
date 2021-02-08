@@ -18,8 +18,8 @@
 			
             <!-- configure logging -->
             <property name="eclipselink.logging.level" value="INFO"/>
-            <property name="eclipselink.logging.level.sql" value="FINE"/>
-            <property name="eclipselink.logging.parameters" value="true"/>
+            <property name="eclipselink.logging.level.sql" value="INFO"/>
+            <property name="eclipselink.logging.parameters" value="false"/>
         </properties>   
 	</persistence-unit>
 	

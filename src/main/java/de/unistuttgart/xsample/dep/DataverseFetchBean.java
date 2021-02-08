@@ -36,9 +36,7 @@ import java.util.regex.Pattern;
 
 import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
-import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.omnifaces.util.Messages;
 
@@ -57,8 +55,8 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @Deprecated
-@Named
-@RequestScoped
+//@Named
+//@RequestScoped
 public class DataverseFetchBean {
 
 	private static final Logger logger = Logger.getLogger(DataverseFetchBean.class.getCanonicalName());

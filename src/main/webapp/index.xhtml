@@ -17,9 +17,9 @@
             <ui:param name="showMessagePanel" value="#{true}"/>
             <ui:param name="showXsampleHeader" value="#{true}"/>
 			<ui:define name="body"> 
-				<div jsf:id="content">
+				<p:outputPanel id="content">
 			        <ui:include src="#{xsampleWorkflow.page}.xhtml"/>
-			    </div>
+			    </p:outputPanel>
 			</ui:define>
 		</ui:composition>
 	</h:body>
