@@ -26,6 +26,8 @@ public class XsampleSliceData implements Serializable {
 	private long range = 1;
 	/** Upper limit of allowed segments to be published */
 	private long limit = 1;
+	/** Encoded used up quota */
+	private String quota = "";
 	
 	public long getBegin() { return begin; }
 	public void setBegin(long begin) { this.begin = begin; }
@@ -40,6 +42,9 @@ public class XsampleSliceData implements Serializable {
 	
 	public long getLimit() { return limit; }
 	public void setLimit(long limit) { this.limit = limit; }
+	
+	public String getQuota() { return quota; }
+	public void setQuota(String quota) { this.quota = quota; }
 	
 	/** Size of current slice in percent. Including quota */
 	public double getPercent() {

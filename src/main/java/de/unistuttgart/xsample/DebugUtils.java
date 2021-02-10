@@ -75,6 +75,6 @@ public class DebugUtils {
 		quota.clear();
 		
 		String data = getProperty("user.quota");
-		Fragment.parseAll(data).forEach(quota::addFragment);
+		Fragment.decodeAll(data).forEach(quota::addFragment);
 	}
 }

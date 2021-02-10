@@ -38,9 +38,28 @@ import javax.persistence.ManyToOne;
  *
  */
 @Entity
-public class Fragment {
+public class Fragment implements Comparable<Fragment> {
 	
-	public static Fragment parse(String s) {
+	public static String encode(Fragment f) {
+		if(f.size()==1) {
+			return String.valueOf(f.getBeginIndex());
+		} 
+		
+		return String.valueOf(f.getBeginIndex())+"-"+String.valueOf(f.getEndIndex());
+	}
+	
+	public static String encodeAll(List<Fragment> fragments) {
+		StringBuilder sb = new StringBuilder(fragments.size()*4);
+		for (int i = 0; i < fragments.size(); i++) {
+			if(i>0) {
+				sb.append(',');
+			}
+			sb.append(encode(fragments.get(i)));
+		}
+		return sb.toString();
+	}
+	
+	public static Fragment decode(String s) {
 		requireNonNull(s);
 		Fragment f;
 		int sep = s.indexOf('-');
@@ -53,9 +72,9 @@ public class Fragment {
 		return f;
 	}
 	
-	public static List<Fragment> parseAll(String s) {
+	public static List<Fragment> decodeAll(String s) {
 		return Stream.of(s.split(";"))
-				.map(Fragment::parse)
+				.map(Fragment::decode)
 				.collect(Collectors.toList());
 	}
 	
@@ -101,6 +120,15 @@ public class Fragment {
 		assert beginIndex>=0 : "invalid beginIndex";
 		assert endIndex>=beginIndex : "invalid endIndex"; 
 		return endIndex-beginIndex+1; 
+	}
+	
+	@Override
+	public int compareTo(Fragment other) {
+		long res = beginIndex-other.beginIndex;
+		if(res==0L) {
+			res = endIndex-other.endIndex;
+		}
+		return (int)res;
 	}
 	
 	@Override

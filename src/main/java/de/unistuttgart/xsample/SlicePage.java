@@ -8,6 +8,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import de.unistuttgart.xsample.XsampleServices.Key;
+import de.unistuttgart.xsample.dv.Excerpt;
+import de.unistuttgart.xsample.dv.Fragment;
 
 /**
  * @author Markus Gärtner
@@ -37,6 +39,11 @@ public class SlicePage {
 		sliceData.setEnd(Math.min(15, range));
 		sliceData.setRange(range);
 		sliceData.setLimit((long) (range * services.getDoubleSetting(Key.ExcerptLimit)));
+		
+		Excerpt quota = excerptInput.getQuota();
+		if(!quota.isEmpty()) {
+			sliceData.setQuota(Fragment.encodeAll(quota.getFragments()));
+		}
 	}
 
 	/** Callback for button to continue workflow */
