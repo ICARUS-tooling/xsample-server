@@ -59,23 +59,11 @@
 			var percent = Math.ceil(count / range * 100);
 			document.getElementById('excerptSize').textContent = count;
 			document.getElementById('excerptPercent').textContent = percent + "%";
-			var c = document.getElementById('excerptOutline');
-			updateOutline(c, begin, end, range);
-		}
-		
-		const updateOutline = (begin, end, range) => {
-			var c = document.getElementById('excerptOutline');
-			var ctx = c.getContext("2d");
-			ctx.fillStyle = "#3399ff";
-			ctx.fillRect(0, 0, c.width, c.height);
-			var count = end - begin + 1;
-			var percent = Math.ceil(count / range * 100);
-			var step = c.width / range;
-			var x = (begin-1) * step;
-			var width = count * step;
-			ctx.fillStyle = (percent>15) ? "#FF0000":"#00FF00";
-			ctx.fillRect(x, 0, width, c.height);
-			//console.log(ctx);
+			var limit = Number(document.getElementById('excerptThreshold').value);
+			var canvas = document.getElementById('excerptOutline');
+			var excerpt = [toFragment(begin, end)];
+
+			paintExcerpt(canvas, quota, excerpt, range, limit);		
 		}
 		
 		const initOutline = () => {			
@@ -86,8 +74,11 @@
 			var begin = Number(document.getElementById('excerptStart').value);
 			var end = Number(document.getElementById('excerptEnd').value);
 			var range = Number(document.getElementById('excerptRange').value);
+			var limit = Number(document.getElementById('excerptThreshold').value);
+			var canvas = document.getElementById('excerptOutline');
+			var excerpt = [toFragment(begin, end)];
 
-			updateOutline(begin, end, range);			
+			paintExcerpt(canvas, quota, excerpt, range, limit);		
 		}
 
 		$('document').ready(function(){

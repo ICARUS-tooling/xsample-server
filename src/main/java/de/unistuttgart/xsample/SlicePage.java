@@ -3,6 +3,9 @@
  */
 package de.unistuttgart.xsample;
 
+import java.util.Arrays;
+import java.util.logging.Logger;
+
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -20,6 +23,8 @@ import de.unistuttgart.xsample.dv.Fragment;
 public class SlicePage {
 	
 	public static final String PAGE = "slice";
+	
+	private static final Logger logger = Logger.getLogger(SlicePage.class.getCanonicalName());
 
 	@Inject
 	XsampleSliceData sliceData;
@@ -28,19 +33,19 @@ public class SlicePage {
 	XsampleWorkflow workflow;
 	
 	@Inject
-	XsampleExcerptInput excerptInput;
+	XsampleExcerptData excerptData;
 	
 	@Inject
 	XsampleServices services;
 	
 	public void init() {
-		final long range = excerptInput.getFileInfo().getSegments();
+		final long range = excerptData.getFileInfo().getSegments();
 		sliceData.setBegin(1);
 		sliceData.setEnd(Math.min(15, range));
 		sliceData.setRange(range);
 		sliceData.setLimit((long) (range * services.getDoubleSetting(Key.ExcerptLimit)));
 		
-		Excerpt quota = excerptInput.getQuota();
+		Excerpt quota = excerptData.getQuota();
 		if(!quota.isEmpty()) {
 			sliceData.setQuota(Fragment.encodeAll(quota.getFragments()));
 		}
@@ -48,6 +53,8 @@ public class SlicePage {
 
 	/** Callback for button to continue workflow */
 	public void onContinue() {
+		excerptData.setExcerpt(Arrays.asList(Fragment.of(sliceData.getBegin(), sliceData.getEnd())));
+		
 		//TODO
 		
 		workflow.setPage(DownloadPage.PAGE);

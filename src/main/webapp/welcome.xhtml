@@ -42,7 +42,7 @@
 				<div>
 					<h:outputText value="#{bundle['welcome.excerptType']}:" />
 					<p:selectOneRadio layout="pageDirection"
-						value="#{xsampleExcerptInput.excerptType}">
+						value="#{xsampleExcerptData.excerptType}">
 						<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']}"
 							itemValue="STATIC" />
 						<f:selectItem itemLabel="#{bundle['welcome.excerptType.slice']}"
@@ -51,7 +51,7 @@
 							itemValue="QUERY" />
 					</p:selectOneRadio>
 					<p:selectBooleanCheckbox rendered="#{welcomePage.hasAnnotations}" 
-						value="#{xsampleExcerptInput.includeAnnotations}"
+						value="#{xsampleExcerptData.includeAnnotations}"
 						itemLabel="#{bundle['welcome.includeAnnotations']}" />
 				</div>
 				

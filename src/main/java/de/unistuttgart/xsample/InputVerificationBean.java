@@ -92,7 +92,7 @@ public class InputVerificationBean {
 	XsampleInputData inputData;
 	
 	@Inject
-	XsampleExcerptInput excerptInput;
+	XsampleExcerptData excerptData;
 	
 	@Inject
 	XsampleWorkflow workflow;
@@ -199,7 +199,7 @@ public class InputVerificationBean {
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.unknownDataverse", address);
 			return false;
 		}				
-		excerptInput.setServer(dataverse.get());
+		excerptData.setServer(dataverse.get());
 		
 		// Now check that it is a valid URL and initialize our client wrapper
 		URL url;
@@ -241,9 +241,9 @@ public class InputVerificationBean {
 					key, info.getStatus()));
 			return false;
 		}
-		final Dataverse server = excerptInput.getServer();
+		final Dataverse server = excerptData.getServer();
 		final DataverseUser user = services.findDataverseUser(server, info.getData().getPersistentUserId());
-		excerptInput.setDataverseUser(user);
+		excerptData.setDataverseUser(user);
 		
 		return true;
 	}
@@ -251,7 +251,7 @@ public class InputVerificationBean {
 	/** Load file metadata and check that it is a type we can handle */
 	boolean checkFileType(Context context) {
 		final long fileId = inputData.getFile().longValue();
-		final String key = excerptInput.getServer().getMasterKey();
+		final String key = excerptData.getServer().getMasterKey();
 		final DataverseClient client = requireNonNull(context.client);
 		
 		Response<FileMetadata> response;
@@ -276,7 +276,7 @@ public class InputVerificationBean {
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.incompatibleResource");
 			return false;
 		}
-		excerptInput.setInputType(inputType);
+		excerptData.setInputType(inputType);
 		
 		return true;
 	}
@@ -307,7 +307,7 @@ public class InputVerificationBean {
 	/** Load the entire source file */
 	boolean loadFile(Context context) {
 		final long fileId = inputData.getFile().longValue();
-		final String key = excerptInput.getServer().getMasterKey();
+		final String key = excerptData.getServer().getMasterKey();
 		final DataverseClient client = requireNonNull(context.client);
 		
 		final Call<ResponseBody> request = client.downloadFile(fileId, key);
@@ -341,10 +341,10 @@ public class InputVerificationBean {
 			InputType inputType = InputType.forMimeType(contentType);
 			if(inputType==null) {
 				message(FacesMessage.SEVERITY_WARN,"welcome.msg.noMimeType");
-			} else if(!Objects.equals(inputType, excerptInput.getInputType())) {
+			} else if(!Objects.equals(inputType, excerptData.getInputType())) {
 				message(FacesMessage.SEVERITY_WARN,"welcome.msg.mimeTypeMismatch");
 				// Dataverse always wins
-				excerptInput.setInputType(inputType);
+				excerptData.setInputType(inputType);
 			}
 			
 			final FileInfo fileInfo = new FileInfo();
@@ -353,7 +353,7 @@ public class InputVerificationBean {
 			fileInfo.setEncoding(mediaType.charset(StandardCharsets.UTF_8));
 			fileInfo.setTitle(extractName(mediaType.toString()));
 
-			final ExcerptHandler handler = ExcerptHandlers.forInputType(excerptInput.getInputType());
+			final ExcerptHandler handler = ExcerptHandlers.forInputType(excerptData.getInputType());
 			
 			// Ensure an encrypted copy of the resource
 			final Path tempFile = Files.createTempFile("xsample_", ".tmp");
@@ -372,7 +372,7 @@ public class InputVerificationBean {
 			fileInfo.setKey(secret);
 			
 			// Update info in current config
-			excerptInput.setFileInfo(fileInfo);
+			excerptData.setFileInfo(fileInfo);
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Failed to load file content", e);
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.loadFailed");
@@ -397,28 +397,28 @@ public class InputVerificationBean {
 	/** Verify that user still has quota left on the designated resource */
 	boolean checkQuota(Context context) {
 		final Long fileId = inputData.getFile();
-		final DataverseUser user = excerptInput.getDataverseUser();
-		final Dataverse server = excerptInput.getServer();
+		final DataverseUser user = excerptData.getDataverseUser();
+		final Dataverse server = excerptData.getServer();
 		final Resource resource = services.findResource(server, fileId);
 		final Excerpt excerpt = services.findQuota(user, resource);
 		
 		if(!excerpt.isEmpty()) {
 			long quota = excerpt.size();
-			long segments = excerptInput.getFileInfo().getSegments();
-			long limit = (long) (segments / 100 * services.getDoubleSetting(Key.ExcerptLimit));
+			long segments = excerptData.getFileInfo().getSegments();
+			long limit = (long) (segments * services.getDoubleSetting(Key.ExcerptLimit));
 			
 			if(quota>=limit) {
 				logger.log(Level.SEVERE, String.format("Quota of %d used up on resource %s by user %s", 
 						_long(limit), resource, user));
 				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.quotaExceeded", 
-						_long(quota), excerptInput.getFileInfo().getTitle());
+						_long(quota), excerptData.getFileInfo().getTitle());
 				
 				return false;
 			}
 		}
 		
-		excerptInput.setResource(resource);
-		excerptInput.setQuota(excerpt);
+		excerptData.setResource(resource);
+		excerptData.setQuota(excerpt);
 		
 		return true;
 	}

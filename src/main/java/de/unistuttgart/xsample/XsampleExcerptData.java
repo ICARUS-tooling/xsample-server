@@ -22,6 +22,7 @@ package de.unistuttgart.xsample;
 import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
+import java.util.List;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
@@ -30,6 +31,7 @@ import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.dv.Dataverse;
 import de.unistuttgart.xsample.dv.DataverseUser;
 import de.unistuttgart.xsample.dv.Excerpt;
+import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.dv.Resource;
 
 /**
@@ -40,7 +42,7 @@ import de.unistuttgart.xsample.dv.Resource;
  */
 @Named
 @ViewScoped
-public class XsampleExcerptInput implements Serializable {
+public class XsampleExcerptData implements Serializable {
 
 	private static final long serialVersionUID = 142653554299182977L;
 
@@ -52,6 +54,8 @@ public class XsampleExcerptInput implements Serializable {
 	private Resource resource;
 	/** Used up quota */
 	private Excerpt quota;
+	/** Designated output */
+	private List<Fragment> excerpt;
 	
 	/** Type info for raw input file, e.g. 'MANIFEST', 'PDF' */
 	private InputType inputType;
@@ -86,5 +90,8 @@ public class XsampleExcerptInput implements Serializable {
 	
 	public Excerpt getQuota() { return quota; }
 	public void setQuota(Excerpt quota) { this.quota = quota; }
+	
+	public List<Fragment> getExcerpt() { return excerpt; }
+	public void setExcerpt(List<Fragment> excerpt) { this.excerpt = excerpt; }
 
 }

@@ -89,11 +89,13 @@ const paintExcerpt = (canvas, quota, excerpt, range, limit) => {;
 		var x = (begin-1) * step;
 		var width = (end - begin + 1) * step;
 		ctx.fillStyle = style;
-		ctx.fillRect(x, 0, width, c.height);
+		ctx.fillRect(x, 0, width, canvas.height);
 	}
+	
+	//TODO paint used quota and check quota segments included in excerpt
 	
 	var count = excerpt.reduce((total, f) => total + (f.end - f.begin + 1), 0);
 	var style = (count>limit) ? OUTLINE_EXCEEDED : OUTLINE_EXCERPT;
 	excerpt.forEach(f => paintSpan(f.begin, f.end, style));
-	//console.log(ctx);
+	//console.log({count:count, limit:limit, excerpt:excerpt});
 }

@@ -76,7 +76,7 @@ public class XsampleServices {
 		SourceDataverseParam,
 		/** Fully qualified domain name of this XSample server instance */
 		ServerName,
-		/** Limit in percent of the portion a user is allowed to receive per resource. */
+		/** Limit in factor percent of the portion a user is allowed to receive per resource. */
 		ExcerptLimit,
 		;
 		

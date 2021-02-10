@@ -40,15 +40,15 @@ import de.unistuttgart.xsample.util.Property;
 @RequestScoped
 public class WelcomePage {
 	
-	private static final Logger logger = Logger.getLogger(WelcomePage.class.getCanonicalName());
-	
 	public static final String PAGE = "welcome";
+	
+	private static final Logger logger = Logger.getLogger(WelcomePage.class.getCanonicalName());
 	
 	@Inject
 	XsampleWorkflow workflow;
 	
 	@Inject
-	XsampleExcerptInput excerptInput;
+	XsampleExcerptData excerptData;
 	
 	/** Returns text for current status or empty string */
 	public String getStatusInfo() {
@@ -65,7 +65,7 @@ public class WelcomePage {
 	}
 	
 	public boolean isHasAnnotations() {
-		return isShowOutline() && !excerptInput.getInputType().isRaw();
+		return isShowOutline() && !excerptData.getInputType().isRaw();
 	}
 	
 	/** Produce table data for current main file */
@@ -76,11 +76,11 @@ public class WelcomePage {
 		
 		List<Property> properties = new ArrayList<>();
 		
-		InputType inputType = excerptInput.getInputType();
+		InputType inputType = excerptData.getInputType();
 		
 		properties.add(new Property("type", inputType.name()));
 		
-		FileInfo info = excerptInput.getFileInfo();
+		FileInfo info = excerptData.getFileInfo();
 		
 		properties.add(new Property("name", info.getTitle()));
 		properties.add(new Property("content-type", info.getContentType()));
@@ -95,7 +95,7 @@ public class WelcomePage {
 	public void onContinue() {
 
 		String page = null;
-		ExcerptType excerptType = excerptInput.getExcerptType();
+		ExcerptType excerptType = excerptData.getExcerptType();
 		switch (excerptType) {
 		case STATIC: page = DownloadPage.PAGE; break;
 		case SLICE: page = SlicePage.PAGE; break;
