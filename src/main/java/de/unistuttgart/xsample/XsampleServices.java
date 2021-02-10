@@ -68,10 +68,15 @@ public class XsampleServices {
 	}
 	
 	public static enum Key {
+		/** URL param key used for the file */
 		SourceFileParam,
+		/** URL param key used for the API token */
 		ApiKeyParam,
+		/** URL param key used for the source dataverse */
 		SourceDataverseParam,
+		/** Fully qualified domain name of this XSample server instance */
 		ServerName,
+		/** Limit in percent of the portion a user is allowed to receive per resource. */
 		ExcerptLimit,
 		;
 		
@@ -84,10 +89,11 @@ public class XsampleServices {
 		return em.merge(obj);
 	}
 	
-	public Resource findResourceByFile(Long file) {
+	public Resource findResource(Dataverse dataverse, Long file) {
 		requireNonNull(file);
 		
-		List<Resource> resources = em.createNamedQuery("Resource.findByFile")
+		List<Resource> resources = em.createNamedQuery("Resource.find")
+					.setParameter("dataverse", dataverse)
 					.setParameter("file", file)
 					.getResultList();
 		
@@ -96,16 +102,13 @@ public class XsampleServices {
 			log.finer("creating Resource for file: "+file);
 			resource = new Resource();
 			resource.setFile(file);
+			resource.setDataverse(dataverse);
 			resource = em.merge(resource);
 		} else {
 			resource = resources.get(0);
 		}
 		
 		return resource;
-	}
-	
-	public List<Resource> findAllResources() {
-		return em.createNamedQuery("Resource.findAll").getResultList();
 	}
 	
 	public Optional<Dataverse> findDataverseByUrl(String url) {
@@ -158,17 +161,29 @@ public class XsampleServices {
 		return em.createNamedQuery("DataverseUser.findAll").getResultList();
 	}
 	
-	// SETTINGS METHODS
-	
-	public List<Excerpt> findExcerpts(DataverseUser user, Resource resource) {
+	public Excerpt findQuota(DataverseUser user, Resource resource) {
 		requireNonNull(user);
 		requireNonNull(resource);
 		
-		return em.createNamedQuery("Excerpt.find")
+		List<Excerpt> excerpts = em.createNamedQuery("Excerpt.find")
 					.setParameter("user", user)
 					.setParameter("resource", resource)
 					.getResultList();
+		
+		Excerpt excerpt;
+		if(excerpts.isEmpty()) {
+			excerpt = new Excerpt();
+			excerpt.setResource(resource);
+			excerpt.setDataverseUser(user);
+			excerpt = em.merge(excerpt);
+		} else {
+			excerpt = excerpts.get(0);
+		}
+		
+		return excerpt;
 	}
+	
+	// SETTINGS METHODS
 
 	public String getSetting(Key key) {
 		//TODO replace with actual DB query once the settings backend is implemented
@@ -179,6 +194,8 @@ public class XsampleServices {
 	public int getIntSetting(Key key) { return Integer.parseInt(getSetting(key)); }
 	
 	public long getLongSetting(Key key) { return Long.parseLong(getSetting(key)); }
+	
+	public double getDoubleSetting(Key key) { return Double.parseDouble(getSetting(key)); }
 	
 	public boolean getBooleanSetting(Key key) { return Boolean.parseBoolean(getSetting(key)); }
 }

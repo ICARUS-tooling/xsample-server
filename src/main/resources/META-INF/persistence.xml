@@ -8,18 +8,31 @@
 		<description>Persistence back-end for the XSample excerpt generation</description>
 		<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>    
         <jta-data-source>jdbc/xsample</jta-data-source>
+        <class>de.unistuttgart.xsample.dv.Dataverse</class>
+        <class>de.unistuttgart.xsample.dv.DataverseUser</class>
+        <class>de.unistuttgart.xsample.dv.Excerpt</class>
+        <class>de.unistuttgart.xsample.dv.Fragment</class>
+        <class>de.unistuttgart.xsample.dv.Resource</class>
+        <class>de.unistuttgart.xsample.dv.UserId</class>
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>   
 	    	<property name="eclipselink.deploy-on-startup" value="true"/>
-	    	<property name="eclipselink.weaving" value="false"/>
+	    	<property name="eclipselink.weaving" value="true"/>
             <property name="eclipselink.ddl-generation" value="drop-and-create-tables"/>
-            <property name="eclipselink.ddl-generation.output-mode" value="database"/>
-            <property name="eclipselink.cache.shared.default" value="false"/>
+            <property name="eclipselink.ddl-generation.output-mode" value="both"/>
+            <property name="eclipselink.flush-clear.cache" value="Drop"/>
+			<property name="eclipselink.cache.shared" value="false"/>
+			<property name="eclipselink.cache.shared.default" value="false"/>
+			
+			<property name="eclipselink.create-ddl-jdbc-file-name" value="sql-create-script"/>
+	 		<property name="eclipselink.drop-ddl-jdbc-file-name" value="sql-drop-script"/> 
+            
+            <property name="javax.persistence.schema-generation.database.action" value="create" />
 			
             <!-- configure logging -->
-            <property name="eclipselink.logging.level" value="INFO"/>
-            <property name="eclipselink.logging.level.sql" value="INFO"/>
-            <property name="eclipselink.logging.parameters" value="false"/>
+            <property name="eclipselink.logging.level" value="FINE"/>
+            <property name="eclipselink.logging.level.sql" value="FINE"/>
+            <property name="eclipselink.logging.parameters" value="true"/>
         </properties>   
 	</persistence-unit>
 	

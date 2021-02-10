@@ -77,8 +77,8 @@ public class PdfHandler implements ExcerptHandler {
 			PDPageTree target = newDocument.getPages();
 			
 			for(Fragment fragment : fragments) {
-				int from = strictToInt(fragment.getFrom());
-				int to = strictToInt(fragment.getTo());
+				int from = strictToInt(fragment.getBeginIndex());
+				int to = strictToInt(fragment.getEndIndex());
 				for(int idx = from; idx <= to; idx++) {
 					PDPage page = source.get(idx);
 					target.add(page);

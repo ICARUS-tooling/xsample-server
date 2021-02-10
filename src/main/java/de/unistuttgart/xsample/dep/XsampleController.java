@@ -79,7 +79,7 @@ public class XsampleController {
 			//TODO configure excerpt
 			downloadExcerpt(excerpt);
 		} break;
-		case WINDOW: page = "window"; break;
+		case SLICE: page = "window"; break;
 		case QUERY: page = "query"; break;
 
 		default:

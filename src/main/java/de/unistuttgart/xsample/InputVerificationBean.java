@@ -34,7 +34,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -53,6 +52,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.transaction.Transactional;
 
+import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.XsampleWorkflow.Status;
 import de.unistuttgart.xsample.ct.EmptyResourceException;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
@@ -86,7 +86,7 @@ public class InputVerificationBean {
 	private static final Logger logger = Logger.getLogger(InputVerificationBean.class.getCanonicalName());
 
 	@Inject
-	XsampleServices xsampleServices;
+	XsampleServices services;
 	
 	@Inject
 	XsampleInputData inputData;
@@ -159,20 +159,15 @@ public class InputVerificationBean {
 	}
 	
 	private void ioErrorMessage(IOException e) {
-		message(FacesMessage.SEVERITY_ERROR,"welcome.msg.dataverseIoError", e.getMessage());
+		message(FacesMessage.SEVERITY_ERROR, "welcome.msg.dataverseIoError", e.getMessage());
 	}
 
 	/** Ensure a couple of required database entries */	
 	boolean initDebug(Context context) {
-		String url = "https://96e90d20-0328-4a38-87e5-93bc6afa5877.ma.bw-cloud-instance.org";
-		String token = "31aed9b4-8b4c-4366-bc1a-4810a8e72344";
-		Optional<Dataverse> current = xsampleServices.findDataverseByUrl(url);
-		if(!current.isPresent()) {
-			Dataverse dv = new Dataverse(url, token);
-			xsampleServices.add(dv);
-		} else {
-			current.get().setMasterKey(token);
-		}
+		DebugUtils.makeDataverse(services);
+		
+		DebugUtils.makeQuota(services, inputData);
+		
 		return true;
 	}
 	
@@ -199,7 +194,7 @@ public class InputVerificationBean {
 	boolean checkDataverse(Context context) {
 		// Check that we know the given Dataverse
 		final String address = inputData.getSite();
-		final Optional<Dataverse> dataverse = xsampleServices.findDataverseByUrl(address);
+		final Optional<Dataverse> dataverse = services.findDataverseByUrl(address);
 		if(!dataverse.isPresent() || dataverse.get().getMasterKey()==null) {
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.unknownDataverse", address);
 			return false;
@@ -247,7 +242,7 @@ public class InputVerificationBean {
 			return false;
 		}
 		final Dataverse server = excerptInput.getServer();
-		final DataverseUser user = xsampleServices.findDataverseUser(server, info.getData().getPersistentUserId());
+		final DataverseUser user = services.findDataverseUser(server, info.getData().getPersistentUserId());
 		excerptInput.setDataverseUser(user);
 		
 		return true;
@@ -402,13 +397,27 @@ public class InputVerificationBean {
 	/** Verify that user still has quota left on the designated resource */
 	boolean checkQuota(Context context) {
 		final Long fileId = inputData.getFile();
-		final Resource resource = xsampleServices.findResourceByFile(fileId);
 		final DataverseUser user = excerptInput.getDataverseUser();
-		final List<Excerpt> excerpts = xsampleServices.findExcerpts(user, resource);
+		final Dataverse server = excerptInput.getServer();
+		final Resource resource = services.findResource(server, fileId);
+		final Excerpt excerpt = services.findQuota(user, resource);
 		
-		if(!excerpts.isEmpty()) {
-			//TODO compute used up quota based on segment count in resource and emit error
+		if(!excerpt.isEmpty()) {
+			long quota = excerpt.size();
+			long segments = excerptInput.getFileInfo().getSegments();
+			long limit = (long) (segments / 100 * services.getDoubleSetting(Key.ExcerptLimit));
+			
+			if(quota>=limit) {
+				logger.log(Level.SEVERE, String.format("Quota of %d used up on resource %s by user %s", 
+						_long(limit), resource, user));
+				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.quotaExceeded", _long(quota));
+				
+				return false;
+			}
 		}
+		
+		excerptInput.setResource(resource);
+		excerptInput.setQuota(excerpt);
 		
 		return true;
 	}

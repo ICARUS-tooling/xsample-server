@@ -26,7 +26,7 @@ package de.unistuttgart.xsample;
  */
 public enum ExcerptType {
 	STATIC,
-	WINDOW,
+	SLICE,
 	QUERY,
 	;
 }

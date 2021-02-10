@@ -93,13 +93,12 @@ public class WelcomePage {
 	
 	/** Callback for button to continue workflow */
 	public void onContinue() {
-		//TODO add proper handling
 
 		String page = null;
 		ExcerptType excerptType = excerptInput.getExcerptType();
 		switch (excerptType) {
 		case STATIC: page = DownloadPage.PAGE; break;
-		case WINDOW: page = WindowPage.PAGE; break;
+		case SLICE: page = SlicePage.PAGE; break;
 		case QUERY: page = QueryPage.PAGE; break;
 		default:
 			break;
@@ -111,6 +110,8 @@ public class WelcomePage {
 			FacesContext.getCurrentInstance().addMessage("navMsg", msg);
 			return;
 		}
+
+		//TODO if source is too small, delegate to full download
 		
 		logger.fine("Navigating to subpage "+page);
 		

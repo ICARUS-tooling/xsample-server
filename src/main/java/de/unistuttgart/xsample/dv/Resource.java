@@ -19,6 +19,7 @@
  */
 package de.unistuttgart.xsample.dv;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -33,8 +34,7 @@ import javax.persistence.NamedQuery;
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "Resource.findAll", query = "SELECT r FROM Resource r ORDER BY r.id"),
-	@NamedQuery(name = "Resource.findByFile", query = "SELECT r FROM Resource r WHERE r.file = :file"), 
+	@NamedQuery(name = "Resource.find", query = "SELECT r FROM Resource r WHERE r.file = :file AND r.dataverse = :dataverse"), 
 })
 public class Resource {
 	
@@ -45,7 +45,7 @@ public class Resource {
 	@GeneratedValue
 	private Long id;
 
-	@ManyToOne(optional = false)
+	@ManyToOne(optional = false, cascade = CascadeType.ALL)
 	private Dataverse dataverse;
 
 	public Dataverse getDataverse() { return dataverse; }

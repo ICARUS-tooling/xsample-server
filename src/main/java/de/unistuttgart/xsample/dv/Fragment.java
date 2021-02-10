@@ -8,7 +8,7 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed endIndex in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
@@ -19,12 +19,19 @@
  */
 package de.unistuttgart.xsample.dv;
 
+import static java.util.Objects.requireNonNull;
+
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 /**
  * @author Markus Gärtner
@@ -33,10 +40,29 @@ import javax.persistence.Id;
 @Entity
 public class Fragment {
 	
+	public static Fragment parse(String s) {
+		requireNonNull(s);
+		Fragment f;
+		int sep = s.indexOf('-');
+		if(sep!=-1) {
+			f = of(Long.parseUnsignedLong(s.substring(0, sep)), 
+					Long.parseUnsignedLong(s.substring(sep+1)));
+		} else {
+			f = of(Long.parseUnsignedLong(s));
+		}
+		return f;
+	}
+	
+	public static List<Fragment> parseAll(String s) {
+		return Stream.of(s.split(";"))
+				.map(Fragment::parse)
+				.collect(Collectors.toList());
+	}
+	
 	public static Fragment of(long from, long to) {
 		Fragment f = new Fragment();
-		f.setFrom(from);
-		f.setTo(to);
+		f.setBeginIndex(from);
+		f.setEndIndex(to);
 		return f;
 	}
 	
@@ -47,30 +73,50 @@ public class Fragment {
 	@Id
 	@GeneratedValue
 	private Long id;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	private Excerpt excerpt;
 
 	@Column
-	private long from;
+	private long beginIndex;
 	@Column
-	private long to;
+	private long endIndex;
 	
-	public long getFrom() { return from; }
-	public void setFrom(long from) { this.from = from; }
+	public long getBeginIndex() { return beginIndex; }
+	public void setBeginIndex(long from) { this.beginIndex = from; }
 	
-	public long getTo() { return to; }
-	public void setTo(long to) { this.to = to; }
+	public long getEndIndex() { return endIndex; }
+	public void setEndIndex(long to) { this.endIndex = to; }
 
 	public Long getId() { return id; }
 	public void setId(Long id) { this.id = id; }
 	
-	public LongStream stream() { return LongStream.rangeClosed(from, to); }
+	public Excerpt getExcerpt() { return excerpt; }
+
+	public void setExcerpt(Excerpt excerpt) { this.excerpt = excerpt; }
+
+	public LongStream stream() { return LongStream.rangeClosed(beginIndex, endIndex); }
 	
 	public long size() {
-		assert from>=0 : "invalid begin";
-		assert to>=from : "invalid end"; 
-		return to-from+1; 
+		assert beginIndex>=0 : "invalid beginIndex";
+		assert endIndex>=beginIndex : "invalid endIndex"; 
+		return endIndex-beginIndex+1; 
 	}
 	
 	@Override
-	public String toString() { return "["+from+","+to+"]"; }
+	public String toString() { return "["+beginIndex+","+endIndex+"]"; }
+
+	@Override
+	public int hashCode() {
+		return Fragment.class.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Fragment )) return false;
+        return id != null && id.equals(((Fragment) o).getId());
+	}
 	
+	public void detach() { setExcerpt(null); }
 }

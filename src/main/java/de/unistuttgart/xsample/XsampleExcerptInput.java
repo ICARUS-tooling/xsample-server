@@ -29,6 +29,8 @@ import javax.inject.Named;
 import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.dv.Dataverse;
 import de.unistuttgart.xsample.dv.DataverseUser;
+import de.unistuttgart.xsample.dv.Excerpt;
+import de.unistuttgart.xsample.dv.Resource;
 
 /**
  * Input information regarding the excerpt to be created.
@@ -46,12 +48,18 @@ public class XsampleExcerptInput implements Serializable {
 	private Dataverse server;
 	/** User to be used for tracking excerpt quota */
 	private DataverseUser dataverseUser;
-	/** Type of excerpt generation, legal values are 'static', 'window' and 'query'. */
-	private ExcerptType excerptType = ExcerptType.STATIC;
+	/** DB wrapper for the source */
+	private Resource resource;
+	/** Used up quota */
+	private Excerpt quota;
+	
 	/** Type info for raw input file, e.g. 'MANIFEST', 'PDF' */
 	private InputType inputType;
 	/** Physical info about primary source file */
 	private FileInfo fileInfo;	
+	
+	/** Type of excerpt generation, legal values are 'static', 'window' and 'query'. */
+	private ExcerptType excerptType = ExcerptType.STATIC;
 	/** Flag to indicate that annotations should be made part of the final excerpt */
 	private boolean includeAnnotations = false;
 	
@@ -72,5 +80,11 @@ public class XsampleExcerptInput implements Serializable {
 
 	public boolean isIncludeAnnotations() { return includeAnnotations; }
 	public void setIncludeAnnotations(boolean includeAnnotations) { this.includeAnnotations = includeAnnotations; }
+	
+	public Resource getResource() { return resource; }
+	public void setResource(Resource resource) { this.resource = resource; }
+	
+	public Excerpt getQuota() { return quota; }
+	public void setQuota(Excerpt quota) { this.quota = quota; }
 
 }

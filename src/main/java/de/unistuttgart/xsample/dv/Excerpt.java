@@ -19,8 +19,12 @@
  */
 package de.unistuttgart.xsample.dv;
 
+import static java.util.Objects.requireNonNull;
+
+import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -43,14 +47,14 @@ public class Excerpt {
 	@GeneratedValue
 	private Long id;
 	
-	@ManyToOne(optional = false)
+	@ManyToOne(optional = false, cascade = CascadeType.ALL)
 	private DataverseUser dataverseUser;
 
-	@ManyToOne(optional = false)
+	@ManyToOne(optional = false, cascade = CascadeType.ALL)
 	private Resource resource;
 
-	@OneToMany
-	private List<Fragment> fragments;
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "excerpt")
+	private List<Fragment> fragments = new ArrayList<>();
 
 	public Long getId() { return id; }
 	public void setId(Long id) { this.id = id; }
@@ -62,7 +66,17 @@ public class Excerpt {
 	public void setResource(Resource resource) { this.resource = resource; }
 
 	public List<Fragment> getFragments() { return fragments; }
-	public void setFragments(List<Fragment> fragments) { this.fragments = fragments; }
+	public void setFragments(List<Fragment> fragments) { this.fragments = requireNonNull(fragments); }
+	
+	public void addFragment(Fragment fragment) {
+		fragments.add(fragment);
+		fragment.setExcerpt(this);
+	}
+	
+	public void removeFragment(Fragment fragment) {
+		fragments.remove(fragment);
+		fragment.setExcerpt(null);
+	}
 	
 	public long size() {
 		if(fragments.isEmpty()) {
@@ -70,5 +84,12 @@ public class Excerpt {
 		}
 		//TODO not overflow conscious!!
 		return fragments.stream().mapToLong(Fragment::size).sum();
+	}
+	
+	public boolean isEmpty() { return fragments.isEmpty(); }
+	
+	public void clear() {
+		fragments.forEach(Fragment::detach);
+		fragments.clear(); 
 	}
 }

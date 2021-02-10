@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
+
+	<h:head>	
+    	<h:outputStylesheet name="css/primeflex.css"/>
+	</h:head>
+	
+	<h:form prependId="false">	
+		<p:remoteCommand name="initSlice" action="#{slicePage.init}" 
+			process="@this" update="@form" oncomplete="initOutline();" />
+	
+		<h:inputHidden id="excerptStart" value="#{xsampleSliceData.begin}" />
+		<h:inputHidden id="excerptEnd" value="#{xsampleSliceData.end}" />
+		<h:inputHidden id="excerptThreshold" value="#{xsampleSliceData.limit}" readonly="#{true}" />
+		<h:inputHidden id="excerptRange" value="#{xsampleSliceData.range}" readonly="#{true}" />
+			
+		<p:panel>
+			<f:facet name="header">
+				<h:outputText value="#{bundle['slice.info']}" />
+			</f:facet>
+		
+			<div>
+				<h:outputText id="excerptRangeText" style="margin-bottom: 2em" 
+					value="#{bundle['slice.excerptBegin']} #{xsampleSliceData.begin} #{bundle['slice.excerptEnd']} #{xsampleSliceData.end}" />
+				<p:slider widgetVar="excerptRangeSelect" for="excerptStart,excerptEnd" 
+					display="excerptRangeText" onSlide="updateExcerpt(event, ui);" 
+					style="width: 700px; margin: 2em" range="true" displayTemplate="#{bundle['slice.excerptBegin']} {min} #{bundle['slice.excerptEnd']} {max}" 
+					minValue="1" maxValue="#{xsampleSliceData.range}" />    
+				<h:outputLabel for="excerptSize" value="#{bundle['slice.excerptSize']}" />
+				<h:outputText id="excerptSize" style="margin-top: 2em" 
+					value="#{xsampleSliceData.size}" /> 
+				<br/>
+				<h:outputLabel for="excerptPercent" value="#{bundle['slice.excerptPercent']}" />
+				<h:outputText id="excerptPercent" style="margin-top: 2em" 
+					value="#{xsampleSliceData.percent}%" />
+			</div>
+			<br/>
+			<canvas id="excerptOutline" height="15" width="700"
+				style="border:1px solid #000000; margin: 2em; display: block" />
+		
+			<f:facet name="footer">
+	        	<p:messages id="navMsg" showSummary="true" showDetail="false" redisplay="false" />
+				<p:commandButton value="#{bundle['slice.continue']}" 
+					action="#{slicePage.onContinue}" update=":content" />
+			</f:facet>
+		</p:panel>
+	</h:form>
+				
+	<script type="text/javascript">
+		function updateExcerpt(_, ui) {
+			var begin = ui.values[0];
+			var end = ui.values[1];
+			var count = end - begin + 1;
+			var range = Number(document.getElementById('excerptRange').value);
+			var percent = Math.ceil(count / range * 100);
+			document.getElementById('excerptSize').textContent = count;
+			document.getElementById('excerptPercent').textContent = percent + "%";
+			updateOutline(begin, end, range);
+		}
+		
+		function updateOutline(begin, end, range) {
+			var c = document.getElementById('excerptOutline');
+			var ctx = c.getContext("2d");
+			ctx.fillStyle = "#3399ff";
+			ctx.fillRect(0, 0, c.width, c.height);
+			var count = end - begin + 1;
+			var percent = Math.ceil(count / range * 100);
+			var step = c.width / range;
+			var x = (begin-1) * step;
+			var width = count * step;
+			ctx.fillStyle = (percent>15) ? "#FF0000":"#00FF00";
+			ctx.fillRect(x, 0, width, c.height);
+			//console.log(ctx);
+		}
+		
+		function initOutline() {			
+			var begin = Number(document.getElementById('excerptStart').value);
+			var end = Number(document.getElementById('excerptEnd').value);
+			var range = Number(document.getElementById('excerptRange').value);
+			updateOutline(begin, end, range);			
+		}
+
+		$('document').ready(function(){
+			initSlice();
+		});
+	</script>
+</ui:composition>
