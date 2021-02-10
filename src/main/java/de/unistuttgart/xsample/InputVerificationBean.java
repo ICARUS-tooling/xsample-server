@@ -126,7 +126,7 @@ public class InputVerificationBean {
 		workflow.setStatus(status);
 	}
 
-	private void message(Severity severity, String key, Object...args) {
+	private static void message(Severity severity, String key, Object...args) {
 		String text = BundleUtil.format(key, args);
 		FacesMessage msg = new FacesMessage(severity, text, null);
 		FacesContext.getCurrentInstance().addMessage("msg", msg);
@@ -410,7 +410,8 @@ public class InputVerificationBean {
 			if(quota>=limit) {
 				logger.log(Level.SEVERE, String.format("Quota of %d used up on resource %s by user %s", 
 						_long(limit), resource, user));
-				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.quotaExceeded", _long(quota));
+				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.quotaExceeded", 
+						_long(quota), excerptInput.getFileInfo().getTitle());
 				
 				return false;
 			}
