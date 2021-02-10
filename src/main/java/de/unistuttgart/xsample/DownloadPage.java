@@ -45,6 +45,8 @@ public class DownloadPage {
 	@Inject
 	XsampleExcerptData excerptData;
 
+	//TODO check http://www.primefaces.org:8080/showcase/ui/file/download.xhtml?jfwid=0b585 for example of monitoring during download initialization
+	
 	public void onDownload() {
 		//TODO
 

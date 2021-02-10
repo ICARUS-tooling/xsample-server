@@ -34,6 +34,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -97,6 +100,9 @@ public class InputVerificationBean {
 	@Inject
 	XsampleWorkflow workflow;
 	
+	@Inject
+	XsampleSession session;
+	
 	private static class Context {
 		DataverseClient client;
 	}
@@ -147,15 +153,21 @@ public class InputVerificationBean {
 	}
 	
 	private Step[] steps() {
-		return new Step[] {
-				new Step(this::initDebug, "welcome.step.initDebug"),
+		List<Step> steps = new ArrayList<>();
+		
+		if(session.isDebug()) {
+			steps.add(new Step(this::initDebug, "welcome.step.initDebug"));
+		}
+		
+		Collections.addAll(steps, 
 				new Step(this::checkParams, "welcome.step.checkParams"),
 				new Step(this::checkDataverse, "welcome.step.checkDataverse"),
 				new Step(this::checkUser, "welcome.step.checkUser"),
 				new Step(this::checkFileType, "welcome.step.checkFileType"),
 				new Step(this::loadFile, "welcome.step.loadFile"),
-				new Step(this::checkQuota, "welcome.step.checkQuota"),
-		};
+				new Step(this::checkQuota, "welcome.step.checkQuota"));
+		
+		return steps.toArray(new Step[steps.size()]);
 	}
 	
 	private void ioErrorMessage(IOException e) {

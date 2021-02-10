@@ -56,7 +56,6 @@ public interface ExcerptHandler {
 	 * 
 	 * @param fragments specification of the actual excerpt to generate
 	 * @param output the destination for the excerpt generation
-	 *  yet or failed in some way.
 	 * @throws IOException
 	 */
 	void excerpt(FileInfo file, InputStream in, Fragment[] fragments, OutputStream out) throws IOException;

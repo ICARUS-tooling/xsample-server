@@ -53,7 +53,8 @@ public class SlicePage {
 
 	/** Callback for button to continue workflow */
 	public void onContinue() {
-		excerptData.setExcerpt(Arrays.asList(Fragment.of(sliceData.getBegin(), sliceData.getEnd())));
+		excerptData.setExcerpt(Arrays.asList(Fragment.of(
+				sliceData.getBegin()-1, sliceData.getEnd()-1)));
 		
 		//TODO
 		

@@ -17,6 +17,7 @@
 package de.unistuttgart.xsample;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
@@ -29,6 +30,7 @@ import javax.inject.Named;
 
 import de.unistuttgart.xsample.XsampleWorkflow.Flag;
 import de.unistuttgart.xsample.ct.FileInfo;
+import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.Property;
 
@@ -97,7 +99,10 @@ public class WelcomePage {
 		String page = null;
 		ExcerptType excerptType = excerptData.getExcerptType();
 		switch (excerptType) {
-		case STATIC: page = DownloadPage.PAGE; break;
+		case STATIC: {
+			page = DownloadPage.PAGE;
+			excerptData.setExcerpt(Arrays.asList(Fragment.of(0, 14)));
+		} break;
 		case SLICE: page = SlicePage.PAGE; break;
 		case QUERY: page = QueryPage.PAGE; break;
 		default:

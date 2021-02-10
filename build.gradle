@@ -15,8 +15,9 @@ version = '0.1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-// Load custom configuration data. Info will be stored in 'config' map
-apply from: 'config.gradle'
+// Configuration for the Payara deployment tasks
+def deploymentConfig = new Properties()
+deploymentConfig.load(new FileInputStream(rootProject.file("deployment.ini")))
 
 repositories { 
     mavenLocal()
@@ -36,12 +37,10 @@ dependencies {
 
 	// https://mvnrepository.com/artifact/javax.enterprise/cdi-api
 	//providedCompile group: 'javax.enterprise', name: 'cdi-api', version: '2.0.SP1'
-
-	// https://mvnrepository.com/artifact/org.glassfish.main.deployment/deployment-client
-	providedCompile group: 'org.glassfish.main.deployment', name: 'deployment-client', version: '5.1.0'
 	
 	// https://mvnrepository.com/artifact/org.eclipse.persistence/org.eclipse.persistence.jpa
 	compile group: 'org.eclipse.persistence', name: 'org.eclipse.persistence.jpa', version: '2.7.7'
+	
 	
 	// https://mvnrepository.com/artifact/org.slf4j/slf4j-api
 	//compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
@@ -85,7 +84,14 @@ dependencies {
 	
 	// https://mvnrepository.com/artifact/javax.faces/javax.faces-api
 	// providedCompile group: 'javax.faces', name: 'javax.faces-api', version: '2.3'
+	
+	// DEPLOYMENT
 
+	// https://mvnrepository.com/artifact/org.glassfish.main.deployment/deployment-client
+	cargo group: 'org.glassfish.main.deployment', name: 'deployment-client', version: '5.1.0'
+
+	// https://mvnrepository.com/artifact/org.codehaus.cargo/cargo-ant
+	cargo group: 'org.codehaus.cargo', name: 'cargo-ant', version: '1.9.1'
 
 	// TESTING	
 
@@ -143,18 +149,18 @@ cargo {
      
     // Only necessary for local commands
     local {
-        homeDir = file(config.payaraHome)
+        homeDir = file(deploymentConfig.payaraHome)
     }
      
     // Only necessary for remote commands
     remote {
-        hostname = config.payaraHost
-        username = config.payaraUsername
-        password = config.payaraPassword
-        // containerProperties {
-        //     // this is necessary only to pass blank password correctly to the cargo deployer because of a bug in the cargo gradle plugin
-        //     property 'cargo.remote.password', payaraPassword
-        // }
+        hostname = deploymentConfig.payaraHostname
+        username = deploymentConfig.payaraUsername
+        password = deploymentConfig.payaraPassword
+        containerProperties {
+            // this is necessary only to pass blank password correctly to the cargo deployer because of a bug in the cargo gradle plugin
+            property 'cargo.remote.password', deploymentConfig.payaraPassword
+        }
     }
 }
 

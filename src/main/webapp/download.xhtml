@@ -11,8 +11,8 @@
 		</div>
 		
 		<div>
-			<p:commandButton value="#{bundle['download.continue']}"
-				action="#{downloadPage.onDownload}" />
+			<p:commandButton ajax="false" value="#{bundle['download.continue']}" 
+					actionListener="#{downloadPage.onDownload}" />
 		</div>	
 	</h:form>
 </ui:composition>

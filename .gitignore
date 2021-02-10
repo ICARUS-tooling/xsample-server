@@ -40,3 +40,4 @@ local.properties
 /secrets.gradle
 /config.gradle
 /100p_dummy.pdf
+/deployment.ini
