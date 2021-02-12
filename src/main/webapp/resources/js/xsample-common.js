@@ -3,7 +3,7 @@
  * and encoding/decoding excerpt data. 
  */
 
-const toFragment = (begin, end) => {
+function toFragment(begin, end) {
 	return {begin:begin, end:end};
 }
 
@@ -12,7 +12,7 @@ const toFragment = (begin, end) => {
  * @param input raw string encoding the fragment
  * @returns a fragment object with 'begin' and 'end' values
  */
-const parseFragment = (input) => {
+function parseFragment(input) {
 	var sep = input.indexOf("-");
 	if(sep==-1) {
 		var num = Number(str);
@@ -29,7 +29,7 @@ const parseFragment = (input) => {
  * @param input raw string encoding the list of fragments
  * @returns an array of integer values, denoting pairs of fragment bounds
  */
-const parseFragments = (input) => {
+function parseFragments(input) {
 	return input.split(',').map(parseFragment);
 }
 
@@ -43,7 +43,7 @@ const parseFragments = (input) => {
  * @param fromIndex the index of the first element (inclusive) to be searched
  * @param toIndex the index of the last element (exclusive) to be searched
  */
-const findFragment = (quota, segment, fromIndex, toIndex) => {
+function findFragment(quota, segment, fromIndex, toIndex) {
     var low = fromIndex;
     var high = toIndex - 1;
 
@@ -67,6 +67,69 @@ const OUTLINE_EXCERPT = "#00FF00";
 const OUTLINE_EXCEEDED = "#FF0000";
 
 /**
+ * Helper function to compute the size of a fragment span
+ * @param fragment the fragment span to process
+ * @returns the size (at least 1) of the span
+ */
+function sizeOf(fragment) {
+	return fragment.end - fragment.begin + 1;
+}
+
+/**
+ * Helper function to check if the combined coverage of two fragments arrays
+ * exceeds a given limit.
+ * @param a1 first array of fragment objects
+ * @param a2 second array of fragment objects
+ * @param limit threshold on which to return true
+ * @returns true iff the limit was exceeded
+ */
+function exceedsLimit(a1, a2, limit) {
+	var i1 = 0;
+	var i2 = 0; 
+	var size = 0;
+	for (; i1 < a1.length && i2 < a2.length; ) {
+		var f1 = a1[i1];
+		var f2 = a2[i2];
+		
+		if(f1.begin > f2.end) { // no overlap, f1 > f2
+			size += sizeOf(f2);
+			i2++;
+		} else if(f2.begin > f1.end) { // no overlap, f2 > f1
+			size += sizeOf(f1);
+			i1++;
+		} else { // overlap
+			var left = Math.min(f1.begin, f2.begin);
+			var right = Math.max(f1.end, f2.end);
+			size += (right - left + 1);
+			i1++;
+			i2++;
+		}
+		
+		if(size > limit) {
+			return true;
+		}
+	}
+	
+	// Handle leftovers from first array
+	for (; i1 < a1.length; i1++) {
+		size += sizeOf(a1[i1]);
+		if(size > limit) {
+			return true;
+		}
+	}
+	// Handle leftovers from second array
+	for (; i2 < a2.length; i2++) {
+		size += sizeOf(a2[i2]);
+		if(size > limit) {
+			return true;
+		}
+	}
+	
+	// We're clear and still inside the excerpt limit!
+	return false;
+}
+
+/**
  * Paint a horizontal outline on the canvas
  * 
  * @param canvas the canvas widget to paint on
@@ -74,9 +137,12 @@ const OUTLINE_EXCEEDED = "#FF0000";
  * @param excerpt array of fragment pairs
  * @param range the total number of segments available
  * @param limit maximum number of segments allowed in quota + excerpt
+ * @return true, iff the limit was exceeded
  */
-const paintExcerpt = (canvas, quota, excerpt, range, limit) => {;
+function paintExcerpt(canvas, quota, excerpt, range, limit){
 	var ctx = canvas.getContext("2d");
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.globalCompositeOperation = 'source-over';
 	//
 	ctx.fillStyle = OUTLINE_BG;
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -91,11 +157,18 @@ const paintExcerpt = (canvas, quota, excerpt, range, limit) => {;
 		ctx.fillStyle = style;
 		ctx.fillRect(x, 0, width, canvas.height);
 	}
-	
-	//TODO paint used quota and check quota segments included in excerpt
-	
-	var count = excerpt.reduce((total, f) => total + (f.end - f.begin + 1), 0);
-	var style = (count>limit) ? OUTLINE_EXCEEDED : OUTLINE_EXCERPT;
+
+	var exceeded = exceedsLimit(quota, excerpt, limit);
+	var style = exceeded ? OUTLINE_EXCEEDED : OUTLINE_EXCERPT;
 	excerpt.forEach(f => paintSpan(f.begin, f.end, style));
-	//console.log({count:count, limit:limit, excerpt:excerpt});
+	
+	/* globalCompositeOperation :
+	  normal | multiply | screen | overlay | 
+	  darken | lighten | color-dodge | color-burn | hard-light | 
+	  soft-light | difference | exclusion | hue | saturation | 
+	  color | luminosity
+	*/
+	ctx.globalCompositeOperation = 'multiply';
+	quota.forEach(f => paintSpan(f.begin, f.end, OUTLINE_QUOTA));
+	return exceeded;
 }

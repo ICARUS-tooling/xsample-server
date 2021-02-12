@@ -5,7 +5,7 @@
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
 
-	<h:form prependId="false">	
+	<h:form id="slice">	
 		<p:remoteCommand name="initSlice" action="#{slicePage.init}" 
 			process="@this" update="@form" oncomplete="initOutline();" />
 	
@@ -41,7 +41,7 @@
 		
 			<f:facet name="footer">
 	        	<p:messages id="navMsg" showSummary="true" showDetail="false" redisplay="false" />
-				<p:commandButton value="#{bundle['slice.continue']}" 
+				<p:commandButton widgetVar="continue" value="#{bundle['slice.continue']}" 
 					action="#{slicePage.onContinue}" update=":content" />
 			</f:facet>
 		</p:panel>
@@ -55,26 +55,34 @@
 			var begin = ui.values[0];
 			var end = ui.values[1];
 			var count = end - begin + 1;
-			var range = Number(document.getElementById('excerptRange').value);
+			var range = Number(document.getElementById('slice:excerptRange').value);
 			var percent = Math.ceil(count / range * 100);
-			document.getElementById('excerptSize').textContent = count;
-			document.getElementById('excerptPercent').textContent = percent + "%";
-			var limit = Number(document.getElementById('excerptThreshold').value);
+			document.getElementById('slice:excerptSize').textContent = count;
+			document.getElementById('slice:excerptPercent').textContent = percent + "%";
+			var limit = Number(document.getElementById('slice:excerptThreshold').value);
 			var canvas = document.getElementById('excerptOutline');
 			var excerpt = [toFragment(begin, end)];
 
-			paintExcerpt(canvas, quota, excerpt, range, limit);		
+			var exceeded = paintExcerpt(canvas, quota, excerpt, range, limit);	
+			
+			var button = $("#slice continue");
+			console.log(button);
+			if(exceeded) {
+				button.hide();
+			} else {
+				button.show();
+			}
 		}
 		
 		const initOutline = () => {			
-			var encodedQuota = document.getElementById('excerptQuota').value;			
+			var encodedQuota = document.getElementById('slice:excerptQuota').value;			
 			quota = parseFragments(encodedQuota);
 			console.log(quota);
 			
-			var begin = Number(document.getElementById('excerptStart').value);
-			var end = Number(document.getElementById('excerptEnd').value);
-			var range = Number(document.getElementById('excerptRange').value);
-			var limit = Number(document.getElementById('excerptThreshold').value);
+			var begin = Number(document.getElementById('slice:excerptStart').value);
+			var end = Number(document.getElementById('slice:excerptEnd').value);
+			var range = Number(document.getElementById('slice:excerptRange').value);
+			var limit = Number(document.getElementById('slice:excerptThreshold').value);
 			var canvas = document.getElementById('excerptOutline');
 			var excerpt = [toFragment(begin, end)];
 

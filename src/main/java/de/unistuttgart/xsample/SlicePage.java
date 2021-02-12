@@ -41,7 +41,7 @@ public class SlicePage {
 	public void init() {
 		final long range = excerptData.getFileInfo().getSegments();
 		sliceData.setBegin(1);
-		sliceData.setEnd(Math.min(15, range));
+		sliceData.setEnd(1);
 		sliceData.setRange(range);
 		sliceData.setLimit((long) (range * services.getDoubleSetting(Key.ExcerptLimit)));
 		
@@ -56,7 +56,7 @@ public class SlicePage {
 		excerptData.setExcerpt(Arrays.asList(Fragment.of(
 				sliceData.getBegin()-1, sliceData.getEnd()-1)));
 		
-		//TODO
+		//TODO sanity check against exceeding the excerpt limit
 		
 		workflow.setPage(DownloadPage.PAGE);
 	}
