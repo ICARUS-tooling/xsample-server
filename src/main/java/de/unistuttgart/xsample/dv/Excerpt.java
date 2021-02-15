@@ -56,6 +56,8 @@ public class Excerpt {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "excerpt")
 	private List<Fragment> fragments = new ArrayList<>();
 
+	private transient long size = -1;
+
 	public Long getId() { return id; }
 	public void setId(Long id) { this.id = id; }
 
@@ -66,24 +68,38 @@ public class Excerpt {
 	public void setResource(Resource resource) { this.resource = resource; }
 
 	public List<Fragment> getFragments() { return fragments; }
-	public void setFragments(List<Fragment> fragments) { this.fragments = requireNonNull(fragments); }
+	public void setFragments(List<Fragment> fragments) {
+		this.fragments = requireNonNull(fragments); 
+		invalidateSize();
+	}
 	
 	public void addFragment(Fragment fragment) {
 		fragments.add(fragment);
 		fragment.setExcerpt(this);
+		invalidateSize();
 	}
 	
 	public void removeFragment(Fragment fragment) {
 		fragments.remove(fragment);
-		fragment.setExcerpt(null);
+		fragment.detach();
+		invalidateSize();
+	}
+	
+	private void invalidateSize() { size = -1; }
+	
+	private void validateSize() {
+		if(fragments.isEmpty()) {
+			size = 0;
+		}
+		//TODO not overflow conscious!!
+		size = fragments.stream().mapToLong(Fragment::size).sum();
 	}
 	
 	public long size() {
-		if(fragments.isEmpty()) {
-			return 0;
+		if(size==-1) {
+			validateSize();
 		}
-		//TODO not overflow conscious!!
-		return fragments.stream().mapToLong(Fragment::size).sum();
+		return size;
 	}
 	
 	public boolean isEmpty() { return fragments.isEmpty(); }
@@ -91,5 +107,6 @@ public class Excerpt {
 	public void clear() {
 		fragments.forEach(Fragment::detach);
 		fragments.clear(); 
+		invalidateSize();
 	}
 }

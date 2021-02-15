@@ -27,6 +27,7 @@
 					display="excerptRangeText" onSlide="updateExcerpt(event, ui);" 
 					style="width: 700px; margin: 2em" range="true" displayTemplate="#{bundle['slice.excerptBegin']} {min} #{bundle['slice.excerptEnd']} {max}" 
 					minValue="1" maxValue="#{xsampleSliceData.range}" />    
+				
 				<h:outputLabel for="excerptSize" value="#{bundle['slice.excerptSize']}" />
 				<h:outputText id="excerptSize" style="margin-top: 2em" 
 					value="#{xsampleSliceData.size}" /> 
@@ -34,6 +35,11 @@
 				<h:outputLabel for="excerptPercent" value="#{bundle['slice.excerptPercent']}" />
 				<h:outputText id="excerptPercent" style="margin-top: 2em" 
 					value="#{xsampleSliceData.percent}%" />
+				<br/>
+				<h:outputLabel for="totalPercent" value="#{bundle['slice.totalPercent']}" 
+					rendered="#{slicePage.showQuota}" />
+				<h:outputText id="totalPercent" style="margin-top: 2em" 
+					rendered="#{slicePage.showQuota}" />
 			</div>
 			<br/>
 			<canvas id="excerptOutline" height="15" width="700"
@@ -41,7 +47,7 @@
 		
 			<f:facet name="footer">
 	        	<p:messages id="navMsg" showSummary="true" showDetail="false" redisplay="false" />
-				<p:commandButton widgetVar="continue" value="#{bundle['slice.continue']}" 
+				<p:commandButton widgetVar="wv_continue" value="#{bundle['slice.continue']}" 
 					action="#{slicePage.onContinue}" update=":content" />
 			</f:facet>
 		</p:panel>
@@ -56,21 +62,26 @@
 			var end = ui.values[1];
 			var count = end - begin + 1;
 			var range = Number(document.getElementById('slice:excerptRange').value);
-			var percent = Math.ceil(count / range * 100);
-			document.getElementById('slice:excerptSize').textContent = count;
-			document.getElementById('slice:excerptPercent').textContent = percent + "%";
+			var percent = Math.ceil(count / range * 100.0);
 			var limit = Number(document.getElementById('slice:excerptThreshold').value);
 			var canvas = document.getElementById('excerptOutline');
 			var excerpt = [toFragment(begin, end)];
+			var used = combinedSize(quota, excerpt, limit);
+			var exceeded = used>limit;
+			var style = exceeded ? OUTLINE_EXCEEDED : OUTLINE_EXCERPT;
 
-			var exceeded = paintExcerpt(canvas, quota, excerpt, range, limit);	
+			paintExcerpt(canvas, quota, excerpt, range, style);	
 			
-			var button = $("#slice continue");
-			console.log(button);
+			document.getElementById('slice:excerptSize').textContent = count;
+			document.getElementById('slice:excerptPercent').textContent = percent + "%";
+			if(quota.length>0) {				
+				var totalPercent = Math.ceil(used / range * 100.0);
+				document.getElementById('slice:totalPercent').textContent = totalPercent + "%";
+			}
 			if(exceeded) {
-				button.hide();
+				PF('wv_continue').disable();
 			} else {
-				button.show();
+				PF('wv_continue').enable();
 			}
 		}
 		
@@ -86,7 +97,7 @@
 			var canvas = document.getElementById('excerptOutline');
 			var excerpt = [toFragment(begin, end)];
 
-			paintExcerpt(canvas, quota, excerpt, range, limit);		
+			paintExcerpt(canvas, quota, excerpt, range, OUTLINE_EXCERPT);		
 		}
 
 		$('document').ready(function(){

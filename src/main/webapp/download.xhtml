@@ -11,7 +11,8 @@
 		</div>
 		
 		<div>
-			<p:commandButton ajax="false" value="#{bundle['download.continue']}" 
+			<p:commandButton widgetVar="wv_download" ajax="false" value="#{bundle['download.continue']}" 
+					onclick="PF('wv_download').disable()"
 					actionListener="#{downloadPage.onDownload}" />
 		</div>	
 	</h:form>
