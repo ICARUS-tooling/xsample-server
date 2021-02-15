@@ -7,12 +7,11 @@
 	
 	<h:form>	
 		<div>
-			<p:staticMessage severity="info" summary="#{bundle['download.message']}" />
+			<p:staticMessage severity="info" escape="false" summary="#{bundle['download.message']}" />
 		</div>
 		
 		<div>
 			<p:commandButton widgetVar="wv_download" ajax="false" value="#{bundle['download.continue']}" 
-					onclick="PF('wv_download').disable()"
 					actionListener="#{downloadPage.onDownload}" />
 		</div>	
 	</h:form>
