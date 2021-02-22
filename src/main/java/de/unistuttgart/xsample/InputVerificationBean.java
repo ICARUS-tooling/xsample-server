@@ -156,7 +156,7 @@ public class InputVerificationBean {
 		List<Step> steps = new ArrayList<>();
 		
 		if(session.isDebug()) {
-			steps.add(new Step(this::initDebug, "welcome.step.initDebug"));
+//			steps.add(new Step(this::initDebug, "welcome.step.initDebug"));
 		}
 		
 		Collections.addAll(steps, 
@@ -165,6 +165,7 @@ public class InputVerificationBean {
 				new Step(this::checkUser, "welcome.step.checkUser"),
 				new Step(this::checkFileType, "welcome.step.checkFileType"),
 				new Step(this::loadFile, "welcome.step.loadFile"),
+				new Step(this::checkFileSize, "welcome.step.checkFileSize"),
 				new Step(this::checkQuota, "welcome.step.checkQuota"));
 		
 		return steps.toArray(new Step[steps.size()]);
@@ -174,14 +175,14 @@ public class InputVerificationBean {
 		message(FacesMessage.SEVERITY_ERROR, "welcome.msg.dataverseIoError", e.getMessage());
 	}
 
-	/** Ensure a couple of required database entries */	
-	boolean initDebug(Context context) {
-		DebugUtils.makeDataverse(services);
-		
-		DebugUtils.makeQuota(services, inputData);
-		
-		return true;
-	}
+//	/** Ensure a couple of required database entries */	
+//	boolean initDebug(Context context) {
+//		DebugUtils.makeDataverse(services);
+//		
+//		DebugUtils.makeQuota(services, inputData);
+//		
+//		return true;
+//	}
 	
 	/** Verify obligatory URL parameters */
 	boolean checkParams(Context context) {
@@ -404,7 +405,14 @@ public class InputVerificationBean {
 		}
 		
 		return true;
-	}		
+	}	
+	
+	boolean checkFileSize(Context context) {
+		final long segments = excerptData.getFileInfo().getSegments();
+		final long threshold = services.getLongSetting(Key.SmallFileLimit);
+		excerptData.setSmallFile(segments<=threshold);
+		return true;
+	}
 		
 	/** Verify that user still has quota left on the designated resource */
 	boolean checkQuota(Context context) {
@@ -414,7 +422,7 @@ public class InputVerificationBean {
 		final Resource resource = services.findResource(server, fileId);
 		final Excerpt excerpt = services.findQuota(user, resource);
 		
-		if(!excerpt.isEmpty()) {
+		if(!excerptData.isSmallFile() && !excerpt.isEmpty()) {
 			long quota = excerpt.size();
 			long segments = excerptData.getFileInfo().getSegments();
 			long limit = (long) (segments * services.getDoubleSetting(Key.ExcerptLimit));

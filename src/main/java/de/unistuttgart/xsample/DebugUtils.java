@@ -29,15 +29,15 @@ public class DebugUtils {
 	public static Properties settings;
 	static {
 		URL config = XsampleServices.class.getResource("/config/debug.ini");
-		Properties settings = new Properties();
 		if(config!=null) {
+			Properties settings = new Properties();
 			try {
 				settings.load(config.openStream());
 			} catch (IOException e) {
 				log.log(Level.SEVERE, "Failed to load debug settings", e);
 			}
+			DebugUtils.settings = settings;
 		}
-		DebugUtils.settings = settings;
 	}
 	
 	public static boolean isActive() { return settings!=null; }
@@ -62,13 +62,15 @@ public class DebugUtils {
 		}
 	}
 	
-	public static void makeQuota(XsampleServices services, XsampleInputData inputData) {
+	public static void makeQuota(XsampleServices services) {
 		if(!isActive()) {
 			return;
 		}
-		
-		Dataverse dataverse = services.findDataverseByUrl(inputData.getSite()).get();
-		Resource resource = services.findResource(dataverse, inputData.getFile());
+
+		String url = getProperty("dataverse.url");
+		Long file = Long.valueOf(getProperty("dataverse.file"));
+		Dataverse dataverse = services.findDataverseByUrl(url).get();
+		Resource resource = services.findResource(dataverse, file);
 		DataverseUser user = services.findDataverseUser(dataverse, getProperty("user.name"));
 		
 		Excerpt quota = services.findQuota(user, resource);

@@ -66,6 +66,8 @@ public class XsampleExcerptData implements Serializable {
 	private ExcerptType excerptType = ExcerptType.STATIC;
 	/** Flag to indicate that annotations should be made part of the final excerpt */
 	private boolean includeAnnotations = false;
+	/** Flag to indicate that the file is too small for excerpt generation */
+	private boolean smallFile = false;
 	
 	public Dataverse getServer() { return server; }
 	public void setServer(Dataverse server) { this.server = server; }
@@ -93,5 +95,8 @@ public class XsampleExcerptData implements Serializable {
 	
 	public List<Fragment> getExcerpt() { return excerpt; }
 	public void setExcerpt(List<Fragment> excerpt) { this.excerpt = excerpt; }
+	
+	public boolean isSmallFile() { return smallFile; }
+	public void setSmallFile(boolean smallFile) { this.smallFile = smallFile; }
 
 }

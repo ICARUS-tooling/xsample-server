@@ -3,6 +3,12 @@
  * and encoding/decoding excerpt data. 
  */
 
+/**
+ * Wrap begin and end values into a fragment object with matching fields.
+ * @param begin the 1-based begin value
+ * @param end the 1-based end value 
+ * @returns a fragment object
+ */
 function toFragment(begin, end) {
 	return {begin:begin, end:end};
 }
@@ -15,7 +21,7 @@ function toFragment(begin, end) {
 function parseFragment(input) {
 	var sep = input.indexOf("-");
 	if(sep==-1) {
-		var num = Number(str);
+		var num = Number(input);
 		return toFragment(num, num);
 	} else {
 		return toFragment(Number(input.slice(0, sep)), Number(input.slice(sep+1, input.length)));
@@ -30,7 +36,7 @@ function parseFragment(input) {
  * @returns an array of integer values, denoting pairs of fragment bounds
  */
 function parseFragments(input) {
-	return input.split(',').map(parseFragment);
+	return input.length==0 ? [] : input.split(',').map(parseFragment);
 }
 
 /**

@@ -19,6 +19,8 @@
  */
 package de.unistuttgart.xsample.util;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -235,5 +237,50 @@ public class XSampleUtils {
 			return (BufferedReader) reader;
 		}
 		return new BufferedReader(reader);
+	}
+
+
+	public static void checkState(boolean condition) {
+		if(!condition)
+			throw new IllegalStateException();
+	}
+
+	public static void checkState(String msg, boolean condition) {
+		if(!condition)
+			throw new IllegalStateException(msg);
+	}
+
+	public static void checkArgument(boolean condition) {
+		if(!condition)
+			throw new IllegalArgumentException();
+	}
+
+	public static void checkArgument(String msg, boolean condition) {
+		if(!condition)
+			throw new IllegalArgumentException(msg);
+	}
+
+	public static void checkIndex(int index, int min, int max) {
+		if(index<min || (index!=min && index>max))
+			throw new IndexOutOfBoundsException();
+	}
+
+	public static <E> E[] checkNotEmpty(E[] array) {
+		requireNonNull(array);
+		checkArgument("Array must not be empty", array.length>0);
+		return array;
+	}
+
+	public static String checkNotEmpty(String s) {
+		requireNonNull(s);
+		if(s.isEmpty())
+			throw new IllegalArgumentException("String must not be empty");
+		return s;
+	}
+
+	public static String checkNullOrNotEmpty(String s) {
+		if(s!=null && s.isEmpty())
+			throw new IllegalArgumentException("String must be null or not be empty");
+		return s;
 	}
 }

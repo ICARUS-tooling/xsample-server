@@ -16,10 +16,13 @@
  */
 package de.unistuttgart.xsample;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._int;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
@@ -28,11 +31,13 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.XsampleWorkflow.Flag;
 import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.Property;
+import de.unistuttgart.xsample.util.XSampleUtils;
 
 /**
  * @author Markus Gärtner
@@ -52,6 +57,9 @@ public class WelcomePage {
 	@Inject
 	XsampleExcerptData excerptData;
 	
+	@Inject
+	XsampleServices services;
+	
 	/** Returns text for current status or empty string */
 	public String getStatusInfo() {
 		if(isShowOutline()) {
@@ -68,6 +76,11 @@ public class WelcomePage {
 	
 	public boolean isHasAnnotations() {
 		return isShowOutline() && !excerptData.getInputType().isRaw();
+	}
+	
+	/** Indicate that the choice for excerpt selection should be shown */
+	public boolean isShowExcerptSelection() {
+		return isShowOutline() && !excerptData.isSmallFile();
 	}
 	
 	/** Produce table data for current main file */
@@ -93,33 +106,67 @@ public class WelcomePage {
 		return properties;
 	}
 	
+	private boolean prepareStaticExcerpt() {
+		int portion = services.getIntSetting(Key.DefaultStaticExcerpt);
+		List<Fragment> excerpt = Arrays.asList(Fragment.of(1, portion));
+		
+		long segments = excerptData.getFileInfo().getSegments();
+		long limit = (long)(segments * services.getDoubleSetting(Key.ExcerptLimit));
+		long usedUpSlots = XSampleUtils.combinedSize(excerpt, excerptData.getQuota().getFragments());
+		if(usedUpSlots > limit) {
+			String text = BundleUtil.format("welcome.msg.staticExcerptExceedsQuota", 
+					_int(portion), excerptData.getFileInfo().getTitle());
+			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
+			FacesContext.getCurrentInstance().addMessage("navMsg", msg);
+			return false;			
+		}
+		
+		excerptData.setExcerpt(excerpt);
+		
+		return true;
+	}
+	
+	private void prepareFullDownload() {
+		long segments = excerptData.getFileInfo().getSegments();
+		List<Fragment> excerpt = Arrays.asList(Fragment.of(1, segments));
+		excerptData.setExcerpt(excerpt);
+	}
+	
 	/** Callback for button to continue workflow */
 	public void onContinue() {
 
+		String oldPage = workflow.getPage();
 		String page = null;
-		ExcerptType excerptType = excerptData.getExcerptType();
-		switch (excerptType) {
-		case STATIC: {
-			page = DownloadPage.PAGE;
-			excerptData.setExcerpt(Arrays.asList(Fragment.of(0, 14)));
-		} break;
-		case SLICE: page = SlicePage.PAGE; break;
-		case QUERY: page = QueryPage.PAGE; break;
-		default:
-			break;
-		}
 		
-		if(page==null) {
-			String text = BundleUtil.format("welcome.msg.unknownPage", excerptType);
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
-			FacesContext.getCurrentInstance().addMessage("navMsg", msg);
-			return;
+		if(excerptData.isSmallFile()) {
+			// Small file -> full download
+			prepareFullDownload();
+			page = DownloadPage.PAGE;
+		} else {
+			// Big file -> Delegate to correct page
+			ExcerptType excerptType = excerptData.getExcerptType();
+			switch (excerptType) {
+			case STATIC: {
+				page = prepareStaticExcerpt() ? DownloadPage.PAGE : PAGE;
+			} break;
+			case SLICE: page = SlicePage.PAGE; break;
+			case QUERY: page = QueryPage.PAGE; break;
+			default:
+				break;
+			}
+			
+			if(page==null) {
+				String text = BundleUtil.format("welcome.msg.unknownPage", excerptType);
+				FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
+				FacesContext.getCurrentInstance().addMessage("navMsg", msg);
+				return;
+			}
 		}
 
-		//TODO if source is too small, delegate to full download
+//		logger.fine("Navigating to subpage "+page);
 		
-		logger.fine("Navigating to subpage "+page);
-		
-		workflow.setPage(page);
+		if(!Objects.equals(oldPage, page)) {
+			workflow.setPage(page);
+		}
 	}
 }

@@ -78,6 +78,10 @@ public class XsampleServices {
 		ServerName,
 		/** Limit in factor percent of the portion a user is allowed to receive per resource. */
 		ExcerptLimit,
+		/** Percent value of a resource that will be returned as the default slice.  */
+		DefaultStaticExcerpt,
+		/** Lower boundary in segments for a resource to count as "small".  */
+		SmallFileLimit
 		;
 		
 		public String getLabel() { return name(); }

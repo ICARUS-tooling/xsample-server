@@ -34,6 +34,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 /**
+ * Models a span of 1-based indices.
+ * 
  * @author Markus Gärtner
  *
  */

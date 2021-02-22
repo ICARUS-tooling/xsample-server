@@ -39,7 +39,11 @@
 					</div>
 				</div>
 				
-				<div>
+				<div jsf:rendered="#{!welcomePage.showExcerptSelection}">
+					<h:outputText value="#{bundle['welcome.smallFile']}:" />
+				</div>
+				
+				<div jsf:rendered="#{welcomePage.showExcerptSelection}">
 					<h:outputText value="#{bundle['welcome.excerptType']}:" />
 					<p:selectOneRadio layout="pageDirection"
 						value="#{xsampleExcerptData.excerptType}">
