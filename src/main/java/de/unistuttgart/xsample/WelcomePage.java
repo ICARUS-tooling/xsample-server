@@ -35,6 +35,7 @@ import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.XsampleWorkflow.Flag;
 import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.Property;
 import de.unistuttgart.xsample.util.XSampleUtils;
@@ -75,7 +76,7 @@ public class WelcomePage {
 	}
 	
 	public boolean isHasAnnotations() {
-		return isShowOutline() && !excerptData.getInputType().isRaw();
+		return isShowOutline() && excerptData.getManifest().hasManifests();
 	}
 	
 	/** Indicate that the choice for excerpt selection should be shown */
@@ -91,9 +92,9 @@ public class WelcomePage {
 		
 		List<Property> properties = new ArrayList<>();
 		
-		InputType inputType = excerptData.getInputType();
+		SourceType sourceType = excerptData.getManifest().getTarget().getSourceType();
 		
-		properties.add(new Property("type", inputType.name()));
+		properties.add(new Property("type", sourceType.name()));
 		
 		FileInfo info = excerptData.getFileInfo();
 		

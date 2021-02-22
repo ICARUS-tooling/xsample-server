@@ -28,6 +28,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 import retrofit2.http.Streaming;
 
 /**
@@ -50,15 +51,19 @@ public interface DataverseClient {
 	
 	@Streaming
 	@GET("api/access/datafile/{id}")
-	Call<ResponseBody> downloadFile(@Path("id") long file, @Header("X-Dataverse-key") String key);
+	Call<ResponseBody> downloadFile(@Path("id") long fileId, @Header("X-Dataverse-key") String key);
+	
+	@Streaming
+	@GET("api/access/datafile/:persistentId")
+	Call<ResponseBody> downloadFile(@Query("persistentId") String persistentId, @Header("X-Dataverse-key") String key);
 	
 	@Streaming
 	@GET("api/files/{id}/metadata")
-	Call<FileMetadata> getFileMetadata(@Path("id") long file, @Header("X-Dataverse-key") String key);
+	Call<FileMetadata> getFileMetadata(@Path("id") long fileId, @Header("X-Dataverse-key") String key);
 	
 	@Streaming
 	@GET("api/files/{id}/metadata/draft")
-	Call<FileMetadata> getDraftFileMetadata(@Path("id") long file, @Header("X-Dataverse-key") String key);
+	Call<FileMetadata> getDraftFileMetadata(@Path("id") long fileId, @Header("X-Dataverse-key") String key);
 	
 	@GET("api/users/:me")
 	Call<UserInfo> getUserInfo(@Header("X-Dataverse-key") String key);

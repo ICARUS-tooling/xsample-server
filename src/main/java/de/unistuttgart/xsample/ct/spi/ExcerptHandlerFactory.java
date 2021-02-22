@@ -21,8 +21,8 @@ package de.unistuttgart.xsample.ct.spi;
 
 import java.util.Optional;
 
-import de.unistuttgart.xsample.InputType;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
+import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
 
 /**
  * @author Markus Gärtner
@@ -30,5 +30,5 @@ import de.unistuttgart.xsample.ct.ExcerptHandler;
  */
 public interface ExcerptHandlerFactory {
 
-	Optional<ExcerptHandler> create(InputType type);
+	Optional<ExcerptHandler> create(SourceType type);
 }

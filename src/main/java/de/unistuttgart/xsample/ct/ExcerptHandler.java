@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import de.unistuttgart.xsample.InputType;
 import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
  
 /**
  * Stateless handler for various file types supported by the XSample workflow.
@@ -35,7 +35,7 @@ import de.unistuttgart.xsample.dv.Fragment;
 public interface ExcerptHandler {
 	
 	/** The basic resource/mime type the handler is meant to deal with. */
-	InputType getType();
+	SourceType getType();
 
 	/**
 	 * Initialize the handler with the given {@link InputStream input}.

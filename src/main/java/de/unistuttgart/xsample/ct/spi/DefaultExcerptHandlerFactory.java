@@ -26,10 +26,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import de.unistuttgart.xsample.InputType;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.PdfHandler;
 import de.unistuttgart.xsample.ct.PlaintextHandler;
+import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
 
 /**
  * @author Markus Gärtner
@@ -37,14 +37,14 @@ import de.unistuttgart.xsample.ct.PlaintextHandler;
  */
 public class DefaultExcerptHandlerFactory implements ExcerptHandlerFactory {
 	
-	private static final Map<InputType, Supplier<ExcerptHandler>> handlers = new EnumMap<>(InputType.class);
+	private static final Map<SourceType, Supplier<ExcerptHandler>> handlers = new EnumMap<>(SourceType.class);
 	static {
-		handlers.put(InputType.PDF, PdfHandler::new);
-		handlers.put(InputType.TXT, PlaintextHandler::new);
+		handlers.put(SourceType.PDF, PdfHandler::new);
+		handlers.put(SourceType.TXT, PlaintextHandler::new);
 	}
 
 	@Override
-	public Optional<ExcerptHandler> create(InputType type) {
+	public Optional<ExcerptHandler> create(SourceType type) {
 		requireNonNull(type);
 		return Optional.ofNullable(handlers.get(type)).map(Supplier::get);
 	}

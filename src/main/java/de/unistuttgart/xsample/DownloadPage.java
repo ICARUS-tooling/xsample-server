@@ -28,6 +28,7 @@ import de.unistuttgart.xsample.ct.ExcerptHandlers;
 import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
 import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
 
 /**
@@ -53,7 +54,8 @@ public class DownloadPage {
 		final FileInfo fileInfo = excerptData.getFileInfo();
 		ExcerptHandler handler;
 		try {
-			handler = ExcerptHandlers.forInputType(excerptData.getInputType());
+			final SourceType sourceType = excerptData.getManifest().getTarget().getSourceType();
+			handler = ExcerptHandlers.forSourceType(sourceType);
 		} catch (UnsupportedContentTypeException e) {
 			logger.log(Level.SEVERE, "Content type of file not supported (this should not happen!!)", e);
 			Messages.addGlobalError("download.msg.unsupportedType");

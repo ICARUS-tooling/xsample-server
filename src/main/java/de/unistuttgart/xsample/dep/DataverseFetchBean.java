@@ -128,7 +128,7 @@ public class DataverseFetchBean {
 			fileInfo.setEncoding(mediaType.charset(StandardCharsets.UTF_8));
 			fileInfo.setTitle(extractName(mediaType.toString()));
 
-			final ExcerptHandler handler = ExcerptHandlers.forInputType(null) /*ExcerptHandlers.forContentType(fileInfo.getContentType())*/;
+			final ExcerptHandler handler = ExcerptHandlers.forSourceType(null) /*ExcerptHandlers.forContentType(fileInfo.getContentType())*/;
 			
 			// Ensure an encrypted copy of the resource
 			final Path tempFile = Files.createTempFile("xsample_", ".tmp");

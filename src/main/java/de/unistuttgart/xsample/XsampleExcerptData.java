@@ -33,6 +33,7 @@ import de.unistuttgart.xsample.dv.DataverseUser;
 import de.unistuttgart.xsample.dv.Excerpt;
 import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.dv.Resource;
+import de.unistuttgart.xsample.mf.XsampleManifest;
 
 /**
  * Input information regarding the excerpt to be created.
@@ -57,10 +58,13 @@ public class XsampleExcerptData implements Serializable {
 	/** Designated output */
 	private List<Fragment> excerpt;
 	
-	/** Type info for raw input file, e.g. 'MANIFEST', 'PDF' */
-	private InputType inputType;
+//	/** Type info for raw input file, e.g. 'MANIFEST', 'PDF' */
+//	private InputType inputType;
 	/** Physical info about primary source file */
 	private FileInfo fileInfo;	
+	
+	/** The root manifest for the current workflow. */
+	private XsampleManifest manifest;
 	
 	/** Type of excerpt generation, legal values are 'static', 'window' and 'query'. */
 	private ExcerptType excerptType = ExcerptType.STATIC;
@@ -78,8 +82,11 @@ public class XsampleExcerptData implements Serializable {
 	public ExcerptType getExcerptType() { return excerptType; }
 	public void setExcerptType(ExcerptType type) { this.excerptType = requireNonNull(type); }
 	
-	public InputType getInputType() { return inputType; }
-	public void setInputType(InputType inputType) { this.inputType = inputType; }
+	public XsampleManifest getManifest() { return manifest; }
+	public void setManifest(XsampleManifest manifest) { this.manifest = manifest; }
+	
+//	public InputType getInputType() { return inputType; }
+//	public void setInputType(InputType inputType) { this.inputType = inputType; }
 	
 	public FileInfo getFileInfo() { return fileInfo; }
 	public void setFileInfo(FileInfo fileInfo) { this.fileInfo = fileInfo; }

@@ -31,8 +31,8 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 
-import de.unistuttgart.xsample.InputType;
 import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.XSampleUtils;
 
@@ -43,7 +43,7 @@ import de.unistuttgart.xsample.util.XSampleUtils;
 public class PdfHandler implements ExcerptHandler {
 
 	@Override
-	public InputType getType() { return InputType.PDF; }
+	public SourceType getType() { return SourceType.PDF; }
 
 	@Override
 	public void analyze(FileInfo file, InputStream in) throws IOException, UnsupportedContentTypeException, EmptyResourceException {

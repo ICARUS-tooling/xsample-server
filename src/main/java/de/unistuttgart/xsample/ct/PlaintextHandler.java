@@ -26,8 +26,8 @@ import java.io.Reader;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
-import de.unistuttgart.xsample.InputType;
 import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
 
 /**
@@ -37,7 +37,7 @@ import de.unistuttgart.xsample.util.BundleUtil;
 public class PlaintextHandler implements ExcerptHandler {
 
 	@Override
-	public InputType getType() { return InputType.TXT; }
+	public SourceType getType() { return SourceType.TXT; }
 	
 	//TODO currently we're not really unicode aware here
 

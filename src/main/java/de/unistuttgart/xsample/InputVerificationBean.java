@@ -28,6 +28,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +38,6 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -55,6 +55,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.transaction.Transactional;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+
 import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.XsampleWorkflow.Status;
 import de.unistuttgart.xsample.ct.EmptyResourceException;
@@ -69,6 +74,9 @@ import de.unistuttgart.xsample.dv.Excerpt;
 import de.unistuttgart.xsample.dv.FileMetadata;
 import de.unistuttgart.xsample.dv.Resource;
 import de.unistuttgart.xsample.dv.UserInfo;
+import de.unistuttgart.xsample.mf.XsampleManifest;
+import de.unistuttgart.xsample.mf.XsampleManifest.SourceFile;
+import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.CountingSplitStream;
 import okhttp3.MediaType;
@@ -163,7 +171,8 @@ public class InputVerificationBean {
 				new Step(this::checkParams, "welcome.step.checkParams"),
 				new Step(this::checkDataverse, "welcome.step.checkDataverse"),
 				new Step(this::checkUser, "welcome.step.checkUser"),
-				new Step(this::checkFileType, "welcome.step.checkFileType"),
+//				new Step(this::checkFileType, "welcome.step.checkFileType"),
+				new Step(this::loadManifest, "welcome.step.loadManifest"),
 				new Step(this::loadFile, "welcome.step.loadFile"),
 				new Step(this::checkFileSize, "welcome.step.checkFileSize"),
 				new Step(this::checkQuota, "welcome.step.checkQuota"));
@@ -174,15 +183,32 @@ public class InputVerificationBean {
 	private void ioErrorMessage(IOException e) {
 		message(FacesMessage.SEVERITY_ERROR, "welcome.msg.dataverseIoError", e.getMessage());
 	}
-
-//	/** Ensure a couple of required database entries */	
-//	boolean initDebug(Context context) {
-//		DebugUtils.makeDataverse(services);
-//		
-//		DebugUtils.makeQuota(services, inputData);
-//		
-//		return true;
-//	}
+	
+	private void httpErrorMessage(Response<?> response) {
+		// Determine what kind of error we are dealing with
+		String key = "welcome.msg.responseUnknown";
+		if(response.code()>=500) {
+			key = "welcome.msg.response500";
+		} else if(response.code()>=400) {
+			key = "welcome.msg.response400";
+		}
+		
+		// Fetch complete error message from remote
+		String msg;
+		try(ResponseBody body = response.errorBody()) {
+			msg = body.string();
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, "Failed to fetch remote error message", e);
+			ioErrorMessage(e);
+			return;
+		}
+		
+		// Log full error message
+		logger.severe(String.format("Error response from Dataverse (code %d): %s", _int(response.code()), msg));
+		
+		// Display proper error message to user
+		message(FacesMessage.SEVERITY_ERROR, key, _int(response.code()));
+	}
 	
 	/** Verify obligatory URL parameters */
 	boolean checkParams(Context context) {
@@ -262,6 +288,7 @@ public class InputVerificationBean {
 	}
 		
 	/** Load file metadata and check that it is a type we can handle */
+	@Deprecated
 	boolean checkFileType(Context context) {
 		final long fileId = inputData.getFile().longValue();
 		final String key = excerptData.getServer().getMasterKey();
@@ -284,16 +311,71 @@ public class InputVerificationBean {
 		}
 		
 		final FileMetadata metadata = response.body();
-		final InputType inputType = InputType.forFileName(metadata.getLabel());
+		final SourceType inputType = SourceType.forFileName(metadata.getLabel());
 		if(inputType==null) { //TODO need a better check then null here?!
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.incompatibleResource");
 			return false;
 		}
-		excerptData.setInputType(inputType);
+//		excerptData.setInputType(inputType);
 		
 		return true;
 	}
 		
+	/** Load the root manifest */
+	boolean loadManifest(Context context) {
+		final long fileId = inputData.getFile().longValue();
+		final String key = inputData.getKey();
+		final DataverseClient client = requireNonNull(context.client);
+		
+		final Call<ResponseBody> request = client.downloadFile(fileId, key);
+	
+		Response<ResponseBody> response;		
+		try {
+			response = request.execute();
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, "Failed to fetch resource", e);
+			ioErrorMessage(e);
+			return false;
+		}
+		
+		if(!response.isSuccessful()) {
+			httpErrorMessage(response);
+			return false;
+		}
+		
+		// Successfully opened and accessed data, now load content
+		try(ResponseBody body = response.body()) {
+			final MediaType mediaType = body.contentType();
+			if(mediaType==null) {
+				logger.log(Level.SEVERE, "Failed to obtain media type");
+				message(FacesMessage.SEVERITY_ERROR,"welcome.msg.noMediaType");
+				return false;
+			}
+			
+			XsampleManifest manifest;
+			
+			try(Reader reader = body.charStream()) {
+				Gson gson = new GsonBuilder() 
+						.excludeFieldsWithoutExposeAnnotation()
+						.create();
+				manifest = gson.fromJson(reader, XsampleManifest.class);
+			}
+			
+			// Update manifest in current setup
+			excerptData.setManifest(manifest);
+		} catch (IOException | JsonIOException e) {
+			logger.log(Level.SEVERE, "Failed to load manifest content", e);
+			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.loadFailed");
+			return false;
+		} catch (JsonSyntaxException e) {
+			logger.log(Level.SEVERE, "Malformed manifest file: "+request.request().url(), e);
+			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.malformedManifest");
+			return false;
+		}
+		
+		return true;
+	}
+
 	private static final String TOKEN = "([a-zA-Z0-9-!#$%&'*+.^_`{|}~]+)";
 	private static final String QUOTED = "\"([^\"]*)\"";
 	private final Pattern PARAMETER = Pattern
@@ -319,11 +401,19 @@ public class InputVerificationBean {
 
 	/** Load the entire source file */
 	boolean loadFile(Context context) {
-		final long fileId = inputData.getFile().longValue();
+		final SourceFile sourceFile = excerptData.getManifest().getTarget();
 		final String key = excerptData.getServer().getMasterKey();
 		final DataverseClient client = requireNonNull(context.client);
 		
-		final Call<ResponseBody> request = client.downloadFile(fileId, key);
+		final Call<ResponseBody> request;
+		if(sourceFile.getId()!=null) {
+			request = client.downloadFile(sourceFile.getId().longValue(), key);
+		} else if(sourceFile.getPersistentId()!=null) {
+			request = client.downloadFile(sourceFile.getPersistentId(), key);
+		} else {
+			message(FacesMessage.SEVERITY_FATAL, "welcome.msg.missingFileId", "manifest");
+			return false;
+		}
 	
 		Response<ResponseBody> response;		
 		try {
@@ -335,8 +425,7 @@ public class InputVerificationBean {
 		}
 		
 		if(!response.isSuccessful()) {
-			//TODO do a switch on http code and provide meaningful messages
-			message(FacesMessage.SEVERITY_ERROR,"Fetching failed ... [[TODO]]");
+			httpErrorMessage(response);
 			return false;
 		}
 		
@@ -345,28 +434,18 @@ public class InputVerificationBean {
 			final MediaType mediaType = body.contentType();
 			if(mediaType==null) {
 				logger.log(Level.SEVERE, "Failed to obtain media type");
-				message(FacesMessage.SEVERITY_ERROR,"welcome.msg.noMediaType");
+				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.noMediaType");
 				return false;
 			}
 			
-			// Sanity check to sync between our naive strategy and dataverse MIME type calculation
-			final String contentType = mediaType.type()+"/"+mediaType.subtype();
-			InputType inputType = InputType.forMimeType(contentType);
-			if(inputType==null) {
-				message(FacesMessage.SEVERITY_WARN,"welcome.msg.noMimeType");
-			} else if(!Objects.equals(inputType, excerptData.getInputType())) {
-				message(FacesMessage.SEVERITY_WARN,"welcome.msg.mimeTypeMismatch");
-				// Dataverse always wins
-				excerptData.setInputType(inputType);
-			}
-			
 			final FileInfo fileInfo = new FileInfo();
-			fileInfo.setContentType(contentType);
+			fileInfo.setContentType(mediaType.type()+"/"+mediaType.subtype());
 			//TODO strictly speaking we should handle an unset or incompatible charset here!!
 			fileInfo.setEncoding(mediaType.charset(StandardCharsets.UTF_8));
 			fileInfo.setTitle(extractName(mediaType.toString()));
 
-			final ExcerptHandler handler = ExcerptHandlers.forInputType(excerptData.getInputType());
+			final SourceType sourceType = excerptData.getManifest().getTarget().getSourceType();
+			final ExcerptHandler handler = ExcerptHandlers.forSourceType(sourceType);
 			
 			// Ensure an encrypted copy of the resource
 			final Path tempFile = Files.createTempFile("xsample_", ".tmp");
@@ -388,19 +467,19 @@ public class InputVerificationBean {
 			excerptData.setFileInfo(fileInfo);
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Failed to load file content", e);
-			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.loadFailed");
+			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.loadFailed");
 			return false;
 		} catch (UnsupportedContentTypeException e) {
 			logger.log(Level.SEVERE, "Content type of file not supported", e);
-			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.unsupportedType");
+			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.unsupportedType");
 			return false;
 		} catch (EmptyResourceException e) {
 			logger.log(Level.SEVERE, "Source file empty", e);
-			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.emptyResource");
+			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.emptyResource");
 			return false;
 		} catch (GeneralSecurityException e) {
 			logger.log(Level.SEVERE, "Failed to prepare cipher", e);
-			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.cipherPreparation");
+			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.cipherPreparation");
 			return false;
 		}
 		

@@ -18,9 +18,11 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
+import com.google.common.base.Preconditions;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import de.unistuttgart.xsample.util.XSampleUtils;
 
 /**
  * @author Markus Gärtner
@@ -59,6 +61,13 @@ public class XsampleManifest implements Serializable {
 	public List<ManifestFile> getManifests() {
 		return manifests==null ? Collections.emptyList() : new ArrayList<>(manifests);
 	}
+	
+	// Helpers
+	
+	public boolean hasManifests() { return manifests!=null && !manifests.isEmpty(); }
+	
+	public boolean hasMetadata() { return metadata!=null && !metadata.isEmpty(); }
+	
 	
 	public static Builder builder() { return new Builder(); }
 
@@ -276,12 +285,41 @@ public class XsampleManifest implements Serializable {
 	
 	public enum SourceType {
 		@SerializedName("pdf")
-		PDF,
+		PDF(".pdf"),
 		@SerializedName("epub")
-		EPUB,
+		EPUB(".epub"),
 		@SerializedName("plain-text")
-		TXT,
+		TXT(".txt"),
 		;
+
+		private final String[] endings;
+
+		private SourceType(String...endings) {
+			Preconditions.checkArgument(endings.length>0, "Must have at least 1 ending registered");
+			this.endings = endings;
+		}
+		
+		public static @Nullable SourceType forFileName(String filename) {
+			for(SourceType type : SourceType.values()) {
+				for(String ending : type.endings) {
+					if(filename.endsWith(ending)) {
+						return type;
+					}
+				}
+			}
+			return null;
+		}
+		
+		private static final Map<String, SourceType> mimeMap = new HashMap<>();
+		static {
+			mimeMap.put(XSampleUtils.MIME_TXT, TXT);
+			mimeMap.put(XSampleUtils.MIME_EPUB, EPUB);
+			mimeMap.put(XSampleUtils.MIME_PDF, PDF);
+		}
+		
+		public static @Nullable SourceType forMimeType(String mimeType) {
+			return mimeMap.get(requireNonNull(mimeType));
+		}
 	}
 	
 	/**

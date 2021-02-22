@@ -24,9 +24,9 @@ import static java.util.Objects.requireNonNull;
 import java.util.Optional;
 import java.util.ServiceLoader;
 
-import de.unistuttgart.xsample.InputType;
 import de.unistuttgart.xsample.ct.spi.DefaultExcerptHandlerFactory;
 import de.unistuttgart.xsample.ct.spi.ExcerptHandlerFactory;
+import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
 
 /**
  * @author Markus Gärtner
@@ -39,7 +39,7 @@ public class ExcerptHandlers {
 	
 	private static final ExcerptHandlerFactory defaultFactory = new DefaultExcerptHandlerFactory();
 	
-	public static ExcerptHandler forInputType(InputType type) throws UnsupportedContentTypeException {
+	public static ExcerptHandler forSourceType(SourceType type) throws UnsupportedContentTypeException {
 		requireNonNull(type);
 		for(ExcerptHandlerFactory factory : loader) {
 			Optional<ExcerptHandler> handler = factory.create(type);

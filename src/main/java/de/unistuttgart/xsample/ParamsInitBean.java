@@ -65,6 +65,7 @@ public class ParamsInitBean {
 			.map(params::get)
 			.ifPresent(inputData::setKey);
 		
+		// Toggle or set debug status
 		Optional.ofNullable(params.get("debug"))
 			.map(Boolean::valueOf)
 			.ifPresent(session::setDebug);
