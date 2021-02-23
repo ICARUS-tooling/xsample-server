@@ -19,6 +19,7 @@
  */
 package de.unistuttgart.xsample.dv;
 
+import static de.unistuttgart.xsample.util.XSampleUtils.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
@@ -75,12 +76,15 @@ public class Fragment implements Comparable<Fragment> {
 	}
 	
 	public static List<Fragment> decodeAll(String s) {
-		return Stream.of(s.split(";"))
+		return Stream.of(s.split(","))
 				.map(Fragment::decode)
 				.collect(Collectors.toList());
 	}
 	
 	public static Fragment of(long from, long to) {
+		checkArgument(from>0);
+		checkArgument(to>0);
+		checkArgument(to>=from);
 		Fragment f = new Fragment();
 		f.setBeginIndex(from);
 		f.setEndIndex(to);
@@ -88,6 +92,7 @@ public class Fragment implements Comparable<Fragment> {
 	}
 	
 	public static Fragment of(long value) {
+		checkArgument(value>0);
 		return of(value, value);
 	}
 
