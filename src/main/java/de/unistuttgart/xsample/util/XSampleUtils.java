@@ -31,6 +31,9 @@ import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -49,24 +52,52 @@ public class XSampleUtils {
 	public static final String MIME_TXT = "text/plain";
 	public static final String MIME_EPUB = "application/epub+zip";
 	
+	private static class SizeAccumulator implements Consumer<Fragment>, BiConsumer<Fragment, Fragment> {
+		private LongAdder size = new LongAdder();
+
+		@Override
+		public void accept(Fragment f1, Fragment f2) {
+			long left = Math.min(f1.getBeginIndex(), f2.getBeginIndex());
+			long right = Math.max(f1.getEndIndex(), f2.getEndIndex());
+			size.add(right - left + 1);
+		}
+
+		@Override
+		public void accept(Fragment f) {
+			size.add(f.size());
+		}
+		
+		public long size() { return size.sum(); }
+	}
+	
 	public static long combinedSize(List<Fragment> a1, List<Fragment> a2) {
+		final SizeAccumulator acc = new SizeAccumulator();
+		merge(a1, a2, acc, acc);
+		return acc.size();
+	}
+	
+	public static void merge(List<Fragment> a1, List<Fragment> a2, 
+			Consumer<? super Fragment> distinct,
+			BiConsumer<? super Fragment, ? super Fragment> overlap) {
+		requireNonNull(a1);
+		requireNonNull(a2);
+		requireNonNull(distinct);
+		requireNonNull(overlap);
+		
 		int i1 = 0;
 		int i2 = 0; 
-		long size = 0;
 		for (; i1 < a1.size() && i2 < a2.size(); ) {
 			Fragment f1 = a1.get(i1);
 			Fragment f2 = a2.get(i2);
 			
 			if(f1.getBeginIndex() > f2.getEndIndex()) { // no overlap, f1 > f2
-				size += f2.size();
+				distinct.accept( f2);
 				i2++;
 			} else if(f2.getBeginIndex() > f1.getEndIndex()) { // no overlap, f2 > f1
-				size += f1.size();
+				distinct.accept(f1);
 				i1++;
 			} else { // overlap
-				long left = Math.min(f1.getBeginIndex(), f2.getBeginIndex());
-				long right = Math.max(f1.getEndIndex(), f2.getEndIndex());
-				size += (right - left + 1);
+				overlap.accept(f1, f2);
 				i1++;
 				i2++;
 			}
@@ -74,14 +105,12 @@ public class XSampleUtils {
 		
 		// Handle leftovers from first array
 		for (; i1 < a1.size(); i1++) {
-			size += a1.get(i1).size();
+			distinct.accept(a1.get(i1));
 		}
 		// Handle leftovers from second array
 		for (; i2 < a2.size(); i2++) {
-			size += a2.get(i2).size();
+			distinct.accept(a2.get(i2));
 		}
-		
-		return size;
 	}
 
 	private static final IvParameterSpec iv = new IvParameterSpec(new SecureRandom().generateSeed(16));

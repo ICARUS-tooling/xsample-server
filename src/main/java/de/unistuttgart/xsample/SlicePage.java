@@ -61,7 +61,7 @@ public class SlicePage {
 	/** Callback for button to continue workflow */
 	public void onContinue() {
 		List<Fragment> excerpt = Arrays.asList(Fragment.of(
-				sliceData.getBegin()-1, sliceData.getEnd()-1));
+				sliceData.getBegin(), sliceData.getEnd()));
 		List<Fragment> quota = excerptData.getQuota().getFragments();
 		
 		/* The following issue should never occur, since we do the same
@@ -71,6 +71,8 @@ public class SlicePage {
 		 */
 		long usedUpSlots = XSampleUtils.combinedSize(excerpt, quota);
 		if(usedUpSlots>sliceData.getLimit()) {
+			logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
+					_long(sliceData.getLimit()), excerptData.getResource(), excerptData.getServer(), excerptData.getDataverseUser()));
 			Messages.addError("navMsg", BundleUtil.get("slice.msg.quotaExceeded"), 
 					_long(usedUpSlots), _long(sliceData.getLimit()));
 			return;

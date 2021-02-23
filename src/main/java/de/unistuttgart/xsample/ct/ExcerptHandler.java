@@ -22,6 +22,7 @@ package de.unistuttgart.xsample.ct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
@@ -58,7 +59,7 @@ public interface ExcerptHandler {
 	 * @param output the destination for the excerpt generation
 	 * @throws IOException
 	 */
-	void excerpt(FileInfo file, InputStream in, Fragment[] fragments, OutputStream out) throws IOException;
+	void excerpt(FileInfo file, InputStream in, List<Fragment> fragments, OutputStream out) throws IOException;
 	
 	//TODO add methods for fetching localized strings related to segment names etc
 	

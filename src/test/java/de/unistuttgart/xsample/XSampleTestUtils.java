@@ -19,6 +19,7 @@
  */
 package de.unistuttgart.xsample;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import de.unistuttgart.xsample.dv.Fragment;
@@ -31,6 +32,12 @@ public class XSampleTestUtils {
 
 	public static long[] asIndices(Fragment[] fragments) {
 		return Stream.of(fragments)
+				.flatMapToLong(Fragment::stream)
+				.toArray();
+	}
+
+	public static long[] asIndices(List<Fragment> fragments) {
+		return fragments.stream()
 				.flatMapToLong(Fragment::stream)
 				.toArray();
 	}

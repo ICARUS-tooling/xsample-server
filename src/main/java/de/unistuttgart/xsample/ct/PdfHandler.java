@@ -19,12 +19,14 @@
  */
 package de.unistuttgart.xsample.ct;
 
+import static de.unistuttgart.xsample.util.XSampleUtils.checkArgument;
 import static de.unistuttgart.xsample.util.XSampleUtils.strictToInt;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -64,13 +66,12 @@ public class PdfHandler implements ExcerptHandler {
 	}
 
 	@Override
-	public void excerpt(FileInfo file, InputStream in, Fragment[] fragments, OutputStream out) throws IOException {
+	public void excerpt(FileInfo file, InputStream in, List<Fragment> fragments, OutputStream out) throws IOException {
 		requireNonNull(file);
 		requireNonNull(in);
 		requireNonNull(fragments);
 		requireNonNull(out);
-		if(fragments.length==0)
-			throw new IllegalArgumentException("Empty fragments list");
+		checkArgument("Empty fragments list", !fragments.isEmpty());
 		
 		try(PDDocument document = PDDocument.load(in); PDDocument newDocument = new PDDocument()) {
 			PDPageTree source = document.getPages();
@@ -80,7 +81,7 @@ public class PdfHandler implements ExcerptHandler {
 				int from = strictToInt(fragment.getBeginIndex());
 				int to = strictToInt(fragment.getEndIndex());
 				for(int idx = from; idx <= to; idx++) {
-					PDPage page = source.get(idx);
+					PDPage page = source.get(idx-1);
 					target.add(page);
 				}
 			}

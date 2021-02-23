@@ -453,7 +453,7 @@ public class InputVerificationBean {
 			long size = 0;
 			try(OutputStream out = new CipherOutputStream(buffer(Files.newOutputStream(tempFile)), encrypt(secret));
 					CountingSplitStream in = new CountingSplitStream(body.byteStream(), out)) {
-				// Let handler to the actual work. Any acquired information is stored in fileInfo
+				// Let handler do the actual work. Any acquired information is stored in fileInfo
 				handler.analyze(fileInfo, in);
 				size = in.getCount();
 			}

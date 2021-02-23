@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -148,7 +150,7 @@ interface ExcerptHandlerTest<H extends ExcerptHandler> {
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#excerpt(FileInfo, InputStream, Fragment[], java.io.OutputStream)}.
+	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#excerpt(FileInfo, InputStream, List, java.io.OutputStream)}.
 	 */
 	@TestFactory
 	default Stream<DynamicNode> testExcerpt() {
@@ -175,7 +177,7 @@ interface ExcerptHandlerTest<H extends ExcerptHandler> {
 							byte[] data = input(size, contentType, encoding);
 							InputStream in = new FastByteArrayInputStream(data);
 							
-							Fragment[] fragments = new Fragment[]{Fragment.of(from, to)};
+							List<Fragment> fragments = Arrays.asList(Fragment.of(from, to));
 							FastByteArrayOutputStream out = new FastByteArrayOutputStream();
 							handler.excerpt(fileInfo, in, fragments, out);
 							

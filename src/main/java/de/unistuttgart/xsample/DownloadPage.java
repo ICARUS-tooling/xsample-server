@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.security.GeneralSecurityException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,6 +28,7 @@ import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.ExcerptHandlers;
 import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
+import de.unistuttgart.xsample.dv.Excerpt;
 import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
@@ -45,13 +47,23 @@ public class DownloadPage {
 	
 	@Inject
 	XsampleExcerptData excerptData;
+	
+	@Inject
+	XsampleServices services;
 
 	//TODO check http://www.primefaces.org:8080/showcase/ui/file/download.xhtml?jfwid=0b585 for example of monitoring during download initialization
 	
 	public void onDownload() {
-		//TODO
-
+		
 		final FileInfo fileInfo = excerptData.getFileInfo();
+		
+		// Early check if we already downloaded the excerpt
+		if(!Files.exists(fileInfo.getTempFile())) {
+			Messages.addGlobalError(BundleUtil.get("download.msg.resourceDeleted"));
+			return;
+		}
+		
+		// Obtain handler to create excerpt
 		ExcerptHandler handler;
 		try {
 			final SourceType sourceType = excerptData.getManifest().getTarget().getSourceType();
@@ -61,16 +73,13 @@ public class DownloadPage {
 			Messages.addGlobalError("download.msg.unsupportedType");
 			return;
 		}
-
-		FacesContext fc = FacesContext.getCurrentInstance();
 		
-		try {			
-			Fragment[] fragments = excerptData.getExcerpt().toArray(new Fragment[0]);
-			
-			if(!Files.exists(fileInfo.getTempFile())) {
-				Messages.addGlobalError(BundleUtil.get("download.msg.resourceDeleted"));
-				return;
-			}
+		// Fetch excerpt
+		final List<Fragment> fragments = excerptData.getExcerpt();
+
+		// Now produce excerpt and send back data
+		FacesContext fc = FacesContext.getCurrentInstance();
+		try {
 			
 			// Prepare basic response header
 			HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();			
@@ -96,6 +105,10 @@ public class DownloadPage {
 			Messages.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
 			return;
 		}
+		
+		// If everything went well, add to quota
+		final Excerpt quota = excerptData.getQuota();
+		quota.merge(fragments);
 	    
 	    fc.responseComplete();
 	}

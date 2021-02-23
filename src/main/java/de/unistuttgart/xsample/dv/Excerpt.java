@@ -23,6 +23,8 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -32,6 +34,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+
+import de.unistuttgart.xsample.util.XSampleUtils;
 
 /**
  * @author Markus Gärtner
@@ -108,5 +112,28 @@ public class Excerpt {
 		fragments.forEach(Fragment::detach);
 		fragments.clear(); 
 		invalidateSize();
+	}
+	
+	public void merge(List<Fragment> others) {
+		if(others.isEmpty()) {
+			return;
+		}
+		
+		List<Fragment> ours = new ArrayList<>(fragments);
+		fragments.clear();
+		invalidateSize();
+		
+		Consumer<Fragment> distinct = f -> {
+			f.setExcerpt(this);
+			fragments.add(f);
+		};
+		BiConsumer<Fragment, Fragment> overlap = (f1, f2) -> {
+			// f1 is ours, f2 is theirs
+			f1.setBeginIndex(Math.min(f1.getBeginIndex(), f2.getBeginIndex()));
+			f1.setEndIndex(Math.max(f1.getEndIndex(), f2.getEndIndex()));
+			fragments.add(f1);
+		};
+		
+		XSampleUtils.merge(ours, others, distinct, overlap);
 	}
 }
