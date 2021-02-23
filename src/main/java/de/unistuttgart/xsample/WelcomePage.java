@@ -167,6 +167,7 @@ public class WelcomePage {
 			}
 			
 			if(page==null) {
+				logger.severe("Unknown page result from routing in welcome page for type: "+excerptType);
 				String text = BundleUtil.format("welcome.msg.unknownPage", excerptType);
 				FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
 				FacesContext.getCurrentInstance().addMessage("navMsg", msg);
