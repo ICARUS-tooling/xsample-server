@@ -44,6 +44,16 @@
 			<br/>
 			<canvas id="excerptOutline" height="15" width="700"
 				style="border:1px solid #000000; margin: 2em; display: block" />
+			<div>
+				<div class="color-box" style="background-color: var(--outline-bg);" />
+				<h:outputText value="#{bundle['slice.color.unused']}" />
+				<div class="color-box" style="background-color: var(--outline-quota);" />
+				<h:outputText value="#{bundle['slice.color.quota']}" />
+				<div class="color-box" style="background-color: var(--outline-excerpt);" />
+				<h:outputText value="#{bundle['slice.color.excerpt']}" />
+				<div class="color-box" style="background-color: var(--outline-exceeded);" />
+				<h:outputText value="#{bundle['slice.color.exceeded']}" />
+			</div>
 		
 			<f:facet name="footer">
 	        	<p:messages id="navMsg" showSummary="true" showDetail="false" redisplay="false" />
@@ -57,7 +67,7 @@
 	<h:outputScript>
 		var quota = [];
 	
-		const updateExcerpt = (_, ui) => {
+		function updateExcerpt(_, ui) {
 			var begin = ui.values[0];
 			var end = ui.values[1];
 			var count = end - begin + 1;
@@ -85,10 +95,10 @@
 			}
 		}
 		
-		const initOutline = () => {			
+		function initOutline() {			
 			var encodedQuota = document.getElementById('slice:excerptQuota').value;			
 			quota = parseFragments(encodedQuota);
-			console.log(quota);
+			//console.log(quota);
 			
 			var begin = Number(document.getElementById('slice:excerptStart').value);
 			var end = Number(document.getElementById('slice:excerptEnd').value);
@@ -97,7 +107,13 @@
 			var canvas = document.getElementById('excerptOutline');
 			var excerpt = [toFragment(begin, end)];
 
-			paintExcerpt(canvas, quota, excerpt, range, OUTLINE_EXCERPT);		
+			paintExcerpt(canvas, quota, excerpt, range, OUTLINE_EXCERPT);	
+				
+			if(quota.length>0) {			
+			var used = combinedSize(quota, excerpt, limit);	
+				var totalPercent = Math.ceil(used / range * 100.0);
+				document.getElementById('slice:totalPercent').textContent = totalPercent + "%";
+			}
 		}
 
 		$('document').ready(function(){

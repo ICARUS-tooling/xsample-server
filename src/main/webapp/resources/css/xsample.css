@@ -1,0 +1,14 @@
+:root {
+  --outline-bg: #3399ff;
+  --outline-quota: #33662A;
+  --outline-excerpt: #00FF00;
+  --outline-exceeded: #FF0000;
+}
+
+.color-box {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    background-color: #ccc;
+    position: relative;
+}

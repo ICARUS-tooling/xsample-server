@@ -90,7 +90,11 @@ public class XsampleServices {
 	// DB LOOKUP METHODS
 	
 	public <T> T add(T obj) {
-		return em.merge(obj);
+		T result = em.merge(obj);
+		
+		em.flush();
+		
+		return result;
 	}
 	
 	public Resource findResource(Dataverse dataverse, Long file) {

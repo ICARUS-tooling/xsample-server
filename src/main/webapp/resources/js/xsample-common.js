@@ -3,6 +3,10 @@
  * and encoding/decoding excerpt data. 
  */
 
+function getCSSVariable(varName) {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName);
+}
+
 /**
  * Wrap begin and end values into a fragment object with matching fields.
  * @param begin the 1-based begin value
@@ -67,10 +71,10 @@ function findFragment(quota, segment, fromIndex, toIndex) {
     return -1;  // segment not found.
 }
 
-const OUTLINE_BG = "#3399ff";
-const OUTLINE_QUOTA = "#FFAA2A";
-const OUTLINE_EXCERPT = "#00FF00";
-const OUTLINE_EXCEEDED = "#FF0000";
+const OUTLINE_BG = getCSSVariable('--outline-bg');
+const OUTLINE_QUOTA = getCSSVariable('--outline-quota');
+const OUTLINE_EXCERPT = getCSSVariable('--outline-excerpt');
+const OUTLINE_EXCEEDED = getCSSVariable('--outline-exceeded');
 
 /**
  * Helper function to compute the size of a fragment span

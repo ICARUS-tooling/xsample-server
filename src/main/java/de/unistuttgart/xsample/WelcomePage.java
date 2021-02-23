@@ -16,6 +16,7 @@
  */
 package de.unistuttgart.xsample;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._double;
 import static de.unistuttgart.xsample.util.XSampleUtils._int;
 
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import javax.inject.Named;
 import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.XsampleWorkflow.Flag;
 import de.unistuttgart.xsample.ct.FileInfo;
+import de.unistuttgart.xsample.dv.Excerpt;
 import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
@@ -103,6 +105,14 @@ public class WelcomePage {
 		properties.add(new Property("encoding", info.getEncoding().displayName()));
 		properties.add(new Property("size", String.valueOf(info.getSize())));
 		properties.add(new Property("segments", String.valueOf(info.getSegments())));
+		
+		Excerpt quota = excerptData.getQuota();
+		if(!quota.isEmpty()) {
+			long used = quota.size();
+			double percent = (double) used / info.getSegments() * 100.0;
+			properties.add(new Property("quota", String.valueOf(used)));
+			properties.add(new Property("quota-ratio", String.format("%.2f%%", _double(percent))));
+		}
 		
 		return properties;
 	}

@@ -21,6 +21,7 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 
 import org.omnifaces.util.Messages;
 
@@ -53,6 +54,7 @@ public class DownloadPage {
 
 	//TODO check http://www.primefaces.org:8080/showcase/ui/file/download.xhtml?jfwid=0b585 for example of monitoring during download initialization
 	
+	@Transactional
 	public void onDownload() {
 		
 		final FileInfo fileInfo = excerptData.getFileInfo();
@@ -109,6 +111,7 @@ public class DownloadPage {
 		// If everything went well, add to quota
 		final Excerpt quota = excerptData.getQuota();
 		quota.merge(fragments);
+		services.add(quota);
 	    
 	    fc.responseComplete();
 	}
