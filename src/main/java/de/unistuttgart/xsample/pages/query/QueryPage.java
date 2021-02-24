@@ -15,7 +15,7 @@ import de.unistuttgart.xsample.pages.XsamplePage;
  */
 @Named
 @RequestScoped
-public class QueryPage extends XsamplePage{
+public class QueryPage extends XsamplePage {
 	
 	public static final String PAGE = "query";
 	
@@ -33,7 +33,7 @@ public class QueryPage extends XsamplePage{
 	}
 
 	/** Callback for button to continue workflow */
-	public void continueWorkflow() {
+	public void next() {
 		
 	}
 }

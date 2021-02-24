@@ -8,7 +8,8 @@
 	<h:form>
 	
 	<div>
-	        <p:messages id="msg" for="initMsgs" closable="true" showSummary="true" showDetail="false" redisplay="false" />
+	        <p:messages id="msg" for="initMsgs" closable="true" showSummary="true" 
+	        	showDetail="false" redisplay="false" />
 			<h:outputText id="status" value="#{welcomePage.statusInfo}" />
 			<p:remoteCommand name="loadResource" action="#{inputVerificationBean.verifyInput}" 
 				update="status msg outline" />
@@ -61,8 +62,8 @@
 				
 				<f:facet name="footer">
 	        		<p:messages id="navMsg" for="navMsgs" showSummary="true" closable="true" showDetail="false" redisplay="false" />
-					<p:commandButton value="#{bundle['welcome.continue']}" 
-						action="#{welcomePage.continueWorkflow}" update="navMsg" />
+					<p:commandButton value="#{bundle['continue']}" 
+						action="#{welcomePage.next}" update="navMsg" />
 				</f:facet>
 			</p:panel>
 		</p:outputPanel>

@@ -42,22 +42,14 @@
 					rendered="#{slicePage.showQuota}" />
 			</div>
 			<br/>
-			<canvas id="outline" class="excerpt-outline" width="700" height="15" />
-			<div>
-				<div class="color-box" style="background-color: var(--outline-bg);" />
-				<h:outputText value="#{bundle['slice.color.unused']}" />
-				<div class="color-box" style="background-color: var(--outline-quota);" />
-				<h:outputText value="#{bundle['slice.color.quota']}" />
-				<div class="color-box" style="background-color: var(--outline-excerpt);" />
-				<h:outputText value="#{bundle['slice.color.excerpt']}" />
-				<div class="color-box" style="background-color: var(--outline-exceeded);" />
-				<h:outputText value="#{bundle['slice.color.exceeded']}" />
-			</div>
+			
+			<ui:include src="/outline.xhtml" />
 		
 			<f:facet name="footer">
 	        	<p:messages id="navMsg" showSummary="true" showDetail="false" redisplay="false" />
-				<p:commandButton widgetVar="wv_continue" value="#{bundle['slice.continue']}" 
-					action="#{slicePage.continueWorkflow}" update=":content" />
+				<p:commandButton value="#{bundle['back']}" action="#{slicePage.back}" process="@this" />
+				<p:commandButton widgetVar="wv_continue" value="#{bundle['continue']}" 
+					action="#{slicePage.next}" />
 			</f:facet>
 		</p:panel>
 	</h:form>

@@ -23,15 +23,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.inject.Named;
-
-import org.primefaces.PrimeFaces;
 
 import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.ct.FileInfo;
@@ -156,9 +153,7 @@ public class WelcomePage extends XsamplePage {
 	}
 	
 	/** Callback for button to continue workflow */
-	public void continueWorkflow() {
-
-		String oldPage = workflow.getPage();
+	public void next() {
 		String page = null;
 		
 		if(excerptData.isSmallFile()) {
@@ -189,10 +184,9 @@ public class WelcomePage extends XsamplePage {
 
 //		logger.fine("Navigating to subpage "+page);
 		
-		// Only cause a "page change" if page actually changed
-		if(!Objects.equals(oldPage, page)) {
-			workflow.setPage(page);
-			PrimeFaces.current().ajax().update(":content");
-		}
+		forward(page);
 	}
+
+	@Override
+	public void back() { throw new UnsupportedOperationException("This is the landing page..."); }
 }

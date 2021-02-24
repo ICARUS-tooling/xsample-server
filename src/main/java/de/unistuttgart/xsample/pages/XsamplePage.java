@@ -5,6 +5,8 @@ package de.unistuttgart.xsample.pages;
 
 import javax.inject.Inject;
 
+import org.primefaces.PrimeFaces;
+
 import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.dv.Excerpt;
@@ -35,6 +37,23 @@ public class XsamplePage {
 		Excerpt quota = excerptData.getQuota();
 		if(!quota.isEmpty()) {
 			data.setQuota(Fragment.encodeAll(quota.getFragments()));
+		}
+	}
+	
+	public void back() {
+		if(workflow.back()) {
+			updatePage();
+		}
+	}
+	
+	protected void updatePage() {
+		PrimeFaces.current().ajax().update(":content");
+	}
+	
+	protected void forward(String page) {
+		// Only cause a "page change" if page actually changed
+		if(workflow.forward(page)) {
+			updatePage();
 		}
 	}
 }

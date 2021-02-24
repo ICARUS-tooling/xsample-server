@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
+
+	<canvas id="outline" class="excerpt-outline" width="700" height="15" />	
+	<div>
+		<div class="color-box" style="background-color: var(--outline-bg);" />
+		<h:outputText value="#{bundle['color.unused']}" />
+		<div class="color-box" style="background-color: var(--outline-quota);" />
+		<h:outputText value="#{bundle['color.quota']}" />
+		<div class="color-box" style="background-color: var(--outline-excerpt);" />
+		<h:outputText value="#{bundle['color.excerpt']}" />
+		<div class="color-box" style="background-color: var(--outline-exceeded);" />
+		<h:outputText value="#{bundle['color.exceeded']}" />
+	</div>
+</ui:composition>

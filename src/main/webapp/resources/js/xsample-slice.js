@@ -1,8 +1,8 @@
 
-const OUTLINE_BG = getCSSVariable('--outline-bg');
-const OUTLINE_QUOTA = getCSSVariable('--outline-quota');
-const OUTLINE_EXCERPT = getCSSVariable('--outline-excerpt');
-const OUTLINE_EXCEEDED = getCSSVariable('--outline-exceeded');
+var OUTLINE_BG = getCSSVariable('--outline-bg');
+var OUTLINE_QUOTA = getCSSVariable('--outline-quota');
+var OUTLINE_EXCERPT = getCSSVariable('--outline-excerpt');
+var OUTLINE_EXCEEDED = getCSSVariable('--outline-exceeded');
 
 /**
  * Paint a horizontal outline on the canvas

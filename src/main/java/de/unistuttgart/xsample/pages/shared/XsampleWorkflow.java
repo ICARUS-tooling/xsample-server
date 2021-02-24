@@ -31,6 +31,8 @@ import javax.inject.Named;
 
 import de.unistuttgart.xsample.pages.welcome.WelcomePage;
 import de.unistuttgart.xsample.util.BundleUtil;
+import it.unimi.dsi.fastutil.Stack;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 /**
  * @author Markus Gärtner
@@ -49,9 +51,31 @@ public class XsampleWorkflow implements Serializable {
 	
 	/** Content page to load. Initially set to {@link WelcomePage#PAGE}. */
 	private String page = WelcomePage.PAGE;
+	
+	private final Stack<String> history = new ObjectArrayList<>(); 
 
 	public String getPage() { return page; }
-	public void setPage(String page) { this.page = requireNonNull(page); }	
+	public boolean forward(String page) { 
+		requireNonNull(page);
+		
+		if(this.page.equals(page)) {
+			return false;
+		}
+		
+		history.push(this.page);
+		this.page = page;
+		
+		return true;
+	}	
+	
+	public boolean back() {
+		if(history.isEmpty()) {
+			return false;
+		}
+		
+		this.page = history.pop();
+		return true;
+	}
 
 	public Status getStatus() { return status; }
 	public void setStatus(Status status) { this.status = requireNonNull(status); }

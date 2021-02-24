@@ -18,14 +18,12 @@ import java.util.logging.Logger;
 import javax.crypto.CipherInputStream;
 import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
 import org.omnifaces.util.Messages;
 
-import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.ExcerptHandlers;
 import de.unistuttgart.xsample.ct.FileInfo;
@@ -33,7 +31,7 @@ import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
 import de.unistuttgart.xsample.dv.Excerpt;
 import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
-import de.unistuttgart.xsample.pages.shared.XsampleExcerptData;
+import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.util.BundleUtil;
 
 /**
@@ -42,22 +40,16 @@ import de.unistuttgart.xsample.util.BundleUtil;
  */
 @Named
 @RequestScoped
-public class DownloadPage {
+public class DownloadPage extends XsamplePage {
 	
 	public static final String PAGE = "download";
 	
 	private static final Logger logger = Logger.getLogger(DownloadPage.class.getCanonicalName());
-	
-	@Inject
-	XsampleExcerptData excerptData;
-	
-	@Inject
-	XsampleServices services;
 
 	//TODO check http://www.primefaces.org:8080/showcase/ui/file/download.xhtml?jfwid=0b585 for example of monitoring during download initialization
 	
 	@Transactional
-	public void onDownload() {
+	public void download() {
 		
 		final FileInfo fileInfo = excerptData.getFileInfo();
 		

@@ -43,7 +43,7 @@ public class SlicePage extends XsamplePage {
 	}
 
 	/** Callback for button to continue workflow */
-	public void continueWorkflow() {
+	public void next() {
 		List<Fragment> excerpt = Arrays.asList(Fragment.of(
 				sliceData.getBegin(), sliceData.getEnd()));
 		List<Fragment> quota = excerptData.getQuota().getFragments();
@@ -64,7 +64,8 @@ public class SlicePage extends XsamplePage {
 		
 		// Everything's fine, continue the workflow
 		excerptData.setExcerpt(excerpt);
-		workflow.setPage(DownloadPage.PAGE);
+		
+		forward(DownloadPage.PAGE);
 	}
 	
 	public boolean isShowQuota() {

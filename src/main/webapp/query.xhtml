@@ -28,23 +28,14 @@
 			<p:messages for="queryMsgs" closable="true" redisplay="false" skipDetailIfEqualsSummary="true" />
 			<p:commandButton value="#{bundle['query.runQuery']}"  action="#{queryPage.runQuery}" />
 		</div>
-		<div>
-			<canvas id="outline" class="excerpt-outline" width="700" height="15" />			
-			<div>
-				<div class="color-box" style="background-color: var(--outline-bg);" />
-				<h:outputText value="#{bundle['slice.color.unused']}" />
-				<div class="color-box" style="background-color: var(--outline-quota);" />
-				<h:outputText value="#{bundle['slice.color.quota']}" />
-				<div class="color-box" style="background-color: var(--outline-excerpt);" />
-				<h:outputText value="#{bundle['slice.color.excerpt']}" />
-				<div class="color-box" style="background-color: var(--outline-exceeded);" />
-				<h:outputText value="#{bundle['slice.color.exceeded']}" />
-			</div>
+		<div>				
+			<ui:include src="/outline.xhtml" />
 		</div>
 		<div>
         	<p:messages id="navMsg" showSummary="true" showDetail="false" redisplay="false" />
-			<p:commandButton widgetVar="wv_continue" value="#{bundle['query.continue']}" 
-				action="#{queryPage.continueWorkflow}" update=":content" disabled="true"/>
+			<p:commandButton value="#{bundle['back']}" action="#{queryPage.back}" process="@this" />
+			<p:commandButton widgetVar="wv_continue" value="#{bundle['continue']}" 
+				action="#{queryPage.next}" disabled="true"/>
 		</div>
 	</h:form>
 
