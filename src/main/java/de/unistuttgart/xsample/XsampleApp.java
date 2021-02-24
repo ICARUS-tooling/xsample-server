@@ -10,6 +10,7 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.transaction.Transactional;
 
 import org.omnifaces.cdi.Eager;
 
@@ -30,6 +31,7 @@ public class XsampleApp implements Serializable {
 	XsampleServices services;
 
 	@PostConstruct
+	@Transactional
 	private void init() {
 		
 		if(DebugUtils.isActive()) {

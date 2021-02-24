@@ -19,6 +19,7 @@
  */
 package de.unistuttgart.xsample;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._double;
 import static de.unistuttgart.xsample.util.XSampleUtils._int;
 import static de.unistuttgart.xsample.util.XSampleUtils._long;
 import static de.unistuttgart.xsample.util.XSampleUtils.buffer;
@@ -55,8 +56,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.transaction.Transactional;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
@@ -143,7 +142,7 @@ public class InputVerificationBean {
 	private static void message(Severity severity, String key, Object...args) {
 		String text = BundleUtil.format(key, args);
 		FacesMessage msg = new FacesMessage(severity, text, null);
-		FacesContext.getCurrentInstance().addMessage("msg", msg);
+		FacesContext.getCurrentInstance().addMessage("initMsgs", msg);
 	}
 
 	static class Step {
@@ -355,10 +354,7 @@ public class InputVerificationBean {
 			XsampleManifest manifest;
 			
 			try(Reader reader = body.charStream()) {
-				Gson gson = new GsonBuilder() 
-						.excludeFieldsWithoutExposeAnnotation()
-						.create();
-				manifest = gson.fromJson(reader, XsampleManifest.class);
+				manifest = XsampleManifest.parse(reader);
 			}
 			
 			// Update manifest in current setup
@@ -371,6 +367,33 @@ public class InputVerificationBean {
 			logger.log(Level.SEVERE, "Malformed manifest file: "+request.request().url(), e);
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.malformedManifest");
 			return false;
+		}
+		
+		return true;
+	}
+
+	/** Verify manifest integrity */
+	boolean validateManifest(Context context) {
+		final XsampleManifest manifest = excerptData.getManifest();
+		
+		if(manifest.hasStaticExcerpt()) {
+			int begin = manifest.getStaticExcerptBegin();
+			if(begin==-1) begin = 0;
+			int end = manifest.getStaticExcerptEnd();
+			if(end==-1) end = 100;
+			
+			final double limit = services.getDoubleSetting(Key.ExcerptLimit) * 100;
+			final int size = end-begin+1; 
+			
+			if(size > limit) {
+				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.manifestExceedsQuota", 
+						_int(size), _double(limit));
+				return false;
+			}
+			excerptData.setStaticExcerptBegin(begin);
+			excerptData.setStaticExcerptEnd(end);
+		} else {
+			excerptData.setStaticExcerptEnd(services.getIntSetting(Key.DefaultStaticExcerpt));
 		}
 		
 		return true;

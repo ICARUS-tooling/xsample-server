@@ -56,7 +56,7 @@ public class DebugUtils {
 		Optional<Dataverse> current = services.findDataverseByUrl(url);
 		if(!current.isPresent()) {
 			Dataverse dv = new Dataverse(url, token);
-			services.add(dv);
+			services.save(dv);
 		} else {
 			current.get().setMasterKey(token);
 		}

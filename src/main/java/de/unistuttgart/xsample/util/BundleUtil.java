@@ -19,7 +19,6 @@
  */
 package de.unistuttgart.xsample.util;
 
-import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -90,7 +89,7 @@ public class BundleUtil {
 	public static String format(String key, Object...params) {
 		String text = get(key);
 		if(params.length>0) {
-			text = MessageFormat.format(text, params);
+			text = XSampleUtils.format(text, params);
 		}
 		return text;
 	}

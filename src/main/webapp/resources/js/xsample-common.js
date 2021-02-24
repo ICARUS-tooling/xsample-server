@@ -71,11 +71,6 @@ function findFragment(quota, segment, fromIndex, toIndex) {
     return -1;  // segment not found.
 }
 
-const OUTLINE_BG = getCSSVariable('--outline-bg');
-const OUTLINE_QUOTA = getCSSVariable('--outline-quota');
-const OUTLINE_EXCERPT = getCSSVariable('--outline-excerpt');
-const OUTLINE_EXCEEDED = getCSSVariable('--outline-exceeded');
-
 /**
  * Helper function to compute the size of a fragment span
  * @param fragment the fragment span to process
@@ -178,44 +173,4 @@ function combinedSize(a1, a2) {
 	}
 	
 	return size;
-}
-
-/**
- * Paint a horizontal outline on the canvas
- * 
- * @param canvas the canvas widget to paint on
- * @param quota array of fragment pairs
- * @param excerpt array of fragment pairs
- * @param range the total number of segments available
- * @param style the style to  use for the excerpt fragments
- */
-function paintExcerpt(canvas, quota, excerpt, range, style){
-	var ctx = canvas.getContext("2d");
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.globalCompositeOperation = 'source-over';
-	//
-	ctx.fillStyle = OUTLINE_BG;
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-	// Width in pixels of a single segment
-	var step = canvas.width / range;
-	
-	// Utility function to paint a continuous range of segments
-	var paintSpan = (begin, end, style) => {
-		var x = (begin-1) * step;
-		var width = (end - begin + 1) * step;
-		ctx.fillStyle = style;
-		ctx.fillRect(x, 0, width, canvas.height);
-	}
-
-	excerpt.forEach(f => paintSpan(f.begin, f.end, style));
-	
-	/* globalCompositeOperation :
-	  normal | multiply | screen | overlay | 
-	  darken | lighten | color-dodge | color-burn | hard-light | 
-	  soft-light | difference | exclusion | hue | saturation | 
-	  color | luminosity
-	*/
-	ctx.globalCompositeOperation = 'multiply';
-	quota.forEach(f => paintSpan(f.begin, f.end, OUTLINE_QUOTA));
 }

@@ -130,6 +130,65 @@ public class XSampleUtils {
 	public static SecretKey makeKey() throws NoSuchAlgorithmException {
 		return KeyGenerator.getInstance("AES").generateKey();
 	}
+ 
+	private static final int KB = 1024;
+	private static final int MB = KB * KB;
+	private static final int GB = KB * KB * KB;
+	
+	public static String formatSize(long size) {
+		if(size>GB) {
+			return (size/GB)+"GB";
+		} else if(size>MB) {
+			return (size/MB)+"MB";
+		} else if(size>KB) {
+			return (size/KB)+"KB";
+		}
+		
+		return size+"B";
+	}
+
+	public static String format(String text, Object...params) {
+		requireNonNull(text);
+		if(text.indexOf('{')==-1) {
+			return text;
+		}
+
+		final StringBuilder result = new StringBuilder();
+		final StringBuilder index = new StringBuilder();
+		boolean isArg = false;
+
+		int paramsIndex = 0;
+
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+
+			if (c == '{') {
+				index.setLength(0);
+				isArg = true;
+			} else if (isArg && c == '}') {
+
+				int tmp = paramsIndex;
+
+				if(index.length()>0) {
+					tmp = Integer.parseInt(index.toString());
+					index.setLength(0);
+				} else {
+					paramsIndex++;
+				}
+
+				if (tmp >= 0 && params!=null && tmp < params.length) {
+					result.append(params[tmp]);
+				}
+				isArg = false;
+			} else if (isArg) {
+				index.append(c);
+			} else {
+				result.append(c);
+			}
+		}
+
+		return result.toString();
+	}
 
 	public static int unbox(Integer value) {
 		return value==null ? 0 : value.intValue();

@@ -111,8 +111,8 @@ public class DownloadPage {
 		// If everything went well, add to quota
 		final Excerpt quota = excerptData.getQuota();
 		quota.merge(fragments);
-		services.add(quota);
-	    
+		services.save(quota);
+		
 	    fc.responseComplete();
 	}
 }

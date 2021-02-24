@@ -12,3 +12,12 @@
     background-color: #ccc;
     position: relative;
 }
+
+.excerpt-outline {
+	border:1px solid #000000; 
+	background-color: var(--outline-bg);
+	margin: 2em; 
+	display: block;
+	height: 15;
+	/* width: 700; */
+}

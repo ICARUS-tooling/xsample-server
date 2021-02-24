@@ -16,4 +16,7 @@ public class QueryPage {
 	
 	public static final String PAGE = "query";
 
+	public void init() {
+		
+	}
 }

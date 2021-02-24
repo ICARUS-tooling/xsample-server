@@ -73,6 +73,9 @@ public class XsampleExcerptData implements Serializable {
 	/** Flag to indicate that the file is too small for excerpt generation */
 	private boolean smallFile = false;
 	
+	private int staticExcerptBegin = 0;
+	private int staticExcerptEnd = 10;
+	
 	public Dataverse getServer() { return server; }
 	public void setServer(Dataverse server) { this.server = server; }
 	
@@ -105,5 +108,11 @@ public class XsampleExcerptData implements Serializable {
 	
 	public boolean isSmallFile() { return smallFile; }
 	public void setSmallFile(boolean smallFile) { this.smallFile = smallFile; }
+	
+	public int getStaticExcerptBegin() { return staticExcerptBegin; }
+	public void setStaticExcerptBegin(int staticExcerptBegin) { this.staticExcerptBegin = staticExcerptBegin; }
+	
+	public int getStaticExcerptEnd() { return staticExcerptEnd; }
+	public void setStaticExcerptEnd(int staticExcerptEnd) { this.staticExcerptEnd = staticExcerptEnd; }
 
 }

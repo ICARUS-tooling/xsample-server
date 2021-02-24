@@ -32,6 +32,8 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.primefaces.PrimeFaces;
+
 import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.XsampleWorkflow.Flag;
 import de.unistuttgart.xsample.ct.FileInfo;
@@ -103,7 +105,7 @@ public class WelcomePage {
 		properties.add(new Property("name", info.getTitle()));
 		properties.add(new Property("content-type", info.getContentType()));
 		properties.add(new Property("encoding", info.getEncoding().displayName()));
-		properties.add(new Property("size", String.valueOf(info.getSize())));
+		properties.add(new Property("size", XSampleUtils.formatSize(info.getSize())));
 		properties.add(new Property("segments", String.valueOf(info.getSegments())));
 		
 		Excerpt quota = excerptData.getQuota();
@@ -117,18 +119,33 @@ public class WelcomePage {
 		return properties;
 	}
 	
-	private boolean prepareStaticExcerpt() {
-		int portion = services.getIntSetting(Key.DefaultStaticExcerpt);
-		List<Fragment> excerpt = Arrays.asList(Fragment.of(1, portion));
+//	/** Label appendix for the static excerpt option */
+//	public String getStaticExcerptRange() {
+//		if(!isShowOutline()) {
+//			return "???";
+//		}
+//
+//		final int begin = excerptData.getStaticExcerptBegin();
+//		final int end = excerptData.getStaticExcerptEnd();
+//		
+//		return String.format("(%d-%d%%)", _int(begin), _int(end));
+//	}
+	
+	boolean prepareStaticExcerpt() {
+		final int begin = excerptData.getStaticExcerptBegin();
+		final int end = excerptData.getStaticExcerptEnd();
 		
 		long segments = excerptData.getFileInfo().getSegments();
+		long first = Math.max(1, (long) (segments / 100.0 * begin));
+		long last = Math.min(segments, first + (long) (segments / 100.0 * (end-begin+1)) - 1);
+		List<Fragment> excerpt = Arrays.asList(Fragment.of(first, last));
 		long limit = (long)(segments * services.getDoubleSetting(Key.ExcerptLimit));
 		long usedUpSlots = XSampleUtils.combinedSize(excerpt, excerptData.getQuota().getFragments());
 		if(usedUpSlots > limit) {
 			String text = BundleUtil.format("welcome.msg.staticExcerptExceedsQuota", 
-					_int(portion), excerptData.getFileInfo().getTitle());
+					_int(begin), _int(end), excerptData.getFileInfo().getTitle());
 			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
-			FacesContext.getCurrentInstance().addMessage("navMsg", msg);
+			FacesContext.getCurrentInstance().addMessage("navMsgs", msg);
 			return false;			
 		}
 		
@@ -137,7 +154,7 @@ public class WelcomePage {
 		return true;
 	}
 	
-	private void prepareFullDownload() {
+	void prepareFullDownload() {
 		long segments = excerptData.getFileInfo().getSegments();
 		List<Fragment> excerpt = Arrays.asList(Fragment.of(1, segments));
 		excerptData.setExcerpt(excerpt);
@@ -170,15 +187,17 @@ public class WelcomePage {
 				logger.severe("Unknown page result from routing in welcome page for type: "+excerptType);
 				String text = BundleUtil.format("welcome.msg.unknownPage", excerptType);
 				FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
-				FacesContext.getCurrentInstance().addMessage("navMsg", msg);
+				FacesContext.getCurrentInstance().addMessage("navMsgs", msg);
 				return;
 			}
 		}
 
 //		logger.fine("Navigating to subpage "+page);
 		
+		// Only cause a "page change" if page actually changed
 		if(!Objects.equals(oldPage, page)) {
 			workflow.setPage(page);
+			PrimeFaces.current().ajax().update(":content");
 		}
 	}
 }

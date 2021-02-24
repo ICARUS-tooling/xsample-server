@@ -147,7 +147,7 @@ cargo {
      
     // Define deploy artifact properties
     deployable {
-        context = "/"
+        context = "/xsample"
     }
      
     // Only necessary for local commands

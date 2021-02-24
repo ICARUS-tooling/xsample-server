@@ -42,8 +42,7 @@
 					rendered="#{slicePage.showQuota}" />
 			</div>
 			<br/>
-			<canvas id="excerptOutline" height="15" width="700"
-				style="border:1px solid #000000; margin: 2em; display: block" />
+			<canvas id="outline" class="excerpt-outline" width="700" height="15" />
 			<div>
 				<div class="color-box" style="background-color: var(--outline-bg);" />
 				<h:outputText value="#{bundle['slice.color.unused']}" />
@@ -64,9 +63,11 @@
 	</h:form>
 				
 	<h:outputScript library="js" name="xsample-common.js" target="body" />
-	<h:outputScript>
+	<h:outputScript library="js" name="xsample-slice.js" target="body" />
+	<h:outputScript>	
+
 		var quota = [];
-	
+		
 		function updateExcerpt(_, ui) {
 			var begin = ui.values[0];
 			var end = ui.values[1];
@@ -74,12 +75,12 @@
 			var range = Number(document.getElementById('slice:excerptRange').value);
 			var percent = Math.ceil(count / range * 100.0);
 			var limit = Number(document.getElementById('slice:excerptThreshold').value);
-			var canvas = document.getElementById('excerptOutline');
+			var canvas = document.getElementById('outline');
 			var excerpt = [toFragment(begin, end)];
 			var used = combinedSize(quota, excerpt, limit);
 			var exceeded = used>limit;
 			var style = exceeded ? OUTLINE_EXCEEDED : OUTLINE_EXCERPT;
-
+		
 			paintExcerpt(canvas, quota, excerpt, range, style);	
 			
 			document.getElementById('slice:excerptSize').textContent = count;
@@ -104,9 +105,9 @@
 			var end = Number(document.getElementById('slice:excerptEnd').value);
 			var range = Number(document.getElementById('slice:excerptRange').value);
 			var limit = Number(document.getElementById('slice:excerptThreshold').value);
-			var canvas = document.getElementById('excerptOutline');
+			var canvas = document.getElementById('outline');
 			var excerpt = [toFragment(begin, end)];
-
+		
 			paintExcerpt(canvas, quota, excerpt, range, OUTLINE_EXCERPT);	
 				
 			if(quota.length>0) {			
@@ -115,7 +116,7 @@
 				document.getElementById('slice:totalPercent').textContent = totalPercent + "%";
 			}
 		}
-
+		
 		$('document').ready(function(){
 			initSlice();
 		});

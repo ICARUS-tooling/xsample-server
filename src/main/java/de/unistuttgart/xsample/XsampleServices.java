@@ -89,7 +89,7 @@ public class XsampleServices {
 	
 	// DB LOOKUP METHODS
 	
-	public <T> T add(T obj) {
+	public <T> T save(T obj) {
 		T result = em.merge(obj);
 		
 		em.flush();

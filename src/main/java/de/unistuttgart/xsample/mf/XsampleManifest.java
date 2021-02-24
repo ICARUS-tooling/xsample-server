@@ -8,6 +8,7 @@ import static de.unistuttgart.xsample.util.XSampleUtils.checkNotEmpty;
 import static de.unistuttgart.xsample.util.XSampleUtils.checkState;
 import static java.util.Objects.requireNonNull;
 
+import java.io.Reader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +20,8 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -31,28 +34,61 @@ import de.unistuttgart.xsample.util.XSampleUtils;
 public class XsampleManifest implements Serializable {
 	
 	private static final long serialVersionUID = 2256551725004203579L;
+	
+	private static final Gson gson = new GsonBuilder() 
+		.excludeFieldsWithoutExposeAnnotation()
+		.create();
+	
+	public static XsampleManifest parse(Reader reader) {
+		synchronized (gson) {
+			return gson.fromJson(reader, XsampleManifest.class);
+		}
+	}
+	
+	private static final String NS = "xmp:";
+	private static final String TYPE = "@type";
+	private static final String CONTEXT = "@context";
+	
+	@Expose
+	@SerializedName(TYPE)
+	private final String _type = NS+"manifest";
+	
+	@Expose
+	@SerializedName(CONTEXT)
+	private final String _context = "http://www.uni-stuttgart.de/xsample/json-ld/manifest";
 
 	@Expose
-	@SerializedName("target")
+	@SerializedName(NS+"target")
 	private SourceFile target;
 
 	@Expose
-	@SerializedName("description")
+	@SerializedName(NS+"description")
 	private String description;
 
 	@Expose
 	@Nullable
-	@SerializedName(value = "metadata", alternate = {"properties"})
+	@SerializedName(value = NS+"metadata", alternate = {NS+"properties"})
 	private Map<String, String> metadata;
 	
 	@Expose
 	@Nullable
-	@SerializedName("manifests")
+	@SerializedName(NS+"manifests")
 	private List<ManifestFile> manifests;
 	
+	@Expose
+	@Nullable
+	@SerializedName(NS+"staticExcerptBegin")
+	private Integer staticExcerptBegin;
+	
+	@Expose
+	@Nullable
+	@SerializedName(NS+"staticExcerptEnd")
+	private Integer staticExcerptEnd;
+	
 	public SourceFile getTarget() { return target; }
-
 	public String getDescription() { return description; }
+	public int getStaticExcerptBegin() { return staticExcerptBegin==null ? -1 : staticExcerptBegin.intValue(); }
+	public int getStaticExcerptEnd() { return staticExcerptEnd==null ? -1 : staticExcerptEnd.intValue(); }
 
 	public Map<String, String> getMetadata() {
 		return metadata==null ? Collections.emptyMap() : new HashMap<>(metadata);
@@ -64,9 +100,9 @@ public class XsampleManifest implements Serializable {
 	
 	// Helpers
 	
-	public boolean hasManifests() { return manifests!=null && !manifests.isEmpty(); }
-	
+	public boolean hasManifests() { return manifests!=null && !manifests.isEmpty(); }	
 	public boolean hasMetadata() { return metadata!=null && !metadata.isEmpty(); }
+	public boolean hasStaticExcerpt() { return staticExcerptBegin!=null || staticExcerptEnd!=null; }
 	
 	
 	public static Builder builder() { return new Builder(); }
@@ -98,6 +134,18 @@ public class XsampleManifest implements Serializable {
 			checkNotEmpty(description);
 			checkState("Description already set", instance.description==null);
 			instance.description = description;
+			return this;
+		}
+		
+		public Builder staticExcerptBegin(int staticExcerptBegin) {
+			checkState("Static excerpt begin already set", instance.staticExcerptBegin==null);
+			instance.staticExcerptBegin = Integer.valueOf(staticExcerptBegin);
+			return this;
+		}
+		
+		public Builder staticExcerptEnd(int staticExcerptEnd) {
+			checkState("Static excerpt end already set", instance.staticExcerptEnd==null);
+			instance.staticExcerptEnd = Integer.valueOf(staticExcerptEnd);
 			return this;
 		}
 		
@@ -157,13 +205,13 @@ public class XsampleManifest implements Serializable {
 		/** Internal numerical ID used by dataverse */
 		@Expose
 		@Nullable
-		@SerializedName("id")
+		@SerializedName(NS+"id")
 		private Long id;
 
 		/** Internal persistent identifier used by dataverse */
 		@Expose
 		@Nullable
-		@SerializedName("persistent-id")
+		@SerializedName(NS+"persistentId")
 		private String persistentId;
 
 		/** 
@@ -232,6 +280,10 @@ public class XsampleManifest implements Serializable {
 	public static class SourceFile extends DataverseFile {
 		
 		private static final long serialVersionUID = -95555390721328529L;
+		
+		@Expose
+		@SerializedName(TYPE)
+		private final String _type = NS+"dataverseFile";
 
 		/** 
 		 * Provides a direct indicator for the segment count in the target file.
@@ -240,12 +292,12 @@ public class XsampleManifest implements Serializable {
 		 */
 		@Expose
 		@Nullable
-		@SerializedName(value = "segments", alternate = {"size", "elements"})
+		@SerializedName(value = NS+"segments", alternate = {NS+"size", NS+"elements"})
 		private Long segments;
 		
 		/** Type indicator to designate how the file is to be treated. */
 		@Expose
-		@SerializedName("source-type")
+		@SerializedName(NS+"sourceType")
 		private SourceType sourceType;
 
 		@Nullable
@@ -284,11 +336,11 @@ public class XsampleManifest implements Serializable {
 	}
 	
 	public enum SourceType {
-		@SerializedName("pdf")
+		@SerializedName(NS+"pdf")
 		PDF(".pdf"),
-		@SerializedName("epub")
+		@SerializedName(NS+"epub")
 		EPUB(".epub"),
-		@SerializedName("plain-text")
+		@SerializedName(NS+"plain-text")
 		TXT(".txt"),
 		;
 
@@ -332,10 +384,14 @@ public class XsampleManifest implements Serializable {
 		
 		private static final long serialVersionUID = -4467949132014774288L;
 		
-		/** Type indicator for the manifest. Currently we only support {@link ManifestType#ICARUS2}! */
 		@Expose
-		@SerializedName("manifest-type")
-		private ManifestType manifestType = ManifestType.ICARUS2;
+		@SerializedName(TYPE)
+		private final String _type = NS+"manifestFile";
+		
+		/** Type indicator for the manifest. Currently we only support {@link ManifestType#IMF}! */
+		@Expose
+		@SerializedName(NS+"manifestType")
+		private ManifestType manifestType = ManifestType.IMF;
 
 		public ManifestType getManifestType() { return manifestType; }
 
@@ -364,8 +420,9 @@ public class XsampleManifest implements Serializable {
 	}
 	
 	public enum ManifestType {
-		@SerializedName("icarus-2")
-		ICARUS2,
+		/** ICARUS2 Manifest Format */
+		@SerializedName(NS+"IMF")
+		IMF,
 		;
 	}
 	
