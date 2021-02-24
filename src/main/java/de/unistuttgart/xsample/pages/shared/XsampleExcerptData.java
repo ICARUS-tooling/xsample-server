@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.pages.shared;
 
 import static java.util.Objects.requireNonNull;
 

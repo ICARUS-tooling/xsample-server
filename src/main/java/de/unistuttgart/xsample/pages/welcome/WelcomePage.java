@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.pages.welcome;
 
 import static de.unistuttgart.xsample.util.XSampleUtils._double;
 import static de.unistuttgart.xsample.util.XSampleUtils._int;
@@ -29,17 +29,21 @@ import java.util.logging.Logger;
 import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.primefaces.PrimeFaces;
 
 import de.unistuttgart.xsample.XsampleServices.Key;
-import de.unistuttgart.xsample.XsampleWorkflow.Flag;
 import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.dv.Excerpt;
 import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
+import de.unistuttgart.xsample.pages.XsamplePage;
+import de.unistuttgart.xsample.pages.download.DownloadPage;
+import de.unistuttgart.xsample.pages.query.QueryPage;
+import de.unistuttgart.xsample.pages.shared.ExcerptType;
+import de.unistuttgart.xsample.pages.shared.XsampleWorkflow.Flag;
+import de.unistuttgart.xsample.pages.slice.SlicePage;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.Property;
 import de.unistuttgart.xsample.util.XSampleUtils;
@@ -50,20 +54,11 @@ import de.unistuttgart.xsample.util.XSampleUtils;
  */
 @Named
 @RequestScoped
-public class WelcomePage {
+public class WelcomePage extends XsamplePage {
 	
 	public static final String PAGE = "welcome";
 	
 	private static final Logger logger = Logger.getLogger(WelcomePage.class.getCanonicalName());
-	
-	@Inject
-	XsampleWorkflow workflow;
-	
-	@Inject
-	XsampleExcerptData excerptData;
-	
-	@Inject
-	XsampleServices services;
 	
 	/** Returns text for current status or empty string */
 	public String getStatusInfo() {
@@ -161,7 +156,7 @@ public class WelcomePage {
 	}
 	
 	/** Callback for button to continue workflow */
-	public void onContinue() {
+	public void continueWorkflow() {
 
 		String oldPage = workflow.getPage();
 		String page = null;

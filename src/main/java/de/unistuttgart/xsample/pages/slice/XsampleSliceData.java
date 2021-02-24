@@ -1,12 +1,12 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
-
-import java.io.Serializable;
+package de.unistuttgart.xsample.pages.slice;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
+
+import de.unistuttgart.xsample.pages.ExcerptUtilityData;
 
 /**
  * @author Markus Gärtner
@@ -14,7 +14,7 @@ import javax.inject.Named;
  */
 @Named
 @ViewScoped
-public class XsampleSliceData implements Serializable {
+public class XsampleSliceData extends ExcerptUtilityData {
 
 	private static final long serialVersionUID = -5558438814838979800L;
 
@@ -22,12 +22,6 @@ public class XsampleSliceData implements Serializable {
 	private long begin = 1;
 	/** End of slice. 1-based. */
 	private long end = 1;
-	/** Total number of segments available */
-	private long range = 1;
-	/** Upper limit of allowed segments to be published */
-	private long limit = 1;
-	/** Encoded used up quota */
-	private String quota = "";
 	
 	public long getBegin() { return begin; }
 	public void setBegin(long begin) { this.begin = begin; }
@@ -36,15 +30,6 @@ public class XsampleSliceData implements Serializable {
 	public void setEnd(long end) { this.end = end; }
 	
 	public long getSize() { return end-begin+1; }
-	
-	public long getRange() { return range; }
-	public void setRange(long range) { this.range = range; }
-	
-	public long getLimit() { return limit; }
-	public void setLimit(long limit) { this.limit = limit; }
-	
-	public String getQuota() { return quota; }
-	public void setQuota(String quota) { this.quota = quota; }
 	
 	/** Size of current slice in percent. Including quota */
 	public double getPercent() {

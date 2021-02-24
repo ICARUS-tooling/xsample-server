@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.pages.slice;
 
 import static de.unistuttgart.xsample.util.XSampleUtils._long;
 
@@ -15,9 +15,9 @@ import javax.inject.Named;
 
 import org.omnifaces.util.Messages;
 
-import de.unistuttgart.xsample.XsampleServices.Key;
-import de.unistuttgart.xsample.dv.Excerpt;
 import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.pages.XsamplePage;
+import de.unistuttgart.xsample.pages.download.DownloadPage;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.XSampleUtils;
 
@@ -27,7 +27,7 @@ import de.unistuttgart.xsample.util.XSampleUtils;
  */
 @Named
 @RequestScoped
-public class SlicePage {
+public class SlicePage extends XsamplePage {
 	
 	public static final String PAGE = "slice";
 	
@@ -36,30 +36,14 @@ public class SlicePage {
 	@Inject
 	XsampleSliceData sliceData;
 	
-	@Inject
-	XsampleWorkflow workflow;
-	
-	@Inject
-	XsampleExcerptData excerptData;
-	
-	@Inject
-	XsampleServices services;
-	
 	public void init() {
-		final long range = excerptData.getFileInfo().getSegments();
+		initQuota(sliceData);
 		sliceData.setBegin(1);
 		sliceData.setEnd(1);
-		sliceData.setRange(range);
-		sliceData.setLimit((long) (range * services.getDoubleSetting(Key.ExcerptLimit)));
-		
-		Excerpt quota = excerptData.getQuota();
-		if(!quota.isEmpty()) {
-			sliceData.setQuota(Fragment.encodeAll(quota.getFragments()));
-		}
 	}
 
 	/** Callback for button to continue workflow */
-	public void onContinue() {
+	public void continueWorkflow() {
 		List<Fragment> excerpt = Arrays.asList(Fragment.of(
 				sliceData.getBegin(), sliceData.getEnd()));
 		List<Fragment> quota = excerptData.getQuota().getFragments();

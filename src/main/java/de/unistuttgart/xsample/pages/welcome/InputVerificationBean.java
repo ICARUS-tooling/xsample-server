@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.pages.welcome;
 
 import static de.unistuttgart.xsample.util.XSampleUtils._double;
 import static de.unistuttgart.xsample.util.XSampleUtils._int;
@@ -59,8 +59,9 @@ import javax.transaction.Transactional;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
+import de.unistuttgart.xsample.XsampleServices;
+import de.unistuttgart.xsample.XsampleSession;
 import de.unistuttgart.xsample.XsampleServices.Key;
-import de.unistuttgart.xsample.XsampleWorkflow.Status;
 import de.unistuttgart.xsample.ct.EmptyResourceException;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.ExcerptHandlers;
@@ -76,6 +77,10 @@ import de.unistuttgart.xsample.dv.UserInfo;
 import de.unistuttgart.xsample.mf.XsampleManifest;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceFile;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
+import de.unistuttgart.xsample.pages.shared.XsampleExcerptData;
+import de.unistuttgart.xsample.pages.shared.XsampleInputData;
+import de.unistuttgart.xsample.pages.shared.XsampleWorkflow;
+import de.unistuttgart.xsample.pages.shared.XsampleWorkflow.Status;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.CountingSplitStream;
 import okhttp3.MediaType;

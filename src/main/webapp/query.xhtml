@@ -5,19 +5,28 @@
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
 	
-	<h:form>
-		<p:remoteCommand name="initQuery" action="#{queryPage.init}"  autoRun="true"
+	<h:form id="query">
+		<p:remoteCommand name="initQuery" action="#{queryPage.init}"
 			process="@this" update="@form" oncomplete="initOutline();" />
+			
+		<h:inputHidden id="excerptThreshold" value="#{xsampleQueryData.limit}" readonly="#{true}" />
+		<h:inputHidden id="excerptRange" value="#{xsampleQueryData.range}" readonly="#{true}" />
+		<h:inputHidden id="excerptQuota" value="#{xsampleQueryData.quota}" readonly="#{true}" />
+		
 		<div>
-			<p:textEditor widgetVar="editor" height="300" placeholder="#{bundle['query.editor.placeholder']}">
-				<f:facet name="toolBar">
-					<!-- leave toolbar empty for now -->
+			<p:textEditor widgetVar="editor" height="300" placeholder="#{bundle['query.editor.placeholder']}"
+					secure="false" required="true">
+				<f:facet name="toolbar">
+					<span class="ql-formats">
+						There be cool stuff for customizing queries...
+						<!-- leave toolbar empty for now -->
+					</span>
 				</f:facet>
 			</p:textEditor>
 		</div>
 		<div>
 			<p:messages for="queryMsgs" closable="true" redisplay="false" skipDetailIfEqualsSummary="true" />
-			<p:commandButton action="" update="queryMesgs" />
+			<p:commandButton value="#{bundle['query.runQuery']}"  action="#{queryPage.runQuery}" />
 		</div>
 		<div>
 			<canvas id="outline" class="excerpt-outline" width="700" height="15" />			
@@ -32,6 +41,11 @@
 				<h:outputText value="#{bundle['slice.color.exceeded']}" />
 			</div>
 		</div>
+		<div>
+        	<p:messages id="navMsg" showSummary="true" showDetail="false" redisplay="false" />
+			<p:commandButton widgetVar="wv_continue" value="#{bundle['query.continue']}" 
+				action="#{queryPage.continueWorkflow}" update=":content" disabled="true"/>
+		</div>
 	</h:form>
 
 				
@@ -41,13 +55,9 @@
 		var excerpt = [];
 		var quota = [];
 		
-		function updateOutline() {			
-			var encodedQuota = document.getElementById('slice:excerptQuota').value;			
-			quota = parseFragments(encodedQuota);
-			//console.log(quota);
-			
-			var range = Number(document.getElementById('slice:excerptRange').value);
-			var limit = Number(document.getElementById('slice:excerptThreshold').value);
+		function updateOutline() {	
+			var range = Number(document.getElementById('query:excerptRange').value);
+			var limit = Number(document.getElementById('query:excerptThreshold').value);
 			var canvas = document.getElementById('outline');
 			var used = combinedSize(quota, excerpt, limit);
 			var exceeded = used>limit;
@@ -57,7 +67,7 @@
 		}
 		
 		function initOutline() {		
-			var encodedQuota = document.getElementById('slice:excerptQuota').value;			
+			var encodedQuota = document.getElementById('query:excerptQuota').value;			
 			quota = parseFragments(encodedQuota);
 			//console.log(quota);
 			updateOutline();

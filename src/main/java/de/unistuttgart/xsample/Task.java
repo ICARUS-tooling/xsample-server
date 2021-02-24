@@ -36,6 +36,7 @@ import de.unistuttgart.xsample.util.BundleUtil;
  * @author Markus Gärtner
  *
  */
+@Deprecated
 public abstract class Task {
 
 	private final List<FacesMessage> messages = new ArrayList<>();

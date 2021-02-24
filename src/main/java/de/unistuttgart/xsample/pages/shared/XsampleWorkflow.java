@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.pages.shared;
 
 import static java.util.Objects.requireNonNull;
 
@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
+import de.unistuttgart.xsample.pages.welcome.WelcomePage;
 import de.unistuttgart.xsample.util.BundleUtil;
 
 /**

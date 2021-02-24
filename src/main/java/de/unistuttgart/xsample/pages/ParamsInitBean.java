@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.pages;
 
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +27,10 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import de.unistuttgart.xsample.XsampleServices;
+import de.unistuttgart.xsample.XsampleSession;
 import de.unistuttgart.xsample.XsampleServices.Key;
+import de.unistuttgart.xsample.pages.shared.XsampleInputData;
 
 /**
  * @author Markus Gärtner

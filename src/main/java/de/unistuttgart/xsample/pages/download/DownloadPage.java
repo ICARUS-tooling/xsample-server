@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.pages.download;
 
 import static de.unistuttgart.xsample.util.XSampleUtils.decrypt;
 
@@ -25,6 +25,7 @@ import javax.transaction.Transactional;
 
 import org.omnifaces.util.Messages;
 
+import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.ExcerptHandlers;
 import de.unistuttgart.xsample.ct.FileInfo;
@@ -32,6 +33,7 @@ import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
 import de.unistuttgart.xsample.dv.Excerpt;
 import de.unistuttgart.xsample.dv.Fragment;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
+import de.unistuttgart.xsample.pages.shared.XsampleExcerptData;
 import de.unistuttgart.xsample.util.BundleUtil;
 
 /**

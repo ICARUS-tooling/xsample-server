@@ -14,6 +14,8 @@ import javax.transaction.Transactional;
 
 import org.omnifaces.cdi.Eager;
 
+import de.unistuttgart.xsample.util.DebugUtils;
+
 /**
  * @author Markus Gärtner
  *

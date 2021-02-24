@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample;
+package de.unistuttgart.xsample.util;
 
 import static java.util.Objects.requireNonNull;
 
@@ -12,6 +12,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.dv.Dataverse;
 import de.unistuttgart.xsample.dv.DataverseUser;
 import de.unistuttgart.xsample.dv.Excerpt;
