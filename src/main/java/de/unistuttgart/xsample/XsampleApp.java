@@ -29,6 +29,8 @@ public class XsampleApp implements Serializable {
 	
 	private static final Logger logger = Logger.getLogger(XsampleApp.class.getCanonicalName());
 	
+	//TODO inject version identifier from gradle build file here and display it in UI
+	
 	@Inject
 	XsampleServices services;
 

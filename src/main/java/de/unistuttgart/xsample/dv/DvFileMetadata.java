@@ -25,7 +25,7 @@ import java.io.Serializable;
  * @author Markus Gärtner
  *
  */
-public class FileMetadata implements Serializable {
+public class DvFileMetadata implements Serializable {
 
 	private static final long serialVersionUID = 4190333903371053495L;
 

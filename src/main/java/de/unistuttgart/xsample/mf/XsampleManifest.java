@@ -426,6 +426,72 @@ public class XsampleManifest implements Serializable {
 		;
 	}
 	
+	public static class LegalNote implements Serializable {
+
+		private static final long serialVersionUID = 3921667001929679618L;
+		
+		@Expose
+		@SerializedName(TYPE)
+		private final String _type = NS+"legalNote";
+
+		@Expose
+		@SerializedName(NS+"author")
+		private String author;
+
+		@Expose
+		@SerializedName(NS+"title")
+		private String title;
+
+		@Expose
+		@SerializedName(NS+"publisher")
+		private String publisher;
+	}
+	
+	public static class Span implements Serializable {
+
+		private static final long serialVersionUID = -5616064267813758508L;
+		
+		@Expose
+		@SerializedName(TYPE)
+		private final String _type = NS+"span";
+		
+		//TODO
+		private Long begin;
+		private Long end;
+	}
+	
+	public static class Corpus implements Serializable {
+		
+		private static final long serialVersionUID = -9047502342614191852L;
+		
+		@Expose
+		@SerializedName(TYPE)
+		private final String _type = NS+"corpus";
+
+		/** Legal information for corpus or subcorpus */
+		@Expose
+		@SerializedName(NS+"legalNote")
+		private LegalNote legalNote;
+
+		/** General information for corpus or subcorpus */
+		@Expose
+		@SerializedName(NS+"note")
+		@Nullable
+		private String note;
+
+		/** Span covered by corpus or subcorpus, can be omitted for main corpus without sub-parts */
+		@Expose
+		@SerializedName(NS+"span")
+		@Nullable
+		private Span span;
+
+		/** Separate parts of the corpus with individual legal notes */
+		@Expose
+		@SerializedName(NS+"parts")
+		@Nullable
+		private List<Corpus> parts;
+	}
+	
 	@NotThreadSafe
 	public static abstract class BuilderBase<T> {
 		protected T instance;

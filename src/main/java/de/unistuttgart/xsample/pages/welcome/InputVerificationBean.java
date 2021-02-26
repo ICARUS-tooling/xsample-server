@@ -60,8 +60,8 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
 import de.unistuttgart.xsample.XsampleServices;
-import de.unistuttgart.xsample.XsampleSession;
 import de.unistuttgart.xsample.XsampleServices.Key;
+import de.unistuttgart.xsample.XsampleSession;
 import de.unistuttgart.xsample.ct.EmptyResourceException;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.ExcerptHandlers;
@@ -70,10 +70,11 @@ import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
 import de.unistuttgart.xsample.dv.Dataverse;
 import de.unistuttgart.xsample.dv.DataverseClient;
 import de.unistuttgart.xsample.dv.DataverseUser;
+import de.unistuttgart.xsample.dv.DvFileMetadata;
+import de.unistuttgart.xsample.dv.DvResult;
+import de.unistuttgart.xsample.dv.DvUserInfo;
 import de.unistuttgart.xsample.dv.Excerpt;
-import de.unistuttgart.xsample.dv.FileMetadata;
 import de.unistuttgart.xsample.dv.Resource;
-import de.unistuttgart.xsample.dv.UserInfo;
 import de.unistuttgart.xsample.mf.XsampleManifest;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceFile;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
@@ -177,6 +178,7 @@ public class InputVerificationBean {
 				new Step(this::checkUser, "welcome.step.checkUser"),
 //				new Step(this::checkFileType, "welcome.step.checkFileType"),
 				new Step(this::loadManifest, "welcome.step.loadManifest"),
+				new Step(this::validateManifest, "welcome.step.validateManifest"),
 				new Step(this::loadFile, "welcome.step.loadFile"),
 				new Step(this::checkFileSize, "welcome.step.checkFileSize"),
 				new Step(this::checkQuota, "welcome.step.checkQuota"));
@@ -262,7 +264,7 @@ public class InputVerificationBean {
 		final String key = inputData.getKey();
 		final DataverseClient client = requireNonNull(context.client);
 		
-		Response<UserInfo> response;
+		Response<DvResult<DvUserInfo>> response;
 		try {
 			response = client.getUserInfo(key).execute();
 		} catch (IOException e) {
@@ -277,8 +279,8 @@ public class InputVerificationBean {
 			return false;
 		}
 		
-		final UserInfo info = response.body();
-		if(info.getData()==null) {
+		final DvResult<DvUserInfo> info = response.body();
+		if(!info.isOk() || info.getData()==null) {
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.userInfoFailed");
 			logger.severe(String.format("Received empty user info for key '%s': status=%d", 
 					key, info.getStatus()));
@@ -298,7 +300,7 @@ public class InputVerificationBean {
 		final String key = excerptData.getServer().getMasterKey();
 		final DataverseClient client = requireNonNull(context.client);
 		
-		Response<FileMetadata> response;
+		Response<DvFileMetadata> response;
 		try {
 			//TODO change to regular metadata method once we solved the API TOKEN issue
 			response = client.getDraftFileMetadata(fileId, key).execute();
@@ -314,7 +316,7 @@ public class InputVerificationBean {
 			return false;
 		}
 		
-		final FileMetadata metadata = response.body();
+		final DvFileMetadata metadata = response.body();
 		final SourceType inputType = SourceType.forFileName(metadata.getLabel());
 		if(inputType==null) { //TODO need a better check then null here?!
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.incompatibleResource");

@@ -59,12 +59,12 @@ public interface DataverseClient {
 	
 	@Streaming
 	@GET("api/files/{id}/metadata")
-	Call<FileMetadata> getFileMetadata(@Path("id") long fileId, @Header("X-Dataverse-key") String key);
+	Call<DvFileMetadata> getFileMetadata(@Path("id") long fileId, @Header("X-Dataverse-key") String key);
 	
 	@Streaming
 	@GET("api/files/{id}/metadata/draft")
-	Call<FileMetadata> getDraftFileMetadata(@Path("id") long fileId, @Header("X-Dataverse-key") String key);
+	Call<DvFileMetadata> getDraftFileMetadata(@Path("id") long fileId, @Header("X-Dataverse-key") String key);
 	
 	@GET("api/users/:me")
-	Call<UserInfo> getUserInfo(@Header("X-Dataverse-key") String key);
+	Call<DvResult<DvUserInfo>> getUserInfo(@Header("X-Dataverse-key") String key);
 }
