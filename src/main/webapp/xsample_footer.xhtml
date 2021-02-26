@@ -10,6 +10,7 @@
                 xmlns:of="http://omnifaces.org/functions"
                 xmlns:iqbs="http://xmlns.jcp.org/jsf/composite/iqbs">
    
-    <div id="footer" class="#{widgetView ? 'widget-view' : ''}">
+    <div id="footer" class="footer">
+    	<h:outputText value="#{bundle['xsample']} v#{xsampleApp.version}" />
     </div>
 </ui:composition>

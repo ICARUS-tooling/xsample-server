@@ -3,7 +3,13 @@
  */
 package de.unistuttgart.xsample;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -33,10 +39,18 @@ public class XsampleApp implements Serializable {
 	
 	@Inject
 	XsampleServices services;
+	
+	private Properties properties = new Properties();
 
 	@PostConstruct
 	@Transactional
 	private void init() {
+		
+		try(InputStream in = XsampleApp.class.getResourceAsStream("/META-INF/app.properties")) {
+			properties.load(new InputStreamReader(in, StandardCharsets.UTF_8));
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, "Unable to read application properties file", e);
+		}
 		
 		if(DebugUtils.isActive()) {
 			
@@ -47,4 +61,10 @@ public class XsampleApp implements Serializable {
 			DebugUtils.makeQuota(services);
 		}
 	}
+	
+	public String getProperty(String key) {
+		return properties.getProperty(key, "<unset_"+key+">");
+	}
+	
+	public String getVersion() { return getProperty("version"); }
 }

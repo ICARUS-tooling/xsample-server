@@ -31,10 +31,6 @@
 	        <ui:include src="xsample_header.xhtml">
 	        	<ui:param name="showXsampleHeader" value="#{showXsampleHeader}" />
 	        </ui:include>
-	    	
-	        <div id="content">
-	            <ui:insert name="body">#{bundle.defaultBody}</ui:insert>
-	        </div>
 	        
 	        <p:ajaxStatus id="ajaxStatusPanel">
 	            <f:facet name="start">
@@ -44,6 +40,10 @@
 	                <!-- DO NOTHING -->
 	            </f:facet>
 	        </p:ajaxStatus>
+	    	
+	        <div id="content" class="content">
+	            <ui:insert name="body">#{bundle.defaultBody}</ui:insert>
+	        </div>
 	                        
 	        <ui:include src="xsample_footer.xhtml" />
 		</h:body>

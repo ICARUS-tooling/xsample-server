@@ -17,7 +17,12 @@ targetCompatibility = 1.8
 
 // Configuration for the Payara deployment tasks
 def deploymentConfig = new Properties()
-deploymentConfig.load(new FileInputStream(rootProject.file("deployment.ini")))
+rootProject.file("deployment.ini").withReader { deploymentConfig.load(it) }
+
+// App info based on data in build script
+def appConfig = new Properties();
+appConfig.put("version", version)
+rootProject.file("src/main/resources/META-INF/app.properties").withWriter { appConfig.store(it, "Static XSample application info") }
 
 repositories { 
     mavenLocal()
