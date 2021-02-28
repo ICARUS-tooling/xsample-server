@@ -131,6 +131,7 @@ public class DataverseSetup {
 		
 		ManifestGenerator generator = ManifestGenerator.builder()
 				.baseName("100p_pdf")
+				.basePath("pdf")
 				.size(100)
 				.sourceType(SourceType.PDF)
 				.unsupportedfileId(Integer.MAX_VALUE)

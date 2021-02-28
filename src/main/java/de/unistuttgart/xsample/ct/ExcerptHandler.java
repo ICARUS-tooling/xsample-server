@@ -22,6 +22,7 @@ package de.unistuttgart.xsample.ct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.List;
 
 import de.unistuttgart.xsample.dv.Fragment;
@@ -33,7 +34,7 @@ import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
  * @author Markus Gärtner
  *
  */
-public interface ExcerptHandler {
+public interface ExcerptHandler extends Serializable {
 	
 	/** The basic resource/mime type the handler is meant to deal with. */
 	SourceType getType();
@@ -63,5 +64,5 @@ public interface ExcerptHandler {
 	
 	//TODO add methods for fetching localized strings related to segment names etc
 	
-	String getSegmentLabel();
+	String getSegmentLabel(boolean plural);
 }

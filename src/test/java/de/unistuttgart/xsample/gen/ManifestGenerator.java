@@ -28,6 +28,8 @@ import java.util.List;
 
 import de.unistuttgart.xsample.mf.XsampleManifest;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceFile;
+import de.unistuttgart.xsample.mf.XsampleManifest.Span;
+import de.unistuttgart.xsample.mf.XsampleManifest.SpanType;
 
 /**
  * @author Markus Gärtner
@@ -42,6 +44,7 @@ public class ManifestGenerator {
 	private long size = -1;
 	private XsampleManifest.SourceType sourceType = null;
 	private String baseName = null;
+	private String basePath = null;
 	
 	private ManifestGenerator() { /* no-op */ }
 	
@@ -49,21 +52,38 @@ public class ManifestGenerator {
 		return baseName+suffix+".json";
 	}
 	
+	private String path(String path) {
+		if("".equals(path)) {
+			return basePath;
+		}
+		String s = basePath;
+		if(s==null) {
+			s = "";
+		} else if(!s.endsWith("/")) {
+			s += '/';
+		}
+		s += path;
+		return s;
+	}
+	
 	public List<Entry> generate() {
+		final String validPath = path("");
+		final String failPath = path("fail");
 		return Arrays.asList(
 				// Correct manifests
-				new Entry(name("_default"), "", plain()),
-				new Entry(name("_shifted_static"), "", shiftedStatic()),
-				new Entry(name("_open_static_begin"), "", openStaticBegin()),
-				new Entry(name("_open_static_end"), "", openStaticEnd()),
+				new Entry(name("_default"), validPath, plain()),
+				new Entry(name("_fixed_excerpt"), validPath, fixedExcerpt()),
+				new Entry(name("_shifted_static"), validPath, shiftedStatic()),
+				new Entry(name("_open_static_begin"), validPath, openStaticBegin()),
+				new Entry(name("_open_static_end"), validPath, openStaticEnd()),
 				//TODO manifests with hierarchical parts
 				
 				// Expected fails
-				new Entry(name("_exceeds_quota"), "fail", exceedsQuota()),
-				new Entry(name("_unsupported"), "fail", unsupportedTarget()),
-				new Entry(name("_invalid_target"), "fail", invalidTarget()),
-				new Entry(name("_invalid_open_static_begin"), "fail", invalidOpenStaticBegin()),
-				new Entry(name("_invalid_open_static_end"), "fail", invalidOpenStaticEnd())
+				new Entry(name("_exceeds_quota"), failPath, exceedsQuota()),
+				new Entry(name("_unsupported"), failPath, unsupportedTarget()),
+				new Entry(name("_invalid_target"), failPath, invalidTarget()),
+				new Entry(name("_invalid_open_static_begin"), failPath, invalidOpenStaticBegin()),
+				new Entry(name("_invalid_open_static_end"), failPath, invalidOpenStaticEnd())
 		);
 	}
 	
@@ -72,18 +92,36 @@ public class ManifestGenerator {
 	/** Plain manifest that should work */
 	private XsampleManifest plain() {
 		return base()
-				.description("Plain manifest with no customization")
-				.staticExcerptBegin(0)
-				.staticExcerptEnd(10)
+				.description("Plain manifest with no customization (first 10%)")
+				.staticExcerpt(Span.builder()
+						.spanType(SpanType.RELATIVE)
+						.begin(0)
+						.end(10)
+						.build())
+				.build();
+	}
+	
+	/** Fixed pages */
+	private XsampleManifest fixedExcerpt() {
+		return base()
+				.description("Plain manifest with fixed excerpt pages [5-14]")
+				.staticExcerpt(Span.builder()
+						.spanType(SpanType.FIXED)
+						.begin(5)
+						.end(14)
+						.build())
 				.build();
 	}
 	
 	/** Plain manifest with a shifted window for static excerpt */
 	private XsampleManifest shiftedStatic() {
 		return base()
-				.description("Plain manifest with shifted static excerpt window")
-				.staticExcerptBegin(20)
-				.staticExcerptEnd(30)
+				.description("Plain manifest with shifted static excerpt window [20%-30%)")
+				.staticExcerpt(Span.builder()
+						.spanType(SpanType.RELATIVE)
+						.begin(20)
+						.end(30)
+						.build())
 				.build();
 	}
 	
@@ -91,7 +129,10 @@ public class ManifestGenerator {
 	private XsampleManifest openStaticBegin() {
 		return base()
 				.description("Plain manifest with open begin of static excerpt interval")
-				.staticExcerptEnd(10)
+				.staticExcerpt(Span.builder()
+						.spanType(SpanType.RELATIVE)
+						.end(10)
+						.build())
 				.build();
 	}
 	
@@ -99,7 +140,10 @@ public class ManifestGenerator {
 	private XsampleManifest openStaticEnd() {
 		return base()
 				.description("Plain manifest with open end of static excerpt interval")
-				.staticExcerptBegin(90)
+				.staticExcerpt(Span.builder()
+						.spanType(SpanType.RELATIVE)
+						.begin(90)
+						.build())
 				.build();
 	}
 	
@@ -109,8 +153,11 @@ public class ManifestGenerator {
 	private XsampleManifest exceedsQuota() {
 		return base()
 				.description("Manifest that exceeds quota limit with static excerpt")
-				.staticExcerptBegin(0)
-				.staticExcerptEnd(50)
+				.staticExcerpt(Span.builder()
+						.spanType(SpanType.RELATIVE)
+						.begin(0)
+						.end(50)
+						.build())
 				.build();
 	}
 	
@@ -123,8 +170,11 @@ public class ManifestGenerator {
 						.sourceType(sourceType)
 						.build())
 				.description("Manifest that lists an unsupported target for "+sourceType)
-				.staticExcerptBegin(0)
-				.staticExcerptEnd(10)
+				.staticExcerpt(Span.builder()
+						.spanType(SpanType.RELATIVE)
+						.begin(0)
+						.end(10)
+						.build())
 				.build();
 	}
 	
@@ -137,8 +187,11 @@ public class ManifestGenerator {
 						.sourceType(sourceType)
 						.build())
 				.description("Manifest that lists an invalid target")
-				.staticExcerptBegin(0)
-				.staticExcerptEnd(10)
+				.staticExcerpt(Span.builder()
+						.spanType(SpanType.RELATIVE)
+						.begin(0)
+						.end(10)
+						.build())
 				.build();
 	}
 	
@@ -157,7 +210,10 @@ public class ManifestGenerator {
 	private XsampleManifest invalidOpenStaticBegin() {
 		return base()
 				.description("Invalid open begin of static excerpt interval")
-				.staticExcerptEnd(50)
+				.staticExcerpt(Span.builder()
+						.spanType(SpanType.RELATIVE)
+						.end(50)
+						.build())
 				.build();
 	}
 	
@@ -165,7 +221,10 @@ public class ManifestGenerator {
 	private XsampleManifest invalidOpenStaticEnd() {
 		return base()
 				.description("Invalid open end of static excerpt interval")
-				.staticExcerptBegin(50)
+				.staticExcerpt(Span.builder()
+						.spanType(SpanType.RELATIVE)
+						.begin(50)
+						.build())
 				.build();
 	}
 
@@ -206,6 +265,11 @@ public class ManifestGenerator {
 
 		public Builder baseName(String baseName) {
 			instance.baseName = requireNonNull(baseName);
+			return this;
+		}
+
+		public Builder basePath(String basePath) {
+			instance.basePath = requireNonNull(basePath);
 			return this;
 		}
 		

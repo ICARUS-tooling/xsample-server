@@ -19,6 +19,7 @@
  */
 package de.unistuttgart.xsample.mf;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._long;
 import static de.unistuttgart.xsample.util.XSampleUtils.checkArgument;
 import static de.unistuttgart.xsample.util.XSampleUtils.checkNotEmpty;
 import static de.unistuttgart.xsample.util.XSampleUtils.checkState;
@@ -93,18 +94,12 @@ public class XsampleManifest implements Serializable {
 	
 	@Expose
 	@Nullable
-	@SerializedName(NS+"staticExcerptBegin")
-	private Integer staticExcerptBegin;
-	
-	@Expose
-	@Nullable
-	@SerializedName(NS+"staticExcerptEnd")
-	private Integer staticExcerptEnd;
+	@SerializedName(NS+"staticExcerpt")
+	private Span staticExcerpt;
 	
 	public SourceFile getTarget() { return target; }
 	public String getDescription() { return description; }
-	public int getStaticExcerptBegin() { return staticExcerptBegin==null ? -1 : staticExcerptBegin.intValue(); }
-	public int getStaticExcerptEnd() { return staticExcerptEnd==null ? -1 : staticExcerptEnd.intValue(); }
+	public Span getStaticExcerpt() { return staticExcerpt; }
 
 	public Map<String, String> getMetadata() {
 		return metadata==null ? Collections.emptyMap() : new HashMap<>(metadata);
@@ -118,8 +113,9 @@ public class XsampleManifest implements Serializable {
 	
 	public boolean hasManifests() { return manifests!=null && !manifests.isEmpty(); }	
 	public boolean hasMetadata() { return metadata!=null && !metadata.isEmpty(); }
-	public boolean hasStaticExcerpt() { return staticExcerptBegin!=null || staticExcerptEnd!=null; }
+	public boolean hasStaticExcerpt() { return staticExcerpt!=null; }
 	
+	public String toJSON() { return gson.toJson(this); }
 	
 	public static Builder builder() { return new Builder(); }
 
@@ -153,15 +149,10 @@ public class XsampleManifest implements Serializable {
 			return this;
 		}
 		
-		public Builder staticExcerptBegin(int staticExcerptBegin) {
-			checkState("Static excerpt begin already set", instance.staticExcerptBegin==null);
-			instance.staticExcerptBegin = Integer.valueOf(staticExcerptBegin);
-			return this;
-		}
-		
-		public Builder staticExcerptEnd(int staticExcerptEnd) {
-			checkState("Static excerpt end already set", instance.staticExcerptEnd==null);
-			instance.staticExcerptEnd = Integer.valueOf(staticExcerptEnd);
+		public Builder staticExcerpt(Span staticExcerpt) {
+			requireNonNull(staticExcerpt);
+			checkState("Static excerpt already set", instance.staticExcerpt==null);
+			instance.staticExcerpt = staticExcerpt;
 			return this;
 		}
 		
@@ -461,6 +452,8 @@ public class XsampleManifest implements Serializable {
 		@Expose
 		@SerializedName(NS+"publisher")
 		private String publisher;
+		
+		//TODO builder
 	}
 	
 	public static class Span implements Serializable {
@@ -470,10 +463,72 @@ public class XsampleManifest implements Serializable {
 		@Expose
 		@SerializedName(TYPE)
 		private final String _type = NS+"span";
-		
-		//TODO
+
+		@Expose
+		@SerializedName(NS+"begin")
+		@Nullable
 		private Long begin;
+
+		@Expose
+		@SerializedName(NS+"end")
+		@Nullable
 		private Long end;
+
+		@Expose
+		@SerializedName(NS+"spanType")
+		private SpanType spanType;
+		
+		public long getBegin() { return begin==null ? -1 : begin.longValue(); }
+		public long getEnd() { return end==null ? -1 : end.longValue(); }
+		public SpanType getSpanType() { return spanType; }
+
+		public static Builder builder() { return new Builder(); }
+
+		public static class Builder extends BuilderBase<Span> {
+			
+			private Builder() { /* no-op */ }
+		
+			@Override
+			protected Span makeInstance() { return new Span(); }
+			
+			@Override
+			protected void validate() {
+				checkState("Missing 'span-type' field", instance.spanType!=null);
+				checkState("Need at least 1 of 'begin' o 'end' fields", 
+						instance.begin!=null || instance.end!=null);
+			}
+			
+			public Builder begin(long begin) {
+				checkArgument("Begin cannot be negative", begin>=0);
+				checkState("Begin already set", instance.begin==null);
+				instance.begin = _long(begin);
+				return this;
+			}
+			
+			public Builder end(long end) {
+				checkArgument("End cannot be negative", end>=0);
+				checkState("End already set", instance.end==null);
+				instance.end = _long(end);
+				return this;
+			}
+			
+			public Builder spanType(SpanType spanType) {
+				requireNonNull(spanType);
+				checkState("Span type already set", instance.spanType==null);
+				instance.spanType = spanType;
+				return this;
+			}
+		}		
+	}
+	
+	public enum SpanType {
+		/** Direct addressing of segments. */
+		@SerializedName(NS+"fixed")
+		FIXED,
+		/** Relative span definition via percentage [0..100]. */
+		@SerializedName(NS+"relative")
+		RELATIVE,
+		;
 	}
 	
 	public static class Corpus implements Serializable {

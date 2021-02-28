@@ -11,7 +11,7 @@
 	        <p:messages id="msg" for="initMsgs" closable="true" showSummary="true" 
 	        	showDetail="false" redisplay="false" />
 			<h:outputText id="status" value="#{welcomePage.statusInfo}" />
-			<p:remoteCommand name="loadResource" action="#{inputVerificationBean.verifyInput}" 
+			<p:remoteCommand name="loadResource" action="#{welcomePage.verifyInput}" 
 				update="status msg outline" />
 	</div>
 	
@@ -49,7 +49,7 @@
 					<h:outputText value="#{bundle['welcome.excerptType']}:" />
 					<p:selectOneRadio layout="pageDirection"
 						value="#{xsampleExcerptData.excerptType}">
-						<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']} (#{xsampleExcerptData.staticExcerptBegin}-#{xsampleExcerptData.staticExcerptEnd}%)"
+						<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']} (#{xsampleExcerptData.staticExcerptLabel})"
 							itemValue="STATIC" />
 						<f:selectItem itemLabel="#{bundle['welcome.excerptType.slice']}"
 							itemValue="SLICE" />

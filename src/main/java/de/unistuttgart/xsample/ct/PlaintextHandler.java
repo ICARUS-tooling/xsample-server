@@ -37,6 +37,8 @@ import de.unistuttgart.xsample.util.BundleUtil;
  */
 public class PlaintextHandler implements ExcerptHandler {
 
+	private static final long serialVersionUID = 7803808074101364595L;
+
 	@Override
 	public SourceType getType() { return SourceType.TXT; }
 	
@@ -64,5 +66,8 @@ public class PlaintextHandler implements ExcerptHandler {
 	}
 
 	@Override
-	public String getSegmentLabel() { return BundleUtil.get("characters"); }
+	public String getSegmentLabel(boolean plural) {
+		// For now we don't distinguish between pl and sg label here
+		return BundleUtil.get("characters"); 
+	}
 }

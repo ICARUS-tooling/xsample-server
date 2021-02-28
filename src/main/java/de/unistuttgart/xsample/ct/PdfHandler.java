@@ -44,6 +44,8 @@ import de.unistuttgart.xsample.util.XSampleUtils;
  */
 public class PdfHandler implements ExcerptHandler {
 
+	private static final long serialVersionUID = -6009524518534487163L;
+
 	@Override
 	public SourceType getType() { return SourceType.PDF; }
 
@@ -93,5 +95,7 @@ public class PdfHandler implements ExcerptHandler {
 	}
 
 	@Override
-	public String getSegmentLabel() { return BundleUtil.get("pages"); }
+	public String getSegmentLabel(boolean plural) { 
+		return BundleUtil.get(plural ? "pages" : "page"); 
+	}
 }

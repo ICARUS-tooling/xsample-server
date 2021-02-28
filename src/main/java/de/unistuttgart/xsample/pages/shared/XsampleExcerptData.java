@@ -27,6 +27,7 @@ import java.util.List;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
+import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.dv.Dataverse;
 import de.unistuttgart.xsample.dv.DataverseUser;
@@ -58,6 +59,8 @@ public class XsampleExcerptData implements Serializable {
 	/** Designated output */
 	private List<Fragment> excerpt;
 	
+	private String staticExcerptLabel;
+	
 //	/** Type info for raw input file, e.g. 'MANIFEST', 'PDF' */
 //	private InputType inputType;
 	/** Physical info about primary source file */
@@ -66,6 +69,9 @@ public class XsampleExcerptData implements Serializable {
 	/** The root manifest for the current workflow. */
 	private XsampleManifest manifest;
 	
+	/** The designated handler to manage excerpt generation and analysis of the source file */
+	private ExcerptHandler excerptHandler;
+	
 	/** Type of excerpt generation, legal values are 'static', 'window' and 'query'. */
 	private ExcerptType excerptType = ExcerptType.STATIC;
 	/** Flag to indicate that annotations should be made part of the final excerpt */
@@ -73,8 +79,9 @@ public class XsampleExcerptData implements Serializable {
 	/** Flag to indicate that the file is too small for excerpt generation */
 	private boolean smallFile = false;
 	
-	private int staticExcerptBegin = 0;
-	private int staticExcerptEnd = 10;
+	private long staticExcerptBegin = 0;
+	private long staticExcerptEnd = 10;
+	private boolean staticExcerptFixed = false;
 	
 	public Dataverse getServer() { return server; }
 	public void setServer(Dataverse server) { this.server = server; }
@@ -109,10 +116,19 @@ public class XsampleExcerptData implements Serializable {
 	public boolean isSmallFile() { return smallFile; }
 	public void setSmallFile(boolean smallFile) { this.smallFile = smallFile; }
 	
-	public int getStaticExcerptBegin() { return staticExcerptBegin; }
-	public void setStaticExcerptBegin(int staticExcerptBegin) { this.staticExcerptBegin = staticExcerptBegin; }
+	public long getStaticExcerptBegin() { return staticExcerptBegin; }
+	public void setStaticExcerptBegin(long staticExcerptBegin) { this.staticExcerptBegin = staticExcerptBegin; }
 	
-	public int getStaticExcerptEnd() { return staticExcerptEnd; }
-	public void setStaticExcerptEnd(int staticExcerptEnd) { this.staticExcerptEnd = staticExcerptEnd; }
+	public long getStaticExcerptEnd() { return staticExcerptEnd; }
+	public void setStaticExcerptEnd(long staticExcerptEnd) { this.staticExcerptEnd = staticExcerptEnd; }
+	
+	public boolean isStaticExcerptFixed() { return staticExcerptFixed; }
+	public void setStaticExcerptFixed(boolean staticExcerptFixed) { this.staticExcerptFixed = staticExcerptFixed; }
+	
+	public String getStaticExcerptLabel() { return staticExcerptLabel; }
+	public void setStaticExcerptLabel(String staticExcerptLabel) { this.staticExcerptLabel = staticExcerptLabel; }
+	
+	public ExcerptHandler getExcerptHandler() { return excerptHandler; }
+	public void setExcerptHandler(ExcerptHandler excerptHandler) { this.excerptHandler = excerptHandler; }
 
 }
