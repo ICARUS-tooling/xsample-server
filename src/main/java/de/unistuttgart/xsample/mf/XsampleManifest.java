@@ -452,8 +452,50 @@ public class XsampleManifest implements Serializable {
 		@Expose
 		@SerializedName(NS+"publisher")
 		private String publisher;
+
+		public String getAuthor() { return author; }
+
+		public String getTitle() { return title; }
+
+		public String getPublisher() { return publisher; }
+
+		public static Builder builder() { return new Builder(); }
+
+		public static class Builder extends BuilderBase<LegalNote> {
+			
+			private Builder() { /* no-op */ }
 		
-		//TODO builder
+			@Override
+			protected LegalNote makeInstance() { return new LegalNote(); }
+			
+			@Override
+			protected void validate() {
+				checkState("Missing 'author' field", instance.author!=null);
+				checkState("Missing 'title' field", instance.title!=null);
+				checkState("Missing 'publisher' field", instance.publisher!=null);
+			}
+			
+			public Builder author(String author) {
+				requireNonNull(author);
+				checkState("Author already set", instance.author==null);
+				instance.author = author;
+				return this;
+			}
+			
+			public Builder title(String title) {
+				requireNonNull(title);
+				checkState("Title already set", instance.title==null);
+				instance.title = title;
+				return this;
+			}
+			
+			public Builder publisher(String publisher) {
+				requireNonNull(publisher);
+				checkState("Publisher already set", instance.publisher==null);
+				instance.publisher = publisher;
+				return this;
+			}
+		}
 	}
 	
 	public static class Span implements Serializable {

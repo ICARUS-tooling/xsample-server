@@ -28,6 +28,7 @@ import java.util.List;
 
 import de.unistuttgart.xsample.mf.XsampleManifest;
 import de.unistuttgart.xsample.mf.XsampleManifest.SourceFile;
+import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
 import de.unistuttgart.xsample.mf.XsampleManifest.Span;
 import de.unistuttgart.xsample.mf.XsampleManifest.SpanType;
 
@@ -71,19 +72,20 @@ public class ManifestGenerator {
 		final String failPath = path("fail");
 		return Arrays.asList(
 				// Correct manifests
-				new Entry(name("_default"), validPath, plain()),
-				new Entry(name("_fixed_excerpt"), validPath, fixedExcerpt()),
-				new Entry(name("_shifted_static"), validPath, shiftedStatic()),
-				new Entry(name("_open_static_begin"), validPath, openStaticBegin()),
-				new Entry(name("_open_static_end"), validPath, openStaticEnd()),
+				new Entry(name("_c001_default"), validPath, plain()),
+				new Entry(name("_c002_fixed_excerpt"), validPath, fixedExcerpt()),
+				new Entry(name("_c003_shifted_static"), validPath, shiftedStatic()),
+				new Entry(name("_c004_open_static_begin"), validPath, openStaticBegin()),
+				new Entry(name("_c005_open_static_end"), validPath, openStaticEnd()),
 				//TODO manifests with hierarchical parts
 				
 				// Expected fails
-				new Entry(name("_exceeds_quota"), failPath, exceedsQuota()),
-				new Entry(name("_unsupported"), failPath, unsupportedTarget()),
-				new Entry(name("_invalid_target"), failPath, invalidTarget()),
-				new Entry(name("_invalid_open_static_begin"), failPath, invalidOpenStaticBegin()),
-				new Entry(name("_invalid_open_static_end"), failPath, invalidOpenStaticEnd())
+				new Entry(name("_f001_exceeds_quota"), failPath, exceedsQuota()),
+				new Entry(name("_f002_exceeds_fixed_quota"), failPath, exceedsFixedQuota()),
+				new Entry(name("_f003_unsupported"), failPath, unsupportedTarget()),
+				new Entry(name("_f004_invalid_target"), failPath, invalidTarget()),
+				new Entry(name("_f005_invalid_open_static_begin"), failPath, invalidOpenStaticBegin()),
+				new Entry(name("_f006_invalid_open_static_end"), failPath, invalidOpenStaticEnd())
 		);
 	}
 	
@@ -93,11 +95,7 @@ public class ManifestGenerator {
 	private XsampleManifest plain() {
 		return base()
 				.description("Plain manifest with no customization (first 10%)")
-				.staticExcerpt(Span.builder()
-						.spanType(SpanType.RELATIVE)
-						.begin(0)
-						.end(10)
-						.build())
+				.staticExcerpt(span(SpanType.RELATIVE, 0, 10))
 				.build();
 	}
 	
@@ -105,11 +103,7 @@ public class ManifestGenerator {
 	private XsampleManifest fixedExcerpt() {
 		return base()
 				.description("Plain manifest with fixed excerpt pages [5-14]")
-				.staticExcerpt(Span.builder()
-						.spanType(SpanType.FIXED)
-						.begin(5)
-						.end(14)
-						.build())
+				.staticExcerpt(span(SpanType.FIXED, 5, 14))
 				.build();
 	}
 	
@@ -117,11 +111,7 @@ public class ManifestGenerator {
 	private XsampleManifest shiftedStatic() {
 		return base()
 				.description("Plain manifest with shifted static excerpt window [20%-30%)")
-				.staticExcerpt(Span.builder()
-						.spanType(SpanType.RELATIVE)
-						.begin(20)
-						.end(30)
-						.build())
+				.staticExcerpt(span(SpanType.RELATIVE, 20, 30))
 				.build();
 	}
 	
@@ -129,10 +119,7 @@ public class ManifestGenerator {
 	private XsampleManifest openStaticBegin() {
 		return base()
 				.description("Plain manifest with open begin of static excerpt interval")
-				.staticExcerpt(Span.builder()
-						.spanType(SpanType.RELATIVE)
-						.end(10)
-						.build())
+				.staticExcerpt(span(SpanType.RELATIVE, -1, 10))
 				.build();
 	}
 	
@@ -140,10 +127,7 @@ public class ManifestGenerator {
 	private XsampleManifest openStaticEnd() {
 		return base()
 				.description("Plain manifest with open end of static excerpt interval")
-				.staticExcerpt(Span.builder()
-						.spanType(SpanType.RELATIVE)
-						.begin(90)
-						.build())
+				.staticExcerpt(span(SpanType.RELATIVE, 90, -1))
 				.build();
 	}
 	
@@ -153,50 +137,52 @@ public class ManifestGenerator {
 	private XsampleManifest exceedsQuota() {
 		return base()
 				.description("Manifest that exceeds quota limit with static excerpt")
-				.staticExcerpt(Span.builder()
-						.spanType(SpanType.RELATIVE)
-						.begin(0)
-						.end(50)
-						.build())
+				.staticExcerpt(span(SpanType.RELATIVE, 0, 50))
+				.build();
+	}
+	
+	/** Plain manifest with fixed excerpt declaration that exceeds quota */
+	private XsampleManifest exceedsFixedQuota() {
+		return base()
+				.description("Manifest that exceeds quota limit with fixed excerpt")
+				.staticExcerpt(span(SpanType.FIXED, 0, 50))
 				.build();
 	}
 	
 	/** Manifest that references an unsupported file and declares given source type */
 	private XsampleManifest unsupportedTarget() {
-		return XsampleManifest.builder()
-				.target(SourceFile.builder()
-						.id(unsupportedfileId)
-						.segments(10)
-						.sourceType(sourceType)
-						.build())
+		return base(unsupportedfileId, 10, sourceType)
 				.description("Manifest that lists an unsupported target for "+sourceType)
-				.staticExcerpt(Span.builder()
-						.spanType(SpanType.RELATIVE)
-						.begin(0)
-						.end(10)
-						.build())
+				.staticExcerpt(span(SpanType.RELATIVE, 0, 10))
 				.build();
 	}
 	
 	/** Manifest that references a non-existing file */
 	private XsampleManifest invalidTarget() {
-		return XsampleManifest.builder()
-				.target(SourceFile.builder()
-						.id(Integer.MAX_VALUE)
-						.segments(size)
-						.sourceType(sourceType)
-						.build())
+		return base(Integer.MAX_VALUE, size, sourceType)
 				.description("Manifest that lists an invalid target")
-				.staticExcerpt(Span.builder()
-						.spanType(SpanType.RELATIVE)
-						.begin(0)
-						.end(10)
-						.build())
+				.staticExcerpt(span(SpanType.RELATIVE, 0, 10))
 				.build();
 	}
 	
+	/** Plain manifest with a open begin for static excerpt */
+	private XsampleManifest invalidOpenStaticBegin() {
+		return base()
+				.description("Invalid open begin of static excerpt interval")
+				.staticExcerpt(span(SpanType.RELATIVE, -1, 50))
+				.build();
+	}
+
+	/** Plain manifest with a open end for static excerpt */
+	private XsampleManifest invalidOpenStaticEnd() {
+		return base()
+				.description("Invalid open end of static excerpt interval")
+				.staticExcerpt(span(SpanType.RELATIVE, 50, -1))
+				.build();
+	}
+
 	/** Generate basic manfiest with only target file set */
-	private XsampleManifest.Builder base() {
+	private XsampleManifest.Builder base(long fileId, long size, SourceType sourceType) {
 		return XsampleManifest.builder()
 				.target(SourceFile.builder()
 						.id(fileId)
@@ -206,28 +192,15 @@ public class ManifestGenerator {
 				;
 	}
 	
-	/** Plain manifest with a open begin for static excerpt */
-	private XsampleManifest invalidOpenStaticBegin() {
-		return base()
-				.description("Invalid open begin of static excerpt interval")
-				.staticExcerpt(Span.builder()
-						.spanType(SpanType.RELATIVE)
-						.end(50)
-						.build())
-				.build();
+	private XsampleManifest.Builder base() { return base(fileId, size, sourceType); }
+	
+	private Span span(SpanType spanType,  long begin, long end) {
+		Span.Builder builder = Span.builder().spanType(spanType);
+		if(begin!=-1) builder.begin(begin);
+		if(end!=-1) builder.end(end);
+		return builder.build();
 	}
 	
-	/** Plain manifest with a open end for static excerpt */
-	private XsampleManifest invalidOpenStaticEnd() {
-		return base()
-				.description("Invalid open end of static excerpt interval")
-				.staticExcerpt(Span.builder()
-						.spanType(SpanType.RELATIVE)
-						.begin(50)
-						.build())
-				.build();
-	}
-
 	public static class Entry {
 		public final XsampleManifest manifest;
 		public final String name;
