@@ -26,7 +26,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import de.unistuttgart.xsample.dv.Fragment;
-import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
+import de.unistuttgart.xsample.mf.SourceType;
  
 /**
  * Stateless handler for various file types supported by the XSample workflow.

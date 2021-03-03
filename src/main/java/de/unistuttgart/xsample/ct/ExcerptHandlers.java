@@ -26,7 +26,7 @@ import java.util.ServiceLoader;
 
 import de.unistuttgart.xsample.ct.spi.DefaultExcerptHandlerFactory;
 import de.unistuttgart.xsample.ct.spi.ExcerptHandlerFactory;
-import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
+import de.unistuttgart.xsample.mf.SourceType;
 
 /**
  * @author Markus Gärtner

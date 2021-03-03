@@ -28,7 +28,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 
 import de.unistuttgart.xsample.dv.Fragment;
-import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
+import de.unistuttgart.xsample.mf.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
 
 /**

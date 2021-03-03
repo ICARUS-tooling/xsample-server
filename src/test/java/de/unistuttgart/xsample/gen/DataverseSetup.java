@@ -19,6 +19,7 @@
  */
 package de.unistuttgart.xsample.gen;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._int;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
@@ -26,13 +27,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 
 import de.unistuttgart.xsample.dv.DvResult;
+import de.unistuttgart.xsample.gen.DvFileInfo.DvDataFile;
 import de.unistuttgart.xsample.gen.ManifestGenerator.Entry;
-import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
+import de.unistuttgart.xsample.mf.SourceType;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -100,34 +104,22 @@ public class DataverseSetup {
 		final String datasetPID = requireNonNull(settings.getProperty("dataset.persistentId"));
 		final String datasetVersion = settings.getProperty("dataset.version", AdminClient.DRAFT);
 		
-		clearDataset(datasetPID, datasetVersion);
-		
-		populateDataset(datasetPID);
-	}
-	
-	private void clearDataset(String persistentId, String version) throws IOException {
-		System.out.println("Clearing dataset: "+persistentId);
-		List<DvFileInfo> files = doCall(client.getFiles(version, persistentId, key));
-		
-		if(files.isEmpty()) {
-			System.out.printf("Dataset %s version %s is empty%n", persistentId, version);
-			return;
-		}
-		
-		for(DvFileInfo info : files) {
-			long fileId = info.getDataFile().getId();
-			System.out.println("Deleting file: "+fileId);
-			doGenericCall(client.deleteFileSWORD(fileId, auth));
-		}
-		System.out.println("  -- done --  ");
+		populateDataset(datasetPID, datasetVersion);
 	}
 	
 	private static final MediaType JSON = MediaType.get("application/json");
 	private static final MediaType JSON_LD = MediaType.get("application/ld+json");
 	
-	private void populateDataset(String persistentId) throws IOException {
+	private void populateDataset(String persistentId, String version) throws IOException {
 		System.out.println("Populating dataset: "+persistentId);
 		//TODO currently we only do this for a single pdf file, need to expand it to other types when ready!!
+
+		final List<DvFileInfo> files = doCall(client.getFiles(version, persistentId, key));
+		System.out.printf("Found %d existing files in dataset%n", _int(files.size()));
+		
+		final Map<String, DvDataFile> existing = files.stream()
+				.map(DvFileInfo::getDataFile)
+				.collect(Collectors.toMap(DvDataFile::getFilename, d -> d));
 		
 		ManifestGenerator generator = ManifestGenerator.builder()
 				.baseName("100p_pdf")
@@ -138,12 +130,15 @@ public class DataverseSetup {
 				.fileId(26)
 				.create();
 		
-		List<Entry> entries = generator.generate();
+		final List<Entry> entries = generator.generate();
 		
-		Gson gson = new Gson();
+		System.out.printf("Total of %d entries to populate%n", _int(entries.size()));
+		
+		final Gson gson = new Gson();
+		
+		final boolean isDraft = AdminClient.DRAFT.equals(version);
 		
 		for(Entry entry : entries) {
-			System.out.println("Uploading manifest: "+entry.name);
 			
 			RequestBody fileContent = RequestBody.create(JSON, 
 					ByteString.encodeUtf8(gson.toJson(entry.manifest)));
@@ -158,8 +153,28 @@ public class DataverseSetup {
 			RequestBody jsonData = RequestBody.create(JSON, 
 					ByteString.encodeUtf8(gson.toJson(uploadInfo)));
 			
-			doGenericCall(client.addFile(persistentId, key, jsonData, file));
+			// File existed, just replace it
+			DvDataFile existingFile;
+			if(!isDraft && (existingFile = existing.remove(entry.name))!=null) {
+				System.out.println("Replacing manifest: "+entry.name);
+				long fileId = existingFile.getId();
+				doGenericCall(client.replaceFile(fileId, key, jsonData, file));
+			} else {
+				System.out.println("Adding manifest: "+entry.name);
+				// New file, do full add				
+				doGenericCall(client.addFile(persistentId, key, jsonData, file));
+			}
 		}
+		
+		if(!existing.isEmpty()) {
+			System.out.printf("Still %d leftover files to delete", _int(existing.size()));
+			for(DvDataFile file : existing.values()) {
+				long fileId = file.getId();
+				System.out.println("Deleting file: "+fileId);
+				doGenericCall(client.deleteFileSWORD(fileId, auth));
+			}
+		}
+		
 		System.out.println("  -- done --  ");
 	}
 	

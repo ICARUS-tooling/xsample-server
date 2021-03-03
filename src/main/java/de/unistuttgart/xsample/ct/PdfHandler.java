@@ -34,7 +34,7 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 
 import de.unistuttgart.xsample.dv.Fragment;
-import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
+import de.unistuttgart.xsample.mf.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.XSampleUtils;
 

@@ -29,7 +29,7 @@ import java.util.function.Supplier;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.PdfHandler;
 import de.unistuttgart.xsample.ct.PlaintextHandler;
-import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
+import de.unistuttgart.xsample.mf.SourceType;
 
 /**
  * @author Markus Gärtner

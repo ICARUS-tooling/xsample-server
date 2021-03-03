@@ -22,7 +22,7 @@ package de.unistuttgart.xsample.ct.spi;
 import java.util.Optional;
 
 import de.unistuttgart.xsample.ct.ExcerptHandler;
-import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
+import de.unistuttgart.xsample.mf.SourceType;
 
 /**
  * @author Markus Gärtner

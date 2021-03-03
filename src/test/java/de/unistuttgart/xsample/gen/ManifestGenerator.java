@@ -26,11 +26,11 @@ import static java.util.Objects.requireNonNull;
 import java.util.Arrays;
 import java.util.List;
 
+import de.unistuttgart.xsample.mf.SourceFile;
+import de.unistuttgart.xsample.mf.SourceType;
+import de.unistuttgart.xsample.mf.Span;
+import de.unistuttgart.xsample.mf.SpanType;
 import de.unistuttgart.xsample.mf.XsampleManifest;
-import de.unistuttgart.xsample.mf.XsampleManifest.SourceFile;
-import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
-import de.unistuttgart.xsample.mf.XsampleManifest.Span;
-import de.unistuttgart.xsample.mf.XsampleManifest.SpanType;
 
 /**
  * @author Markus Gärtner
@@ -43,7 +43,7 @@ public class ManifestGenerator {
 	private long fileId = -1;
 	private long unsupportedfileId = -1;
 	private long size = -1;
-	private XsampleManifest.SourceType sourceType = null;
+	private SourceType sourceType = null;
 	private String baseName = null;
 	private String basePath = null;
 	
@@ -231,7 +231,7 @@ public class ManifestGenerator {
 			return this;
 		}
 
-		public Builder sourceType(XsampleManifest.SourceType sourceType) {
+		public Builder sourceType(SourceType sourceType) {
 			instance.sourceType = requireNonNull(sourceType);
 			return this;
 		}

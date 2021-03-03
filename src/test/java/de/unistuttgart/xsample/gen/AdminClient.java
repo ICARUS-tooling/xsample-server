@@ -84,6 +84,12 @@ public interface AdminClient extends DataverseClient {
 			@Header("X-Dataverse-key") String key, 
 			@Part("jsonData") RequestBody jsonData, @Part MultipartBody.Part file);
 	
+	@Multipart
+	@POST("api/files/{fileId}/replace")
+	Call<ResponseBody> replaceFile(@Path("fileId") long fileId,
+			@Header("X-Dataverse-key") String key, 
+			@Part("jsonData") RequestBody jsonData, @Part MultipartBody.Part file);
+	
 	public static final String DRAFT = ":draft";
 	
 	public static String asAuth(String key) {

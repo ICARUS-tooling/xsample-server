@@ -46,7 +46,7 @@ import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
 import de.unistuttgart.xsample.dv.Excerpt;
 import de.unistuttgart.xsample.dv.Fragment;
-import de.unistuttgart.xsample.mf.XsampleManifest.SourceType;
+import de.unistuttgart.xsample.mf.SourceType;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.util.BundleUtil;
 
