@@ -46,6 +46,12 @@ public class SourceFile extends DataverseFile {
 	public Long getSegments() { return segments; }
 
 	public SourceType getSourceType() { return sourceType; }
+	
+	@Override
+	public void validate() {
+		super.validate();
+		checkState("Missing 'source-type' field", sourceType!=null);
+	}
 
 	public static SourceFile.Builder builder() { return new Builder(); }
 	
@@ -55,12 +61,6 @@ public class SourceFile extends DataverseFile {
 
 		@Override
 		protected SourceFile makeInstance() { return new SourceFile(); }
-		
-		@Override
-		protected void validate() {
-			super.validate();
-			checkState("Missing 'source-type' field", instance.sourceType!=null);
-		}
 		
 		public SourceFile.Builder segments(long segments) {
 			checkState("Segments already set", instance.segments==null);

@@ -8,12 +8,12 @@
 		<description>Persistence back-end for the XSample excerpt generation</description>
 		<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>    
         <jta-data-source>jdbc/xsample</jta-data-source>
-        <class>de.unistuttgart.xsample.dv.Dataverse</class>
-        <class>de.unistuttgart.xsample.dv.DataverseUser</class>
-        <class>de.unistuttgart.xsample.dv.Excerpt</class>
-        <class>de.unistuttgart.xsample.dv.Fragment</class>
-        <class>de.unistuttgart.xsample.dv.Resource</class>
+        <class>de.unistuttgart.xsample.dv.XmpDataverse</class>
+        <class>de.unistuttgart.xsample.dv.XmpDataverseUser</class>
         <class>de.unistuttgart.xsample.dv.UserId</class>
+        <class>de.unistuttgart.xsample.dv.XmpExcerpt</class>
+        <class>de.unistuttgart.xsample.dv.XmpFragment</class>
+        <class>de.unistuttgart.xsample.dv.XmpResource</class>
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>   
 	    	<property name="eclipselink.deploy-on-startup" value="true"/>

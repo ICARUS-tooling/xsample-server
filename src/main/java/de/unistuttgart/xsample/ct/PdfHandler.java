@@ -33,7 +33,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 
-import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.mf.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.XSampleUtils;
@@ -68,7 +68,7 @@ public class PdfHandler implements ExcerptHandler {
 	}
 
 	@Override
-	public void excerpt(FileInfo file, InputStream in, List<Fragment> fragments, OutputStream out) throws IOException {
+	public void excerpt(FileInfo file, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
 		requireNonNull(file);
 		requireNonNull(in);
 		requireNonNull(fragments);
@@ -79,7 +79,7 @@ public class PdfHandler implements ExcerptHandler {
 			PDPageTree source = document.getPages();
 			PDPageTree target = newDocument.getPages();
 			
-			for(Fragment fragment : fragments) {
+			for(XmpFragment fragment : fragments) {
 				int from = strictToInt(fragment.getBeginIndex());
 				int to = strictToInt(fragment.getEndIndex());
 				for(int idx = from; idx <= to; idx++) {

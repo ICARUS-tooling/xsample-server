@@ -19,6 +19,8 @@
  */
 package de.unistuttgart.xsample.ct;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._int;
+import static de.unistuttgart.xsample.util.XSampleUtils._long;
 import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
@@ -27,6 +29,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 import javax.crypto.SecretKey;
+
+import de.unistuttgart.xsample.mf.Corpus;
 
 /**
  * @author Markus Gärtner
@@ -46,13 +50,25 @@ public class FileInfo implements Serializable {
 	private long size;
 	/** Number of segments that can be extracted. */
 	private long segments;
+	/** Flag to indicate that the file is too small for excerpt generation */
+	private boolean smallFile = false;
+	
+	/** Id of the associated {@link Corpus} in the manifest. */
+	private String corpusId;
 	
 	/** Temporary file on the server, encrypted with {@link #key}.  */
 	private Path tempFile;
 	/** Key for encrypting/decrypting temporary file. */
 	private SecretKey key;
+
+	/** The designated handler to manage excerpt generation and analysis of the source file */
+	private ExcerptHandler excerptHandler;
 	
 	public FileInfo() { /* no-op */ }
+	
+	public FileInfo(Corpus corpus) {
+		setCorpusId(requireNonNull(corpus.getId(), "Corpus is missing id"));
+	}
 	
 	public FileInfo(String contentType, Charset encoding) {
 		setContentType(contentType);
@@ -103,5 +119,23 @@ public class FileInfo implements Serializable {
 	}
 	public void setKey(SecretKey key) {
 		this.key = key;
+	}
+	public ExcerptHandler getExcerptHandler() { return excerptHandler; }
+	public void setExcerptHandler(ExcerptHandler excerptHandler) { this.excerptHandler = excerptHandler; }
+	
+	public String getCorpusId() {
+		return corpusId;
+	}
+	public void setCorpusId(String corpusId) {
+		this.corpusId = corpusId;
+	}
+	
+	public boolean isSmallFile() { return smallFile; }
+	public void setSmallFile(boolean smallFile) { this.smallFile = smallFile; }
+
+	@Override
+	public String toString() {
+		return String.format("FileInfo@%d[title=%s, contentType=%s, encoding)%s, size=%d, segments=%d, tempFile=%s, key=%s]", 
+				_int(hashCode()), title, contentType, encoding, _long(size), _long(segments), tempFile, key);
 	}
 }

@@ -40,7 +40,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
-import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.dv.XmpFragment;
 
 /**
  * @author Markus Gärtner
@@ -52,33 +52,33 @@ public class XSampleUtils {
 	public static final String MIME_TXT = "text/plain";
 	public static final String MIME_EPUB = "application/epub+zip";
 	
-	private static class SizeAccumulator implements Consumer<Fragment>, BiConsumer<Fragment, Fragment> {
+	private static class SizeAccumulator implements Consumer<XmpFragment>, BiConsumer<XmpFragment, XmpFragment> {
 		private LongAdder size = new LongAdder();
 
 		@Override
-		public void accept(Fragment f1, Fragment f2) {
+		public void accept(XmpFragment f1, XmpFragment f2) {
 			long left = Math.min(f1.getBeginIndex(), f2.getBeginIndex());
 			long right = Math.max(f1.getEndIndex(), f2.getEndIndex());
 			size.add(right - left + 1);
 		}
 
 		@Override
-		public void accept(Fragment f) {
+		public void accept(XmpFragment f) {
 			size.add(f.size());
 		}
 		
 		public long size() { return size.sum(); }
 	}
 	
-	public static long combinedSize(List<Fragment> a1, List<Fragment> a2) {
+	public static long combinedSize(List<XmpFragment> a1, List<XmpFragment> a2) {
 		final SizeAccumulator acc = new SizeAccumulator();
 		merge(a1, a2, acc, acc);
 		return acc.size();
 	}
 	
-	public static void merge(List<Fragment> a1, List<Fragment> a2, 
-			Consumer<? super Fragment> distinct,
-			BiConsumer<? super Fragment, ? super Fragment> overlap) {
+	public static void merge(List<XmpFragment> a1, List<XmpFragment> a2, 
+			Consumer<? super XmpFragment> distinct,
+			BiConsumer<? super XmpFragment, ? super XmpFragment> overlap) {
 		requireNonNull(a1);
 		requireNonNull(a2);
 		requireNonNull(distinct);
@@ -87,8 +87,8 @@ public class XSampleUtils {
 		int i1 = 0;
 		int i2 = 0; 
 		for (; i1 < a1.size() && i2 < a2.size(); ) {
-			Fragment f1 = a1.get(i1);
-			Fragment f2 = a2.get(i2);
+			XmpFragment f1 = a1.get(i1);
+			XmpFragment f2 = a2.get(i2);
 			
 			if(f1.getBeginIndex() > f2.getEndIndex()) { // no overlap, f1 > f2
 				distinct.accept( f2);

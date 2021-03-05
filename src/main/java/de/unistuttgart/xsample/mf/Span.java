@@ -15,7 +15,9 @@ import javax.annotation.Nullable;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Span implements Serializable {
+import de.unistuttgart.xsample.util.SelfValidating;
+
+public class Span implements Serializable, SelfValidating {
 
 	private static final long serialVersionUID = -5616064267813758508L;
 	
@@ -40,6 +42,13 @@ public class Span implements Serializable {
 	public long getBegin() { return begin==null ? -1 : begin.longValue(); }
 	public long getEnd() { return end==null ? -1 : end.longValue(); }
 	public SpanType getSpanType() { return spanType; }
+	
+	@Override
+	public void validate() {
+		checkState("Missing 'span-type' field", spanType!=null);
+		checkState("Need at least 1 of 'begin' or 'end' fields", 
+				begin!=null || end!=null);
+	}
 
 	public static Span.Builder builder() { return new Builder(); }
 
@@ -49,13 +58,6 @@ public class Span implements Serializable {
 	
 		@Override
 		protected Span makeInstance() { return new Span(); }
-		
-		@Override
-		protected void validate() {
-			checkState("Missing 'span-type' field", instance.spanType!=null);
-			checkState("Need at least 1 of 'begin' o 'end' fields", 
-					instance.begin!=null || instance.end!=null);
-		}
 		
 		public Span.Builder begin(long begin) {
 			checkArgument("Begin cannot be negative", begin>=0);

@@ -27,7 +27,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 
-import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.mf.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
 
@@ -58,10 +58,10 @@ public class PlaintextHandler implements ExcerptHandler {
 	}
 
 	/**
-	 * @see de.unistuttgart.xsample.ct.ExcerptHandler#excerpt(de.unistuttgart.xsample.dv.Fragment[])
+	 * @see de.unistuttgart.xsample.ct.ExcerptHandler#excerpt(de.unistuttgart.xsample.dv.XmpFragment[])
 	 */
 	@Override
-	public void excerpt(FileInfo file, InputStream in, List<Fragment> fragments, OutputStream out) throws IOException {
+	public void excerpt(FileInfo file, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
 		// TODO Auto-generated method stub
 	}
 

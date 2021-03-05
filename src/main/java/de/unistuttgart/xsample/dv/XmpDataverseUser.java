@@ -20,10 +20,8 @@
 package de.unistuttgart.xsample.dv;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -32,31 +30,27 @@ import javax.persistence.NamedQuery;
  * @author Markus Gärtner
  *
  */
-@Entity
-@NamedQueries({
-	@NamedQuery(name = "Resource.find", query = "SELECT r FROM Resource r WHERE r.file = :file AND r.dataverse = :dataverse"), 
+@Entity(name = XmpDataverseUser.TABLE_NAME)
+@NamedQueries({ 
+	@NamedQuery(name = "DataverseUser.findAll", query = "SELECT u FROM DataverseUser u ORDER BY u.id"),
+	@NamedQuery(name = "DataverseUser.find", query = "SELECT u FROM DataverseUser u WHERE u.id.dataverseUrl = :url AND u.id.persistentUserId = :id"), 
 })
-public class Resource {
+public class XmpDataverseUser {
 	
-	@Column
-	private Long file;
-
-	@Id
-	@GeneratedValue
-	private Long id;
-
+    public static final String TABLE_NAME= "DataverseUser";
+	
 	@ManyToOne(optional = false, cascade = CascadeType.ALL)
-	private Dataverse dataverse;
-
-	public Dataverse getDataverse() { return dataverse; }
-	public void setDataverse(Dataverse dataverse) { this.dataverse = dataverse; }
-
-	public Long getFile() { return file; }
-	public void setFile(Long file) { this.file = file; }
-
-	public Long getId() { return id; }
-	public void setId(Long id) { this.id = id; }
+	private XmpDataverse dataverse;
+	
+	@EmbeddedId
+	private UserId id;
 	
 	@Override
-	public String toString() { return String.format("Resource@[id=%d, file=%d]", id, file); }
+	public String toString() { return String.format("DataverseUser@[id=%s]", id); }
+
+	public XmpDataverse getDataverse() { return dataverse; }
+	public void setDataverse(XmpDataverse dataverse) { this.dataverse = dataverse; }
+
+	public UserId getId() { return id; }
+	public void setId(UserId id) { this.id = id; }
 }

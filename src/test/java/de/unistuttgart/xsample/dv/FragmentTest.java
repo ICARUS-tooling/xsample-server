@@ -45,17 +45,17 @@ class FragmentTest {
 	class Factory {
 
 		/**
-		 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#encode(de.unistuttgart.xsample.dv.Fragment)}.
+		 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#encode(de.unistuttgart.xsample.dv.XmpFragment)}.
 		 */
 		@ParameterizedTest
 		@ValueSource(longs = {1, 99, 999999999999999L})
 		void testEncodeSingle(long value) {
-			Fragment f = Fragment.of(value);
-			assertThat(Fragment.encode(f)).isEqualTo(String.valueOf(value));
+			XmpFragment f = XmpFragment.of(value);
+			assertThat(XmpFragment.encode(f)).isEqualTo(String.valueOf(value));
 		}
 
 		/**
-		 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#encode(de.unistuttgart.xsample.dv.Fragment)}.
+		 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#encode(de.unistuttgart.xsample.dv.XmpFragment)}.
 		 */
 		@ParameterizedTest
 		@CsvSource({
@@ -67,12 +67,12 @@ class FragmentTest {
 			"99, 999",
 		})
 		void testEncodeSpan(long begin, long end) {
-			Fragment f = Fragment.of(begin, end);
-			assertThat(Fragment.encode(f)).isEqualTo(String.format("%d-%d", _long(begin), _long(end)));
+			XmpFragment f = XmpFragment.of(begin, end);
+			assertThat(XmpFragment.encode(f)).isEqualTo(String.format("%d-%d", _long(begin), _long(end)));
 		}
 
 		/**
-		 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#decode(java.lang.String)}.
+		 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#decode(java.lang.String)}.
 		 */
 		@ParameterizedTest
 		@CsvSource({
@@ -85,40 +85,40 @@ class FragmentTest {
 		})
 		void testDecodeSpan(long begin, long end) {
 			String s = String.format("%d-%d", _long(begin), _long(end));
-			Fragment f = Fragment.decode(s);
+			XmpFragment f = XmpFragment.decode(s);
 			assertThat(f.getBeginIndex()).isEqualTo(begin);
 			assertThat(f.getEndIndex()).isEqualTo(end);
 		}
 
 		/**
-		 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#decode(java.lang.String)}.
+		 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#decode(java.lang.String)}.
 		 */
 		@ParameterizedTest
 		@ValueSource(longs = {1, 99, 999999999999999L})
 		void testDecodeSingle(long value) {
 			String s = String.valueOf(value);
-			Fragment f = Fragment.decode(s);
+			XmpFragment f = XmpFragment.decode(s);
 			assertThat(f.getBeginIndex()).isEqualTo(value);
 			assertThat(f.getEndIndex()).isEqualTo(value);
 		}
 
 		/**
-		 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#encodeAll(java.util.List)}.
-		 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#decodeAll(java.lang.String)}.
+		 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#encodeAll(java.util.List)}.
+		 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#decodeAll(java.lang.String)}.
 		 */
 		@Test
 		void testEncodeAndDecodeAll() {
-			Fragment[] fragments = new Fragment[] {
-					Fragment.of(1, 2),
-					Fragment.of(3, 9),
-					Fragment.of(111, 999),
-					Fragment.of(6666, 99999)
+			XmpFragment[] fragments = new XmpFragment[] {
+					XmpFragment.of(1, 2),
+					XmpFragment.of(3, 9),
+					XmpFragment.of(111, 999),
+					XmpFragment.of(6666, 99999)
 			};
 			
-			String s = Fragment.encodeAll(Arrays.asList(fragments));
+			String s = XmpFragment.encodeAll(Arrays.asList(fragments));
 			assertThat(s).isNotBlank();
 			
-			List<Fragment> decoded = Fragment.decodeAll(s);
+			List<XmpFragment> decoded = XmpFragment.decodeAll(s);
 			assertThat(decoded).hasSize(fragments.length);
 			for (int i = 0; i < fragments.length; i++) {
 				assertThat(decoded.get(i).compareTo(fragments[i]))
@@ -128,7 +128,7 @@ class FragmentTest {
 		}
 
 		/**
-		 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#of(long, long)}.
+		 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#of(long, long)}.
 		 */
 		@ParameterizedTest
 		@CsvSource({
@@ -141,13 +141,13 @@ class FragmentTest {
 			"999, 99999",
 		})
 		void testOfLongLong(long begin, long end) {
-			Fragment f = Fragment.of(begin, end);
+			XmpFragment f = XmpFragment.of(begin, end);
 			assertThat(f.getBeginIndex()).isEqualTo(begin);
 			assertThat(f.getEndIndex()).isEqualTo(end);
 		}
 
 		/**
-		 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#of(long)}.
+		 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#of(long)}.
 		 */
 		@ParameterizedTest
 		@CsvSource({
@@ -160,83 +160,83 @@ class FragmentTest {
 		})
 		void testOfLongLong_illegalArgs(long begin, long end) {
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
-					() -> Fragment.of(begin, end));
+					() -> XmpFragment.of(begin, end));
 		}
 
 		/**
-		 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#of(long)}.
+		 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#of(long)}.
 		 */
 		@ParameterizedTest
 		@ValueSource(longs = {1, 2, 99, 9999999999999L})
 		void testOfLong(long value) {
-			Fragment f = Fragment.of(value);
+			XmpFragment f = XmpFragment.of(value);
 			assertThat(f.getBeginIndex()).isEqualTo(value);
 			assertThat(f.getEndIndex()).isEqualTo(value);
 		}
 
 		/**
-		 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#of(long)}.
+		 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#of(long)}.
 		 */
 		@ParameterizedTest
 		@ValueSource(longs = {0, -1, Long.MIN_VALUE})
 		void testOfLong_negative(long value) {
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
-					() -> Fragment.of(value));
+					() -> XmpFragment.of(value));
 		}
 		
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#getBeginIndex()}.
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#setBeginIndex(long)}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#getBeginIndex()}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#setBeginIndex(long)}.
 	 */
 	@ParameterizedTest
 	@ValueSource(longs = {1, 2, 9, 9999999999L})
 	void testBeginIndex(long value) {
-		Fragment f = new Fragment();
+		XmpFragment f = new XmpFragment();
 		f.setBeginIndex(value);
 		assertThat(f.getBeginIndex()).isEqualTo(value);
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#getEndIndex()}.
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#setEndIndex(long)}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#getEndIndex()}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#setEndIndex(long)}.
 	 */
 	@ParameterizedTest
 	@ValueSource(longs = {1, 2, 9, 9999999999L})
 	void testGetEndIndex(long value) {
-		Fragment f = new Fragment();
+		XmpFragment f = new XmpFragment();
 		f.setEndIndex(value);
 		assertThat(f.getEndIndex()).isEqualTo(value);
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#getId()}.
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#setId(java.lang.Long)}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#getId()}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#setId(java.lang.Long)}.
 	 */
 	@ParameterizedTest
 	@ValueSource(longs = {0, 1, 2, 9, 9999999999L})
 	void testGetId(long value) {
-		Fragment f = new Fragment();
+		XmpFragment f = new XmpFragment();
 		f.setId(_long(value));
 		assertThat(f.getId()).isEqualTo(value);
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#getExcerpt()}.
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#setExcerpt(de.unistuttgart.xsample.dv.Excerpt)}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#getExcerpt()}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#setExcerpt(de.unistuttgart.xsample.dv.XmpExcerpt)}.
 	 */
 	@Test
 	void testGetExcerpt() {
-		Fragment f = new Fragment();
+		XmpFragment f = new XmpFragment();
 		assertThat(f.getExcerpt()).isNull();
-		Excerpt e = mock(Excerpt.class);
+		XmpExcerpt e = mock(XmpExcerpt.class);
 		f.setExcerpt(e);
 		assertThat(f.getExcerpt()).isSameAs(e);
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#stream()}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#stream()}.
 	 */
 	@ParameterizedTest
 	@CsvSource({
@@ -247,14 +247,14 @@ class FragmentTest {
 		"22, 99",
 	})
 	void testStream(long begin, long end) {
-		Fragment f = Fragment.of(begin, end);
+		XmpFragment f = XmpFragment.of(begin, end);
 		long[] elements = f.stream().toArray();
 		long[] expected = LongStream.rangeClosed(begin, end).toArray();
 		assertThat(elements).containsExactly(expected);
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#size()}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#size()}.
 	 */
 	@ParameterizedTest
 	@CsvSource({
@@ -265,12 +265,12 @@ class FragmentTest {
 		"22, 99",
 	})
 	void testSize(long begin, long end) {
-		Fragment f = Fragment.of(begin, end);
+		XmpFragment f = XmpFragment.of(begin, end);
 		assertThat(f.size()).isEqualTo(end-begin+1);
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#compareTo(de.unistuttgart.xsample.dv.Fragment)}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#compareTo(de.unistuttgart.xsample.dv.XmpFragment)}.
 	 */
 	@ParameterizedTest
 	@CsvSource({
@@ -281,18 +281,18 @@ class FragmentTest {
 		//TODO
 	})
 	void testCompareTo(long begin1, long end1, long begin2, long end2, int expected) {
-		Fragment f1 = Fragment.of(begin1, end1);
-		Fragment f2 = Fragment.of(begin2, end2);
+		XmpFragment f1 = XmpFragment.of(begin1, end1);
+		XmpFragment f2 = XmpFragment.of(begin2, end2);
 		assertThat(f1.compareTo(f2)).isEqualTo(expected);
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.dv.Fragment#detach()}.
+	 * Test method for {@link de.unistuttgart.xsample.dv.XmpFragment#detach()}.
 	 */
 	@Test
 	void testDetach() {
-		Fragment f = new Fragment();
-		f.setExcerpt(mock(Excerpt.class));
+		XmpFragment f = new XmpFragment();
+		f.setExcerpt(mock(XmpExcerpt.class));
 		assertThat(f.getExcerpt()).isNotNull();
 		f.detach();
 		assertThat(f.getExcerpt()).isNull();

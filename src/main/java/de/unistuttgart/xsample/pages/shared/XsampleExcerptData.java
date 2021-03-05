@@ -19,21 +19,27 @@
  */
 package de.unistuttgart.xsample.pages.shared;
 
+import static de.unistuttgart.xsample.util.XSampleUtils.checkState;
 import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
+import javax.annotation.Nullable;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
-import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.FileInfo;
-import de.unistuttgart.xsample.dv.Dataverse;
-import de.unistuttgart.xsample.dv.DataverseUser;
-import de.unistuttgart.xsample.dv.Excerpt;
-import de.unistuttgart.xsample.dv.Fragment;
-import de.unistuttgart.xsample.dv.Resource;
+import de.unistuttgart.xsample.dv.XmpDataverse;
+import de.unistuttgart.xsample.dv.XmpDataverseUser;
+import de.unistuttgart.xsample.dv.XmpExcerpt;
+import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.dv.XmpResource;
+import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.mf.XsampleManifest;
 
 /**
@@ -47,74 +53,44 @@ import de.unistuttgart.xsample.mf.XsampleManifest;
 public class XsampleExcerptData implements Serializable {
 
 	private static final long serialVersionUID = 142653554299182977L;
+	
+	public static final String ROOT = ":root";
 
 	/** Wrapper for remote server to download data from */
-	private Dataverse server;
+	private XmpDataverse server;
 	/** User to be used for tracking excerpt quota */
-	private DataverseUser dataverseUser;
-	/** DB wrapper for the source */
-	private Resource resource;
-	/** Used up quota */
-	private Excerpt quota;
-	/** Designated output */
-	private List<Fragment> excerpt;
+	private XmpDataverseUser dataverseUser;
 	
-	private String staticExcerptLabel;
-	
-//	/** Type info for raw input file, e.g. 'MANIFEST', 'PDF' */
-//	private InputType inputType;
-	/** Physical info about primary source file */
-	private FileInfo fileInfo;	
+	/** Physical info about primary source file(s) */
+	private List<FileInfo> fileInfos = new ArrayList<>();	
 	
 	/** The root manifest for the current workflow. */
 	private XsampleManifest manifest;
+	/** Current excerpt, can be from multiple files */
+	private List<ExcerptEntry> excerpt = new ArrayList<>();	
 	
-	/** The designated handler to manage excerpt generation and analysis of the source file */
-	private ExcerptHandler excerptHandler;
-	
-	/** Type of excerpt generation, legal values are 'static', 'window' and 'query'. */
-	private ExcerptType excerptType = ExcerptType.STATIC;
-	/** Flag to indicate that annotations should be made part of the final excerpt */
-	private boolean includeAnnotations = false;
-	/** Flag to indicate that the file is too small for excerpt generation */
-	private boolean smallFile = false;
+	/** Accumulated segment count from parts or a monolithic corpus. */
+	private long segments = -1;
 	
 	private long staticExcerptBegin = 0;
 	private long staticExcerptEnd = 10;
 	private boolean staticExcerptFixed = false;
+	private boolean hasAnnotation = false;
 	
-	public Dataverse getServer() { return server; }
-	public void setServer(Dataverse server) { this.server = server; }
+	/** Switc hto prevent redundant calls to verification chains */
+	private boolean verified = false;
 	
-	public DataverseUser getDataverseUser() { return dataverseUser; }
-	public void setDataverseUser(DataverseUser dataverseUser) { this.dataverseUser = dataverseUser; }
+	public XmpDataverse getServer() { return server; }
+	public void setServer(XmpDataverse server) { this.server = server; }
 	
-	public ExcerptType getExcerptType() { return excerptType; }
-	public void setExcerptType(ExcerptType type) { this.excerptType = requireNonNull(type); }
+	public XmpDataverseUser getDataverseUser() { return dataverseUser; }
+	public void setDataverseUser(XmpDataverseUser dataverseUser) { this.dataverseUser = dataverseUser; }
 	
 	public XsampleManifest getManifest() { return manifest; }
 	public void setManifest(XsampleManifest manifest) { this.manifest = manifest; }
 	
-//	public InputType getInputType() { return inputType; }
-//	public void setInputType(InputType inputType) { this.inputType = inputType; }
-	
-	public FileInfo getFileInfo() { return fileInfo; }
-	public void setFileInfo(FileInfo fileInfo) { this.fileInfo = fileInfo; }
-
-	public boolean isIncludeAnnotations() { return includeAnnotations; }
-	public void setIncludeAnnotations(boolean includeAnnotations) { this.includeAnnotations = includeAnnotations; }
-	
-	public Resource getResource() { return resource; }
-	public void setResource(Resource resource) { this.resource = resource; }
-	
-	public Excerpt getQuota() { return quota; }
-	public void setQuota(Excerpt quota) { this.quota = quota; }
-	
-	public List<Fragment> getExcerpt() { return excerpt; }
-	public void setExcerpt(List<Fragment> excerpt) { this.excerpt = excerpt; }
-	
-	public boolean isSmallFile() { return smallFile; }
-	public void setSmallFile(boolean smallFile) { this.smallFile = smallFile; }
+	public List<FileInfo> getFileInfos() { return fileInfos; }
+	public void setFileInfos(List<FileInfo> fileInfos) { this.fileInfos = requireNonNull(fileInfos); }
 	
 	public long getStaticExcerptBegin() { return staticExcerptBegin; }
 	public void setStaticExcerptBegin(long staticExcerptBegin) { this.staticExcerptBegin = staticExcerptBegin; }
@@ -125,10 +101,116 @@ public class XsampleExcerptData implements Serializable {
 	public boolean isStaticExcerptFixed() { return staticExcerptFixed; }
 	public void setStaticExcerptFixed(boolean staticExcerptFixed) { this.staticExcerptFixed = staticExcerptFixed; }
 	
-	public String getStaticExcerptLabel() { return staticExcerptLabel; }
-	public void setStaticExcerptLabel(String staticExcerptLabel) { this.staticExcerptLabel = staticExcerptLabel; }
+	public long getSegments() { return segments; }
+	public void setSegments(long segments) { this.segments = segments; }
 	
-	public ExcerptHandler getExcerptHandler() { return excerptHandler; }
-	public void setExcerptHandler(ExcerptHandler excerptHandler) { this.excerptHandler = excerptHandler; }
+	public boolean isHasAnnotation() { return hasAnnotation; }
+	public void setHasAnnotation(boolean hasAnnotation) { this.hasAnnotation = hasAnnotation; }
+	
+	public boolean isVerified() { return verified; }
+	public void setVerified(boolean verified) { this.verified = verified; }
+	
+	public List<ExcerptEntry> getExcerpt() { return excerpt; }
+	public void setExcerpt(List<ExcerptEntry> excerpt) { this.excerpt = requireNonNull(excerpt); }
+	
+	// Utility
+	
+	/** Find file info with given corpus id */
+	@Nullable
+	public FileInfo findFileInfo(String corpusId) { 
+		requireNonNull(corpusId);
+		for(FileInfo fileInfo : fileInfos) {
+			if(corpusId.equals(fileInfo.getCorpusId())) {
+				return fileInfo;
+			}
+		}
+		return null;
+	}
+	/** Find top-level corpus in manifest (if present) with given id */
+	public Corpus findCorpus(String corpusId) {
+		requireNonNull(corpusId);
+		if(manifest!=null) {
+			for(Corpus corpus : manifest.getCorpora()) {
+				if(corpusId.equals(corpus.getId())) {
+					return corpus;
+				}
+			}
+		}
+		return null;
+	}
+	/** Find corpus associated with given file info */
+	public Corpus findCorpus(FileInfo fileInfo) {
+		requireNonNull(fileInfo);
+		return findCorpus(fileInfo.getCorpusId());
+	}
+	/** Find our entry (if present) matching given id */
+	public ExcerptEntry findEntry(String corpusId) {
+		requireNonNull(corpusId);
+		for(ExcerptEntry entry : excerpt) {
+			if(corpusId.equals(entry.getCorpusId())) {
+				return entry;
+			}
+		}
+		return null;
+	}
+	/** Fetch file info matching manifest entry or first registered file info if no such label is set. */
+	public FileInfo getStaticExcerptFileInfo() {
+		checkState("No file infos registered", !fileInfos.isEmpty());
+		return Optional.ofNullable(manifest)
+				.map(XsampleManifest::getStaticExcerptFile)
+				.map(this::findFileInfo)
+				.orElse(fileInfos.get(0));
+	}
+	public boolean getIsMultiPartCorpus() { return fileInfos.size()>1; }
+	public void forEachFileInfo(Consumer<FileInfo> action) { fileInfos.forEach(action); }
+	
+	public boolean hasFileInfo(Predicate<? super FileInfo> pred) {
+		return fileInfos.stream().anyMatch(pred);
+	}
+	public boolean hasCorpus(Predicate<? super Corpus> pred) {
+		return manifest.getCorpora().stream().anyMatch(pred);
+	}
+	
+	public void addFileInfo(FileInfo file) { fileInfos.add(requireNonNull(file)); }
+	public void addExcerptEntry(ExcerptEntry entry) { excerpt.add(requireNonNull(entry)); }
+	public void resetExcerpt() { excerpt = new ArrayList<>(); }
+	
+	/**
+	 * 
+	 * @author Markus Gärtner
+	 *
+	 */
+	public static class ExcerptEntry implements Serializable {
 
+		private static final long serialVersionUID = 3111407155877405794L;
+		
+		/** Corpus or subcorpus to extract from */
+		private String corpusId;
+		/** Designated output */
+		private List<XmpFragment> fragments;
+		/** DB wrapper for the source */
+		private XmpResource resource;
+		/** Used up quota */
+		private XmpExcerpt quota;
+		
+		public String getCorpusId() {
+			return corpusId;
+		}
+		public void setCorpusId(String corpusId) {
+			this.corpusId = corpusId;
+		}
+		public List<XmpFragment> getFragments() {
+			return fragments;
+		}
+		public void setFragments(List<XmpFragment> fragments) {
+			this.fragments = fragments;
+		}
+		
+		public XmpResource getResource() { return resource; }
+		public void setResource(XmpResource xmpResource) { this.resource = xmpResource; }
+		
+		public XmpExcerpt getQuota() { return quota; }
+		public void setQuota(XmpExcerpt quota) { this.quota = quota; }
+		
+	}
 }

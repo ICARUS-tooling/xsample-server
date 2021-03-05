@@ -29,12 +29,14 @@ import javax.persistence.NamedQuery;
  * @author Markus Gärtner
  *
  */
-@Entity
+@Entity(name = XmpDataverse.TABLE_NAME)
 @NamedQueries({ 
 	@NamedQuery(name = "Dataverse.findAll", query = "SELECT d FROM Dataverse d ORDER BY d.url"),
 	@NamedQuery(name = "Dataverse.findByUrl", query = "SELECT d FROM Dataverse d WHERE d.url = :url"), 
 })
-public class Dataverse {
+public class XmpDataverse {
+	
+    public static final String TABLE_NAME= "Dataverse";
 
 	@Column(length = 36, nullable = false, unique = true)
 	private String masterKey;
@@ -42,9 +44,9 @@ public class Dataverse {
 	@Id
 	private String url;
 	
-	public Dataverse() { /* no-op */ }
+	public XmpDataverse() { /* no-op */ }
 	
-	public Dataverse(String url, String masterKey) {
+	public XmpDataverse(String url, String masterKey) {
 		setUrl(url);
 		setMasterKey(masterKey);
 	}

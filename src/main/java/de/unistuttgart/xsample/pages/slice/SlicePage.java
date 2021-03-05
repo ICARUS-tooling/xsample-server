@@ -31,9 +31,11 @@ import javax.inject.Named;
 
 import org.omnifaces.util.Messages;
 
-import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.ct.FileInfo;
+import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.download.DownloadPage;
+import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.XSampleUtils;
 
@@ -52,44 +54,62 @@ public class SlicePage extends XsamplePage {
 	@Inject
 	XsampleSliceData sliceData;
 	
+	@Inject
+	SliceView view;
+	
+	private ExcerptEntry currentEntry() {
+		String corpusId = view.getSelectedCorpus();
+		return corpusId==null ? null : excerptData.findEntry(corpusId);
+	}
+	
 	public void init() {
 		initQuota(sliceData);
 		sliceData.setBegin(1);
 		sliceData.setEnd(1);
+		FileInfo info = excerptData.getFileInfos().get(0);
+		view.setSelectedCorpus(info.getCorpusId());
+	}
+	
+	@Override
+	protected void rollBack() {
+		excerptData.resetExcerpt();
 	}
 
 	/** Callback for button to continue workflow */
 	public void next() {
-		List<Fragment> excerpt = Arrays.asList(Fragment.of(
+		final ExcerptEntry entry = currentEntry();
+		final List<XmpFragment> fragments = Arrays.asList(XmpFragment.of(
 				sliceData.getBegin(), sliceData.getEnd()));
-		List<Fragment> quota = excerptData.getQuota().getFragments();
+		final List<XmpFragment> quota = entry.getQuota().getFragments();
 		
 		/* The following issue should never occur, since we do the same
 		 * validation on the client side to enable/disable the button.
 		 * We need this additional sanity check to defend against bugs 
 		 * or tampering with the JS code on the client side!
 		 */
-		long usedUpSlots = XSampleUtils.combinedSize(excerpt, quota);
+		long usedUpSlots = XSampleUtils.combinedSize(fragments, quota);
 		if(usedUpSlots>sliceData.getLimit()) {
 			logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
-					_long(sliceData.getLimit()), excerptData.getResource(), excerptData.getServer(), excerptData.getDataverseUser()));
+					_long(sliceData.getLimit()), entry.getResource(), excerptData.getServer(), excerptData.getDataverseUser()));
 			Messages.addError("navMsg", BundleUtil.get("slice.msg.quotaExceeded"), 
 					_long(usedUpSlots), _long(sliceData.getLimit()));
 			return;
 		}
 		
 		// Everything's fine, continue the workflow
-		excerptData.setExcerpt(excerpt);
+		entry.setFragments(fragments);
 		
 		forward(DownloadPage.PAGE);
 	}
 	
 	public boolean isShowQuota() {
-		return !excerptData.getQuota().isEmpty();
+		final ExcerptEntry entry = currentEntry();
+		return entry!=null && !entry.getQuota().isEmpty();
 	}
 	
 	public long getQuotaSize() {
-		return excerptData.getQuota().size();
+		final ExcerptEntry entry = currentEntry();
+		return entry==null ? 0L : entry.getQuota().size();
 	}
 	
 	public double getQuotaPercent() {

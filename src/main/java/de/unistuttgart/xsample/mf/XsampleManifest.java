@@ -29,6 +29,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,11 +40,13 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import de.unistuttgart.xsample.util.SelfValidating;
+
 /**
  * @author Markus Gärtner
  *
  */
-public class XsampleManifest implements Serializable {
+public class XsampleManifest implements Serializable, SelfValidating {
 	
 	private static final long serialVersionUID = 2256551725004203579L;
 	
@@ -70,10 +73,6 @@ public class XsampleManifest implements Serializable {
 	private final String _context = "http://www.uni-stuttgart.de/xsample/json-ld/manifest";
 
 	@Expose
-	@SerializedName(NS+"target")
-	private SourceFile target;
-
-	@Expose
 	@SerializedName(NS+"description")
 	private String description;
 
@@ -83,34 +82,59 @@ public class XsampleManifest implements Serializable {
 	private Map<String, String> metadata;
 	
 	@Expose
-	@Nullable
-	@SerializedName(NS+"manifests")
-	private List<ManifestFile> manifests;
+	@SerializedName(NS+"corpora")
+	private List<Corpus> corpora = new ArrayList<>();
 	
 	@Expose
 	@Nullable
 	@SerializedName(NS+"staticExcerpt")
 	private Span staticExcerpt;
+
+	@Expose
+	@Nullable
+	@SerializedName(NS+"staticExcerptFile")
+	private String staticExcerptFile;
 	
-	public SourceFile getTarget() { return target; }
 	public String getDescription() { return description; }
 	public Span getStaticExcerpt() { return staticExcerpt; }
-
 	public Map<String, String> getMetadata() {
 		return metadata==null ? Collections.emptyMap() : new HashMap<>(metadata);
 	}
-
-	public List<ManifestFile> getManifests() {
-		return manifests==null ? Collections.emptyList() : new ArrayList<>(manifests);
-	}
+	public List<Corpus> getCorpora() { return corpora; }
+	public String getStaticExcerptFile() { return staticExcerptFile; }
 	
 	// Helpers
-	
-	public boolean hasManifests() { return manifests!=null && !manifests.isEmpty(); }	
 	public boolean hasMetadata() { return metadata!=null && !metadata.isEmpty(); }
 	public boolean hasStaticExcerpt() { return staticExcerpt!=null; }
 	
+	/**
+	 * Returns a flat view on the parts that make up the corpus associated with
+	 * this manifest. The map will use either the parent corpus as key for an
+	 * entry or this manifest as indicator for the root corpus.
+	 * @return
+	 */
+	public Map<Object, Corpus> getAllParts() {
+		checkState("No corpus assigned", corpora!=null);
+		Map<Object, Corpus> map = new LinkedHashMap<>();
+		for(Corpus corpus : corpora) {
+			collectParts(map, this, corpus);
+		}
+		return map;
+	}
+	
+	private void collectParts(Map<Object, Corpus> map, Object parent, Corpus corpus) {
+		map.put(parent, corpus);
+		corpus.forEachPart(c -> collectParts(map, corpus, c));
+	}
+	
 	public String toJSON() { return gson.toJson(this); }
+
+	@Override
+	public void validate() {
+		checkState("Missing 'description' field", description!=null);
+		SelfValidating.validateNested(corpora, "corpora");
+		SelfValidating.validateOptionalNested(staticExcerpt);
+	}
 	
 	public static Builder builder() { return new Builder(); }
 
@@ -120,22 +144,6 @@ public class XsampleManifest implements Serializable {
 
 		@Override
 		protected XsampleManifest makeInstance() { return new XsampleManifest(); }
-
-		/**
-		 * @see de.unistuttgart.xsample.mf.BuilderBase#validate()
-		 */
-		@Override
-		protected void validate() {
-			checkState("Missing 'target' field", instance.target!=null);
-			checkState("Missing 'description' field", instance.description!=null);
-		}
-		
-		public Builder target(SourceFile target) {
-			requireNonNull(target);
-			checkState("Target already set", instance.target==null);
-			instance.target = target;
-			return this;
-		}
 		
 		public Builder description(String description) {
 			checkNotEmpty(description);
@@ -172,23 +180,24 @@ public class XsampleManifest implements Serializable {
 			return this;
 		}
 		
-		private List<ManifestFile> ensureManifests() {
-			if(instance.manifests==null) {
-				instance.manifests = new ArrayList<>();
-			}
-			return instance.manifests;
-		}
-		
-		public Builder manifests(List<ManifestFile> manifests) {
-			requireNonNull(manifests);
-			checkArgument("Manifest list is empty", !manifests.isEmpty());
-			ensureManifests().addAll(manifests);
+		public Builder corpora(List<Corpus> corpora) {
+			requireNonNull(corpora);
+			checkState("Corpora already set", instance.corpora==null);
+			instance.corpora.clear();
+			instance.corpora.addAll(corpora);
 			return this;
 		}
 		
-		public Builder manifest(ManifestFile manifest) {
-			requireNonNull(manifest);
-			ensureManifests().add(manifest);
+		public Builder corpus(Corpus corpus) {
+			requireNonNull(corpus);
+			checkState("Corpus already added", instance.corpora.add(corpus));
+			return this;
+		}
+		
+		public Builder staticExcerptFile(String staticExcerptFile) {
+			requireNonNull(staticExcerptFile);
+			checkState("Static excerpt file already set", instance.staticExcerptFile==null);
+			instance.staticExcerptFile = staticExcerptFile;
 			return this;
 		}
 	}

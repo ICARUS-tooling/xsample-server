@@ -11,7 +11,9 @@ import java.io.Serializable;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class LegalNote implements Serializable {
+import de.unistuttgart.xsample.util.SelfValidating;
+
+public class LegalNote implements Serializable, SelfValidating {
 
 	private static final long serialVersionUID = 3921667001929679618L;
 	
@@ -30,12 +32,23 @@ public class LegalNote implements Serializable {
 	@Expose
 	@SerializedName(XsampleManifest.NS+"publisher")
 	private String publisher;
+	
+	@Expose
+	@SerializedName(XsampleManifest.NS+"year")
+	private int year = Integer.MIN_VALUE;
 
 	public String getAuthor() { return author; }
-
 	public String getTitle() { return title; }
-
 	public String getPublisher() { return publisher; }
+	public int getYear() { return year; }
+	
+	@Override
+	public void validate() {
+		checkState("Missing 'author' field", author!=null);
+		checkState("Missing 'title' field", title!=null);
+		checkState("Missing 'publisher' field", publisher!=null);
+		checkState("Missing 'year' field", year!=Integer.MIN_VALUE);
+	}
 
 	public static LegalNote.Builder builder() { return new Builder(); }
 
@@ -45,13 +58,6 @@ public class LegalNote implements Serializable {
 	
 		@Override
 		protected LegalNote makeInstance() { return new LegalNote(); }
-		
-		@Override
-		protected void validate() {
-			checkState("Missing 'author' field", instance.author!=null);
-			checkState("Missing 'title' field", instance.title!=null);
-			checkState("Missing 'publisher' field", instance.publisher!=null);
-		}
 		
 		public LegalNote.Builder author(String author) {
 			requireNonNull(author);
@@ -71,6 +77,12 @@ public class LegalNote implements Serializable {
 			requireNonNull(publisher);
 			checkState("Publisher already set", instance.publisher==null);
 			instance.publisher = publisher;
+			return this;
+		}
+		
+		public LegalNote.Builder year(int year) {
+			checkState("Year already set", instance.year==Integer.MIN_VALUE);
+			instance.year = year;
 			return this;
 		}
 	}

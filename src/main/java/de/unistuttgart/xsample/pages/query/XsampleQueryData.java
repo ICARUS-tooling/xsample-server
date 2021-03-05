@@ -22,7 +22,7 @@ package de.unistuttgart.xsample.pages.query;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
-import de.unistuttgart.xsample.pages.ExcerptUtilityData;
+import de.unistuttgart.xsample.util.ExcerptUtilityData;
 
 /**
  * @author Markus Gärtner

@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample.pages;
+package de.unistuttgart.xsample.util;
 
 import java.io.Serializable;
 

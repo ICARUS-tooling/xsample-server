@@ -20,8 +20,10 @@
 package de.unistuttgart.xsample.dv;
 
 import javax.persistence.CascadeType;
-import javax.persistence.EmbeddedId;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -30,25 +32,33 @@ import javax.persistence.NamedQuery;
  * @author Markus Gärtner
  *
  */
-@Entity
-@NamedQueries({ 
-	@NamedQuery(name = "DataverseUser.findAll", query = "SELECT u FROM DataverseUser u ORDER BY u.id"),
-	@NamedQuery(name = "DataverseUser.find", query = "SELECT u FROM DataverseUser u WHERE u.id.dataverseUrl = :url AND u.id.persistentUserId = :id"), 
+@Entity(name = XmpResource.TABLE_NAME)
+@NamedQueries({
+	@NamedQuery(name = "Resource.find", query = "SELECT r FROM Resource r WHERE r.file = :file AND r.dataverse = :dataverse"), 
 })
-public class DataverseUser {
+public class XmpResource {
 	
+    public static final String TABLE_NAME= "Resource";
+	
+	@Column
+	private Long file;
+
+	@Id
+	@GeneratedValue
+	private Long id;
+
 	@ManyToOne(optional = false, cascade = CascadeType.ALL)
-	private Dataverse dataverse;
-	
-	@EmbeddedId
-	private UserId id;
+	private XmpDataverse dataverse;
+
+	public XmpDataverse getDataverse() { return dataverse; }
+	public void setDataverse(XmpDataverse dataverse) { this.dataverse = dataverse; }
+
+	public Long getFile() { return file; }
+	public void setFile(Long file) { this.file = file; }
+
+	public Long getId() { return id; }
+	public void setId(Long id) { this.id = id; }
 	
 	@Override
-	public String toString() { return String.format("DataverseUser@[id=%s]", id); }
-
-	public Dataverse getDataverse() { return dataverse; }
-	public void setDataverse(Dataverse dataverse) { this.dataverse = dataverse; }
-
-	public UserId getId() { return id; }
-	public void setId(UserId id) { this.id = id; }
+	public String toString() { return String.format("XmpResource@[id=%d, file=%d]", id, file); }
 }

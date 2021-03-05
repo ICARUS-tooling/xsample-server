@@ -29,11 +29,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.unistuttgart.xsample.XsampleServices;
-import de.unistuttgart.xsample.dv.Dataverse;
-import de.unistuttgart.xsample.dv.DataverseUser;
-import de.unistuttgart.xsample.dv.Excerpt;
-import de.unistuttgart.xsample.dv.Fragment;
-import de.unistuttgart.xsample.dv.Resource;
+import de.unistuttgart.xsample.dv.XmpDataverse;
+import de.unistuttgart.xsample.dv.XmpDataverseUser;
+import de.unistuttgart.xsample.dv.XmpExcerpt;
+import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.dv.XmpResource;
 
 /**
  * @author Markus Gärtner
@@ -70,9 +70,9 @@ public class DebugUtils {
 		
 		String url = getProperty("dataverse.url");
 		String token = getProperty("dataverse.masterKey");
-		Optional<Dataverse> current = services.findDataverseByUrl(url);
+		Optional<XmpDataverse> current = services.findDataverseByUrl(url);
 		if(!current.isPresent()) {
-			Dataverse dv = new Dataverse(url, token);
+			XmpDataverse dv = new XmpDataverse(url, token);
 			services.save(dv);
 		} else {
 			current.get().setMasterKey(token);
@@ -86,14 +86,14 @@ public class DebugUtils {
 
 		String url = getProperty("dataverse.url");
 		Long file = Long.valueOf(getProperty("dataverse.file"));
-		Dataverse dataverse = services.findDataverseByUrl(url).get();
-		Resource resource = services.findResource(dataverse, file);
-		DataverseUser user = services.findDataverseUser(dataverse, getProperty("user.name"));
+		XmpDataverse dataverse = services.findDataverseByUrl(url).get();
+		XmpResource xmpResource = services.findResource(dataverse, file);
+		XmpDataverseUser user = services.findDataverseUser(dataverse, getProperty("user.name"));
 		
-		Excerpt quota = services.findQuota(user, resource);
+		XmpExcerpt quota = services.findQuota(user, xmpResource);
 		quota.clear();
 		
 		String data = getProperty("user.quota");
-		Fragment.decodeAll(data).forEach(quota::addFragment);
+		XmpFragment.decodeAll(data).forEach(quota::addFragment);
 	}
 }

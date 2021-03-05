@@ -7,8 +7,10 @@ import static java.util.Objects.requireNonNull;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
+import de.unistuttgart.xsample.util.SelfValidating;
+
 @NotThreadSafe
-abstract class BuilderBase<T> {
+abstract class BuilderBase<T extends SelfValidating> {
 	protected T instance;
 	
 	protected BuilderBase() {
@@ -17,12 +19,10 @@ abstract class BuilderBase<T> {
 	
 	protected abstract T makeInstance();
 	
-	protected abstract void validate();
-	
 	public T build() {
 		if(instance==null)
 			throw new IllegalStateException("Instance already obtained - can't re-use builder");
-		validate();
+		instance.validate();
 		T result = instance;
 		instance = null;
 		return result;

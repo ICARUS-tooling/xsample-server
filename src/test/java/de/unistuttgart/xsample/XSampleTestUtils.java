@@ -22,7 +22,7 @@ package de.unistuttgart.xsample;
 import java.util.List;
 import java.util.stream.Stream;
 
-import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.dv.XmpFragment;
 
 /**
  * @author Markus Gärtner
@@ -30,15 +30,15 @@ import de.unistuttgart.xsample.dv.Fragment;
  */
 public class XSampleTestUtils {
 
-	public static long[] asIndices(Fragment[] fragments) {
+	public static long[] asIndices(XmpFragment[] fragments) {
 		return Stream.of(fragments)
-				.flatMapToLong(Fragment::stream)
+				.flatMapToLong(XmpFragment::stream)
 				.toArray();
 	}
 
-	public static long[] asIndices(List<Fragment> fragments) {
-		return fragments.stream()
-				.flatMapToLong(Fragment::stream)
+	public static long[] asIndices(List<XmpFragment> xmpFragments) {
+		return xmpFragments.stream()
+				.flatMapToLong(XmpFragment::stream)
 				.toArray();
 	}
 }

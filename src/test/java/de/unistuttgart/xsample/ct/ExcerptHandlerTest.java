@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
 import de.unistuttgart.xsample.XSampleTestUtils;
-import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.dv.XmpFragment;
 import it.unimi.dsi.fastutil.io.FastByteArrayInputStream;
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream;
 
@@ -177,7 +177,7 @@ interface ExcerptHandlerTest<H extends ExcerptHandler> {
 							byte[] data = input(size, contentType, encoding);
 							InputStream in = new FastByteArrayInputStream(data);
 							
-							List<Fragment> fragments = Arrays.asList(Fragment.of(from, to));
+							List<XmpFragment> fragments = Arrays.asList(XmpFragment.of(from, to));
 							FastByteArrayOutputStream out = new FastByteArrayOutputStream();
 							handler.excerpt(fileInfo, in, fragments, out);
 							

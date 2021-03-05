@@ -41,51 +41,53 @@ import de.unistuttgart.xsample.util.XSampleUtils;
  * @author Markus Gärtner
  *
  */
-@Entity
+@Entity(name = XmpExcerpt.TABLE_NAME)
 @NamedQueries({ 
 	@NamedQuery(name = "Excerpt.find", query = "SELECT e FROM Excerpt e WHERE e.dataverseUser = :user AND e.resource = :resource"), 
 })
-public class Excerpt {
+public class XmpExcerpt {
+	
+    public static final String TABLE_NAME= "Excerpt";
 
 	@Id
 	@GeneratedValue
 	private Long id;
 	
 	@ManyToOne(optional = false, cascade = CascadeType.ALL)
-	private DataverseUser dataverseUser;
+	private XmpDataverseUser dataverseUser;
 
 	@ManyToOne(optional = false, cascade = CascadeType.ALL)
-	private Resource resource;
+	private XmpResource resource;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "excerpt")
-	private List<Fragment> fragments = new ArrayList<>();
+	private List<XmpFragment> fragments = new ArrayList<>();
 
 	private transient long size = -1;
 
 	public Long getId() { return id; }
 	public void setId(Long id) { this.id = id; }
 
-	public DataverseUser getDataverseUser() { return dataverseUser; }
-	public void setDataverseUser(DataverseUser dataverseUser) { this.dataverseUser = dataverseUser; }
+	public XmpDataverseUser getDataverseUser() { return dataverseUser; }
+	public void setDataverseUser(XmpDataverseUser dataverseUser) { this.dataverseUser = dataverseUser; }
 
-	public Resource getResource() { return resource; }
-	public void setResource(Resource resource) { this.resource = resource; }
+	public XmpResource getResource() { return resource; }
+	public void setResource(XmpResource xmpResource) { this.resource = xmpResource; }
 
-	public List<Fragment> getFragments() { return fragments; }
-	public void setFragments(List<Fragment> fragments) {
-		this.fragments = requireNonNull(fragments); 
+	public List<XmpFragment> getFragments() { return fragments; }
+	public void setFragments(List<XmpFragment> xmpFragments) {
+		this.fragments = requireNonNull(xmpFragments); 
 		invalidateSize();
 	}
 	
-	public void addFragment(Fragment fragment) {
-		fragments.add(fragment);
-		fragment.setExcerpt(this);
+	public void addFragment(XmpFragment xmpFragment) {
+		fragments.add(xmpFragment);
+		xmpFragment.setExcerpt(this);
 		invalidateSize();
 	}
 	
-	public void removeFragment(Fragment fragment) {
-		fragments.remove(fragment);
-		fragment.detach();
+	public void removeFragment(XmpFragment xmpFragment) {
+		fragments.remove(xmpFragment);
+		xmpFragment.detach();
 		invalidateSize();
 	}
 	
@@ -96,7 +98,7 @@ public class Excerpt {
 			size = 0;
 		}
 		//TODO not overflow conscious!!
-		size = fragments.stream().mapToLong(Fragment::size).sum();
+		size = fragments.stream().mapToLong(XmpFragment::size).sum();
 	}
 	
 	public long size() {
@@ -109,25 +111,25 @@ public class Excerpt {
 	public boolean isEmpty() { return fragments.isEmpty(); }
 	
 	public void clear() {
-		fragments.forEach(Fragment::detach);
+		fragments.forEach(XmpFragment::detach);
 		fragments.clear(); 
 		invalidateSize();
 	}
 	
-	public void merge(List<Fragment> others) {
+	public void merge(List<XmpFragment> others) {
 		if(others.isEmpty()) {
 			return;
 		}
 		
-		List<Fragment> ours = new ArrayList<>(fragments);
+		List<XmpFragment> ours = new ArrayList<>(fragments);
 		fragments.clear();
 		invalidateSize();
 		
-		Consumer<Fragment> distinct = f -> {
+		Consumer<XmpFragment> distinct = f -> {
 			f.setExcerpt(this);
 			fragments.add(f);
 		};
-		BiConsumer<Fragment, Fragment> overlap = (f1, f2) -> {
+		BiConsumer<XmpFragment, XmpFragment> overlap = (f1, f2) -> {
 			// f1 is ours, f2 is theirs
 			f1.setBeginIndex(Math.min(f1.getBeginIndex(), f2.getBeginIndex()));
 			f1.setEndIndex(Math.max(f1.getEndIndex(), f2.getEndIndex()));

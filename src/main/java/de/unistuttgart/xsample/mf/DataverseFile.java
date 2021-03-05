@@ -13,6 +13,8 @@ import javax.annotation.Nullable;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import de.unistuttgart.xsample.util.SelfValidating;
+
 /**
  * Models a resource in the dataverse context that can be identified either
  * via (internal) id or a persistent URI string.
@@ -20,7 +22,7 @@ import com.google.gson.annotations.SerializedName;
  * @author Markus Gärtner
  *
  */
-public abstract class DataverseFile implements Serializable { 
+public abstract class DataverseFile implements Serializable, SelfValidating { 
 
 	private static final long serialVersionUID = -5725458746293245542L;
 
@@ -53,15 +55,15 @@ public abstract class DataverseFile implements Serializable {
 
 	@Nullable
 	public String getLabel() { return label; }
+	
+	@Override
+	public void validate() {
+//		checkState("Missing 'label' field", label!=null);
+		checkState("Must define either id or persistent-id", id!=null || persistentId!=null);
+	}
 
 	protected static abstract class AbstractBuilder<B extends DataverseFile.AbstractBuilder<B, F>, F extends DataverseFile> 
 		extends BuilderBase<F> {
-		
-		@Override
-		protected void validate() {
-			DataverseFile file = instance;
-			checkState("Must define either id or persietnt-id", file.id!=null || file.persistentId!=null);
-		}
 		
 		@SuppressWarnings("unchecked")
 		protected B thisAsCast() { return (B) this; }

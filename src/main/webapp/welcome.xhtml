@@ -23,7 +23,31 @@
 				</f:facet>
 				<div class="p-grid">
 					<div class="p-col">
-						<p:dataTable var="property" value="#{welcomePage.fileProperties}">
+						<p:dataTable var="property" value="#{welcomeView.manifestProperties}">
+							<f:facet name="header">
+								<h:outputText value="#{bundle['welcome.manifestInfoHeader']}" />
+							</f:facet>
+							<p:column headerText="#{bundle['property']}">
+								<h:outputText value="#{property.key}" />
+							</p:column>
+							<p:column headerText="#{bundle['value']}">
+								<h:outputText value="#{property.value}" />
+							</p:column>
+						</p:dataTable>
+					</div>
+					<div class="p-col">
+						<div jsf:rendered="#{true or xsampleExcerptData.isMultiPartCorpus}">
+							<h:outputText value="#{bundle['selectFile']}" />
+							<p:selectOneMenu value="#{welcomeView.selectedCorpus}" style="width:300px"
+									valueChangeListener="#{welcomePage.refreshFileProperties}"
+									hideNoSelectionOption="true">
+								<f:selectItem itemLabel="#{bundle['selectFile']}" itemValue="" noSelectionOption="true"/>
+	                   	 		<f:selectItems value="#{xsampleExcerptData.fileInfos}" var="info" 
+	                   	 			itemLabel="#{info.title}" itemValue="#{info.corpusId}" />
+	                   	 		<p:ajax update="fileInfo" />
+							</p:selectOneMenu>
+						</div>
+						<p:dataTable id="fileInfo" var="property" value="#{welcomeView.fileProperties}">
 							<f:facet name="header">
 								<h:outputText value="#{bundle['welcome.fileInfoHeader']}" />
 							</f:facet>
@@ -35,21 +59,17 @@
 							</p:column>
 						</p:dataTable>
 					</div>
-					<div class="p-col">
-						<!-- TODO: display user info and explain tracking -->
-						<!-- TODO: display aggregated info from associated manifest files -->
-					</div>
 				</div>
 				
 				<div jsf:rendered="#{!welcomePage.showExcerptSelection}">
-					<h:outputText value="#{bundle['welcome.smallFile']}:" />
+					<h:outputText value="#{bundle['welcome.smallFile']}" />
 				</div>
 				
 				<div jsf:rendered="#{welcomePage.showExcerptSelection}">
 					<h:outputText value="#{bundle['welcome.excerptType']}:" />
 					<p:selectOneRadio layout="pageDirection"
-						value="#{xsampleExcerptData.excerptType}">
-						<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']} (#{xsampleExcerptData.staticExcerptLabel})"
+						value="#{welcomeView.excerptType}">
+						<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']} (#{welcomeView.staticExcerptLabel})"
 							itemValue="STATIC" />
 						<f:selectItem itemLabel="#{bundle['welcome.excerptType.slice']}"
 							itemValue="SLICE" />
@@ -57,7 +77,7 @@
 							itemValue="QUERY" />
 					</p:selectOneRadio>
 					<p:selectBooleanCheckbox rendered="#{welcomePage.hasAnnotations}" 
-						value="#{xsampleExcerptData.includeAnnotations}"
+						value="#{welcomeView.includeAnnotations}"
 						itemLabel="#{bundle['welcome.includeAnnotations']}" />
 				</div>
 				

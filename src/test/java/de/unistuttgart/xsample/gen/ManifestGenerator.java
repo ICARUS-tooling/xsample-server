@@ -26,6 +26,8 @@ import static java.util.Objects.requireNonNull;
 import java.util.Arrays;
 import java.util.List;
 
+import de.unistuttgart.xsample.mf.Corpus;
+import de.unistuttgart.xsample.mf.LegalNote;
 import de.unistuttgart.xsample.mf.SourceFile;
 import de.unistuttgart.xsample.mf.SourceType;
 import de.unistuttgart.xsample.mf.Span;
@@ -93,41 +95,46 @@ public class ManifestGenerator {
 	
 	/** Plain manifest that should work */
 	private XsampleManifest plain() {
-		return base()
+		return XsampleManifest.builder()
 				.description("Plain manifest with no customization (first 10%)")
 				.staticExcerpt(span(SpanType.RELATIVE, 0, 10))
+				.corpus(monoCorpus(file()))
 				.build();
 	}
 	
 	/** Fixed pages */
 	private XsampleManifest fixedExcerpt() {
-		return base()
+		return XsampleManifest.builder()
 				.description("Plain manifest with fixed excerpt pages [5-14]")
 				.staticExcerpt(span(SpanType.FIXED, 5, 14))
+				.corpus(monoCorpus(file()))
 				.build();
 	}
 	
 	/** Plain manifest with a shifted window for static excerpt */
 	private XsampleManifest shiftedStatic() {
-		return base()
+		return XsampleManifest.builder()
 				.description("Plain manifest with shifted static excerpt window [20%-30%)")
 				.staticExcerpt(span(SpanType.RELATIVE, 20, 30))
+				.corpus(monoCorpus(file()))
 				.build();
 	}
 	
 	/** Plain manifest with a open begin for static excerpt */
 	private XsampleManifest openStaticBegin() {
-		return base()
+		return XsampleManifest.builder()
 				.description("Plain manifest with open begin of static excerpt interval")
 				.staticExcerpt(span(SpanType.RELATIVE, -1, 10))
+				.corpus(monoCorpus(file()))
 				.build();
 	}
 	
 	/** Plain manifest with a open end for static excerpt */
 	private XsampleManifest openStaticEnd() {
-		return base()
+		return XsampleManifest.builder()
 				.description("Plain manifest with open end of static excerpt interval")
 				.staticExcerpt(span(SpanType.RELATIVE, 90, -1))
+				.corpus(monoCorpus(file()))
 				.build();
 	}
 	
@@ -135,64 +142,87 @@ public class ManifestGenerator {
 	
 	/** Plain manifest with static excerpt declaration that exceeds quota */
 	private XsampleManifest exceedsQuota() {
-		return base()
+		return XsampleManifest.builder()
 				.description("Manifest that exceeds quota limit with static excerpt")
 				.staticExcerpt(span(SpanType.RELATIVE, 0, 50))
+				.corpus(monoCorpus(file()))
 				.build();
 	}
 	
 	/** Plain manifest with fixed excerpt declaration that exceeds quota */
 	private XsampleManifest exceedsFixedQuota() {
-		return base()
+		return XsampleManifest.builder()
 				.description("Manifest that exceeds quota limit with fixed excerpt")
 				.staticExcerpt(span(SpanType.FIXED, 0, 50))
+				.corpus(monoCorpus(file()))
 				.build();
 	}
 	
 	/** Manifest that references an unsupported file and declares given source type */
 	private XsampleManifest unsupportedTarget() {
-		return base(unsupportedfileId, 10, sourceType)
+		return XsampleManifest.builder()
 				.description("Manifest that lists an unsupported target for "+sourceType)
 				.staticExcerpt(span(SpanType.RELATIVE, 0, 10))
+				.corpus(monoCorpus(file(unsupportedfileId, 10, sourceType)))
 				.build();
 	}
 	
 	/** Manifest that references a non-existing file */
 	private XsampleManifest invalidTarget() {
-		return base(Integer.MAX_VALUE, size, sourceType)
+		return XsampleManifest.builder()
 				.description("Manifest that lists an invalid target")
 				.staticExcerpt(span(SpanType.RELATIVE, 0, 10))
+				.corpus(monoCorpus(file(Integer.MAX_VALUE, size, sourceType)))
 				.build();
 	}
 	
 	/** Plain manifest with a open begin for static excerpt */
 	private XsampleManifest invalidOpenStaticBegin() {
-		return base()
+		return XsampleManifest.builder()
 				.description("Invalid open begin of static excerpt interval")
 				.staticExcerpt(span(SpanType.RELATIVE, -1, 50))
+				.corpus(monoCorpus(file()))
 				.build();
 	}
 
 	/** Plain manifest with a open end for static excerpt */
 	private XsampleManifest invalidOpenStaticEnd() {
-		return base()
+		return XsampleManifest.builder()
 				.description("Invalid open end of static excerpt interval")
 				.staticExcerpt(span(SpanType.RELATIVE, 50, -1))
+				.corpus(monoCorpus(file()))
 				.build();
 	}
-
-	/** Generate basic manfiest with only target file set */
-	private XsampleManifest.Builder base(long fileId, long size, SourceType sourceType) {
-		return XsampleManifest.builder()
-				.target(SourceFile.builder()
-						.id(fileId)
-						.segments(size)
-						.sourceType(sourceType)
-						.build())
-				;
+	
+	// Utility methods
+	
+	private Corpus monoCorpus(SourceFile file) {
+		return Corpus.builder()
+				.primaryData(file)
+				.legalNote(legalNote())
+				.description("random corpus...bla blub..")
+				.id("root") //TODO change when we expand to multi-patz corpora
+				.build();
 	}
 	
-	private XsampleManifest.Builder base() { return base(fileId, size, sourceType); }
+	private SourceFile file(long fileId, long size, SourceType sourceType) {
+		return SourceFile.builder()
+				.id(fileId)
+				.segments(size)
+				.sourceType(sourceType)
+				.build();
+	}
+	
+	private LegalNote legalNote() {
+		return LegalNote.builder()
+				.title("xx_title")
+				.author("xx_author")
+				.publisher("xx_publisher")
+				.year(2005)
+				.build();
+	}
+	
+	private SourceFile file() { return file(fileId, size, sourceType); }
 	
 	private Span span(SpanType spanType,  long begin, long end) {
 		Span.Builder builder = Span.builder().spanType(spanType);

@@ -18,6 +18,13 @@
 		<p:panel>
 			<f:facet name="header">
 				<h:outputText value="#{bundle['slice.info']}" />
+				<p:selectOneMenu rendered="#{xsampleExcerptData.isMultiPartCorpus}" 
+						value="#{sliceView.selectedCorpus}" style="width:150px">
+					<f:selectItem itemLabel="#{bundle['selectFile']}" itemValue="" noSelectionOption="true"/>
+                 	 		<f:selectItems value="#{xsampleExcerptData.fileInfos}" var="info" 
+                 	 			itemLabel="#{info.title}" itemValue="#{info.corpusId}" />
+                 	 		<p:ajax update="@form" />
+				</p:selectOneMenu>
 			</f:facet>
 		
 			<div>

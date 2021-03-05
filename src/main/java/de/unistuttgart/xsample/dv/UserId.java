@@ -26,7 +26,7 @@ import javax.persistence.Embeddable;
 
 
 /**
- * Primar key wrapper class for {@link DataverseUser}.
+ * Primar key wrapper class for {@link XmpDataverseUser}.
  * @author Markus Gärtner
  *
  */

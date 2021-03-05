@@ -33,6 +33,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * Models a span of 1-based indices.
@@ -41,9 +42,10 @@ import javax.persistence.ManyToOne;
  *
  */
 @Entity
-public class Fragment implements Comparable<Fragment> {
+@Table(name = "Fragment")
+public class XmpFragment implements Comparable<XmpFragment> {
 	
-	public static String encode(Fragment f) {
+	public static String encode(XmpFragment f) {
 		if(f.size()==1) {
 			return String.valueOf(f.getBeginIndex());
 		} 
@@ -51,20 +53,20 @@ public class Fragment implements Comparable<Fragment> {
 		return String.valueOf(f.getBeginIndex())+"-"+String.valueOf(f.getEndIndex());
 	}
 	
-	public static String encodeAll(List<Fragment> fragments) {
-		StringBuilder sb = new StringBuilder(fragments.size()*4);
-		for (int i = 0; i < fragments.size(); i++) {
+	public static String encodeAll(List<XmpFragment> xmpFragments) {
+		StringBuilder sb = new StringBuilder(xmpFragments.size()*4);
+		for (int i = 0; i < xmpFragments.size(); i++) {
 			if(i>0) {
 				sb.append(',');
 			}
-			sb.append(encode(fragments.get(i)));
+			sb.append(encode(xmpFragments.get(i)));
 		}
 		return sb.toString();
 	}
 	
-	public static Fragment decode(String s) {
+	public static XmpFragment decode(String s) {
 		requireNonNull(s);
-		Fragment f;
+		XmpFragment f;
 		int sep = s.indexOf('-');
 		if(sep!=-1) {
 			f = of(Long.parseUnsignedLong(s.substring(0, sep)), 
@@ -75,23 +77,23 @@ public class Fragment implements Comparable<Fragment> {
 		return f;
 	}
 	
-	public static List<Fragment> decodeAll(String s) {
+	public static List<XmpFragment> decodeAll(String s) {
 		return Stream.of(s.split(","))
-				.map(Fragment::decode)
+				.map(XmpFragment::decode)
 				.collect(Collectors.toList());
 	}
 	
-	public static Fragment of(long from, long to) {
+	public static XmpFragment of(long from, long to) {
 		checkArgument(from>0);
 		checkArgument(to>0);
 		checkArgument(to>=from);
-		Fragment f = new Fragment();
+		XmpFragment f = new XmpFragment();
 		f.setBeginIndex(from);
 		f.setEndIndex(to);
 		return f;
 	}
 	
-	public static Fragment of(long value) {
+	public static XmpFragment of(long value) {
 		checkArgument(value>0);
 		return of(value, value);
 	}
@@ -101,7 +103,7 @@ public class Fragment implements Comparable<Fragment> {
 	private Long id;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	private Excerpt excerpt;
+	private XmpExcerpt excerpt;
 
 	@Column
 	private long beginIndex;
@@ -117,9 +119,9 @@ public class Fragment implements Comparable<Fragment> {
 	public Long getId() { return id; }
 	public void setId(Long id) { this.id = id; }
 	
-	public Excerpt getExcerpt() { return excerpt; }
+	public XmpExcerpt getExcerpt() { return excerpt; }
 
-	public void setExcerpt(Excerpt excerpt) { this.excerpt = excerpt; }
+	public void setExcerpt(XmpExcerpt xmpExcerpt) { this.excerpt = xmpExcerpt; }
 
 	public LongStream stream() { return LongStream.rangeClosed(beginIndex, endIndex); }
 	
@@ -130,7 +132,7 @@ public class Fragment implements Comparable<Fragment> {
 	}
 	
 	@Override
-	public int compareTo(Fragment other) {
+	public int compareTo(XmpFragment other) {
 		long res = beginIndex-other.beginIndex;
 		if(res==0L) {
 			res = endIndex-other.endIndex;
@@ -143,14 +145,14 @@ public class Fragment implements Comparable<Fragment> {
 
 	@Override
 	public int hashCode() {
-		return Fragment.class.hashCode();
+		return XmpFragment.class.hashCode();
 	}
 
 	@Override
 	public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Fragment )) return false;
-        return id != null && id.equals(((Fragment) o).getId());
+        if (!(o instanceof XmpFragment )) return false;
+        return id != null && id.equals(((XmpFragment) o).getId());
 	}
 	
 	public void detach() { setExcerpt(null); }

@@ -29,6 +29,12 @@ public class ManifestFile extends DataverseFile {
 	private ManifestType manifestType = ManifestType.IMF;
 
 	public ManifestType getManifestType() { return manifestType; }
+	
+	@Override
+	public void validate() {
+		super.validate();
+		checkState("Missing 'manifest-type' field", manifestType!=null);
+	}
 
 	public static ManifestFile.Builder builder() { return new Builder(); }
 
@@ -38,12 +44,6 @@ public class ManifestFile extends DataverseFile {
 	
 		@Override
 		protected ManifestFile makeInstance() { return new ManifestFile(); }
-		
-		@Override
-		protected void validate() {
-			super.validate();
-			checkState("Missing 'manifest-type' field", instance.manifestType!=null);
-		}
 		
 		public ManifestFile.Builder manifestType(ManifestType manifestType) {
 			requireNonNull(manifestType);

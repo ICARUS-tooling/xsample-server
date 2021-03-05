@@ -33,11 +33,11 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import de.unistuttgart.xsample.dv.Dataverse;
-import de.unistuttgart.xsample.dv.DataverseUser;
-import de.unistuttgart.xsample.dv.Excerpt;
-import de.unistuttgart.xsample.dv.Resource;
 import de.unistuttgart.xsample.dv.UserId;
+import de.unistuttgart.xsample.dv.XmpDataverse;
+import de.unistuttgart.xsample.dv.XmpDataverseUser;
+import de.unistuttgart.xsample.dv.XmpExcerpt;
+import de.unistuttgart.xsample.dv.XmpResource;
 
 
 
@@ -97,18 +97,18 @@ public class XsampleServices {
 		return result;
 	}
 	
-	public Resource findResource(Dataverse dataverse, Long file) {
+	public XmpResource findResource(XmpDataverse dataverse, Long file) {
 		requireNonNull(file);
 		
-		List<Resource> resources = em.createNamedQuery("Resource.find")
+		List<XmpResource> resources = em.createNamedQuery("Resource.find")
 					.setParameter("dataverse", dataverse)
 					.setParameter("file", file)
 					.getResultList();
 		
-		Resource resource;
+		XmpResource resource;
 		if(resources.isEmpty()) {
 			log.finer("creating Resource for file: "+file);
-			resource = new Resource();
+			resource = new XmpResource();
 			resource.setFile(file);
 			resource.setDataverse(dataverse);
 			resource = em.merge(resource);
@@ -119,10 +119,10 @@ public class XsampleServices {
 		return resource;
 	}
 	
-	public Optional<Dataverse> findDataverseByUrl(String url) {
+	public Optional<XmpDataverse> findDataverseByUrl(String url) {
 		requireNonNull(url);
 		
-		List<Dataverse> dataverses = em.createNamedQuery("Dataverse.findByUrl")
+		List<XmpDataverse> dataverses = em.createNamedQuery("Dataverse.findByUrl")
 					.setParameter("url", url)
 					.getResultList();
 		
@@ -141,20 +141,20 @@ public class XsampleServices {
 		return Optional.ofNullable(dataverses.isEmpty() ? null : dataverses.get(0));
 	}
 	
-	public DataverseUser findDataverseUser(Dataverse dataverse, String userId) {
+	public XmpDataverseUser findDataverseUser(XmpDataverse dataverse, String userId) {
 		requireNonNull(dataverse);
 		requireNonNull(userId);
 		final String url = requireNonNull(dataverse.getUrl());
 		
-		List<DataverseUser> dataverseUsers = em.createNamedQuery("DataverseUser.find")
+		List<XmpDataverseUser> dataverseUsers = em.createNamedQuery("DataverseUser.find")
 					.setParameter("url", url)
 					.setParameter("id", userId)
 					.getResultList();
 
-		DataverseUser dataverseUser;
+		XmpDataverseUser dataverseUser;
 		if(dataverseUsers.isEmpty()) {
 			log.finer(String.format("creating DataverseUser for dataverse '%s' and id '%s'", url, userId));
-			dataverseUser = new DataverseUser();
+			dataverseUser = new XmpDataverseUser();
 			dataverseUser.setId(new UserId(url, userId));
 			dataverseUser.setDataverse(dataverse);
 			dataverseUser = em.merge(dataverseUser);
@@ -165,22 +165,22 @@ public class XsampleServices {
 		return dataverseUser;
 	}
 	
-	public List<DataverseUser> findAllUsers() {
+	public List<XmpDataverseUser> findAllUsers() {
 		return em.createNamedQuery("DataverseUser.findAll").getResultList();
 	}
 	
-	public Excerpt findQuota(DataverseUser user, Resource resource) {
+	public XmpExcerpt findQuota(XmpDataverseUser user, XmpResource resource) {
 		requireNonNull(user);
 		requireNonNull(resource);
 		
-		List<Excerpt> excerpts = em.createNamedQuery("Excerpt.find")
+		List<XmpExcerpt> excerpts = em.createNamedQuery("Excerpt.find")
 					.setParameter("user", user)
 					.setParameter("resource", resource)
 					.getResultList();
 		
-		Excerpt excerpt;
+		XmpExcerpt excerpt;
 		if(excerpts.isEmpty()) {
-			excerpt = new Excerpt();
+			excerpt = new XmpExcerpt();
 			excerpt.setResource(resource);
 			excerpt.setDataverseUser(user);
 			excerpt = em.merge(excerpt);

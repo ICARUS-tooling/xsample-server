@@ -19,16 +19,21 @@
  */
 package de.unistuttgart.xsample.pages;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.primefaces.PrimeFaces;
 
 import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.XsampleServices.Key;
-import de.unistuttgart.xsample.dv.Excerpt;
-import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.dv.XmpExcerpt;
+import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.pages.shared.XsampleExcerptData;
+import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
 import de.unistuttgart.xsample.pages.shared.XsampleWorkflow;
+import de.unistuttgart.xsample.util.ExcerptUtilityData;
 
 /**
  * @author Markus Gärtner
@@ -46,27 +51,38 @@ public class XsamplePage {
 	protected XsampleExcerptData excerptData;
 	
 	protected void initQuota(ExcerptUtilityData data) {
-		final long range = excerptData.getFileInfo().getSegments();
+		final long range = excerptData.getSegments();
 		data.setRange(range);
 		data.setLimit((long) (range * services.getDoubleSetting(Key.ExcerptLimit)));
 		
-		Excerpt quota = excerptData.getQuota();
-		if(!quota.isEmpty()) {
-			data.setQuota(Fragment.encodeAll(quota.getFragments()));
+		final List<XmpFragment> totalQuota = new ArrayList<>();
+		for(ExcerptEntry entry : excerptData.getExcerpt()) {
+			XmpExcerpt quota = entry.getQuota();
+			if(!quota.isEmpty()) {
+				totalQuota.addAll(quota.getFragments());
+			}
+		}
+		
+		if(!totalQuota.isEmpty()) {
+			data.setQuota(XmpFragment.encodeAll(totalQuota));
 		}
 	}
 	
-	public void back() {
+	public final void back() {
+		rollBack();
 		if(workflow.back()) {
 			updatePage();
 		}
 	}
 	
-	protected void updatePage() {
+	/** Callback to be invoked before {@link #back()} is fully executed. */
+	protected void rollBack() { /* no-op */ }
+	
+	protected final void updatePage() {
 		PrimeFaces.current().ajax().update(":content");
 	}
 	
-	protected void forward(String page) {
+	protected final void forward(String page) {
 		// Only cause a "page change" if page actually changed
 		if(workflow.forward(page)) {
 			updatePage();

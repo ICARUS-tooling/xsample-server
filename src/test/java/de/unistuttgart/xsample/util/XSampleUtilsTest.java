@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import de.unistuttgart.xsample.dv.Fragment;
+import de.unistuttgart.xsample.dv.XmpFragment;
 
 /**
  * @author Markus Gärtner
@@ -50,8 +50,8 @@ class XSampleUtilsTest {
 		"1-4,8-9;2-6;8",
 	})
 	void testCombinedSize(String s1, String s2, long size) {
-		List<Fragment> f1 = Fragment.decodeAll(s1);
-		List<Fragment> f2 = Fragment.decodeAll(s2);
+		List<XmpFragment> f1 = XmpFragment.decodeAll(s1);
+		List<XmpFragment> f2 = XmpFragment.decodeAll(s2);
 		assertThat(XSampleUtils.combinedSize(f1, f2)).isEqualTo(size);
 	}
 
