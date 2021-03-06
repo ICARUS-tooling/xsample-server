@@ -28,9 +28,12 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -39,6 +42,7 @@ import java.util.zip.ZipOutputStream;
 import javax.crypto.CipherInputStream;
 import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
@@ -49,6 +53,9 @@ import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.dv.XmpLocalCopy;
+import de.unistuttgart.xsample.io.LocalCache;
+import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
 import de.unistuttgart.xsample.util.BundleUtil;
@@ -65,6 +72,9 @@ public class DownloadPage extends XsamplePage {
 	
 	private static final Logger logger = Logger.getLogger(DownloadPage.class.getCanonicalName());
 
+	@Inject
+	LocalCache cache;
+	
 	//TODO check http://www.primefaces.org:8080/showcase/ui/file/download.xhtml?jfwid=0b585 for example of monitoring during download initialization
 
 	@Override
@@ -72,18 +82,46 @@ public class DownloadPage extends XsamplePage {
 		excerptData.resetExcerpt();
 	}
 	
+	public boolean isHasAnnotations() { return excerptData.hasCorpus(Corpus::hasManifests); }
+	
 	@Transactional
 	public void download() {
 		
+		final List<ExcerptEntry> entries = excerptData.getExcerpt();
+		final List<XmpLocalCopy> copies = new ArrayList<>(entries.size());
+		
 		// Early check if we already downloaded the excerpt
-		for(FileInfo fileInfo : excerptData.getFileInfos()) {
-			if(!Files.exists(fileInfo.getTempFile())) {
+		for(ExcerptEntry entry : entries) {
+			XmpLocalCopy copy = cache.getCopy(entry.getResource());
+			if(copy==null || !cache.isPopulated(copy)) {
 				Messages.addGlobalError(BundleUtil.get("download.msg.resourceDeleted"));
+				return;
+			}
+			copies.add(copy);
+		}
+		
+		// Acquire locks on all required resoruces
+		for(int i=0; i<copies.size(); i++) {
+			XmpLocalCopy copy = copies.get(i);
+			boolean locked = false;
+			try {
+				locked = copy.tryLockRead(50, TimeUnit.MILLISECONDS);
+			} catch (InterruptedException e) {
+				locked = false;
+			}
+			
+			if(!locked) {
+				// Release all previously acquired locks if one failed!!
+				for (int j = i-1; j >=0; j--) {
+					copies.get(j).unlockRead();
+				}
+				// Notify user and bail
+				Messages.addGlobalError(BundleUtil.format("download.msg.cacheBusy", copy.getFilename()));
 				return;
 			}
 		}
 		
-		final List<ExcerptEntry> entries = excerptData.getExcerpt();
+		assert entries.size()==copies.size() : "Mismatch between entries and copies";
 
 		final FacesContext fc = FacesContext.getCurrentInstance();
 		final HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();			
@@ -96,9 +134,12 @@ public class DownloadPage extends XsamplePage {
 		try(OutputStream out = response.getOutputStream();
 				ZipOutputStream zipOut = new ZipOutputStream(out)) {
 			
+			// First place a index list containing al lthe files to expect
+			addIndex(zipOut, entries);
+			
 			// Add all the excerpts
-			for(ExcerptEntry entry : entries) {
-				addExcerptEntry(zipOut, entry);
+			for(int i=0; i<entries.size(); i++) {
+				addExcerptEntry(zipOut, entries.get(i), copies.get(i));
 			}
 			
 			// Add the legal note
@@ -123,18 +164,33 @@ public class DownloadPage extends XsamplePage {
 		}
 	}
 	
-	private void addExcerptEntry(ZipOutputStream zipOut, ExcerptEntry entry) 
+	private void addIndex(ZipOutputStream zipOut, List<ExcerptEntry> entries) throws IOException {
+		zipOut.putNextEntry(new ZipEntry("INDEX.txt"));
+		
+		try(OutputStreamWriter osw = new OutputStreamWriter(zipOut, StandardCharsets.UTF_8);
+				BufferedWriter writer = new BufferedWriter(osw)) {
+			for(ExcerptEntry entry : entries) {
+				final FileInfo fileInfo = excerptData.findFileInfo(entry.getCorpusId());
+
+				writer.write(fileInfo.getTitle());
+				writer.newLine();
+			}
+			writer.newLine();
+		}
+	}
+	
+	private void addExcerptEntry(ZipOutputStream zipOut, ExcerptEntry entry, XmpLocalCopy copy) 
 			throws IOException, GeneralSecurityException {
 		final FileInfo fileInfo = excerptData.findFileInfo(entry.getCorpusId());
 		final ZipEntry zipEntry = new ZipEntry("excerpt_"+fileInfo.getTitle());
 		final ExcerptHandler handler = fileInfo.getExcerptHandler();
 		final List<XmpFragment> fragments = entry.getFragments();
-
+		final Path file = cache.getFile(copy);
+		
 		zipOut.putNextEntry(zipEntry);
 		// Now produce excerpt and add file to zip
-		try(InputStream raw = Files.newInputStream(fileInfo.getTempFile(), 
-				StandardOpenOption.READ, StandardOpenOption.DELETE_ON_CLOSE);
-				InputStream in = new CipherInputStream(raw, decrypt(fileInfo.getKey()))) {
+		try(InputStream raw = Files.newInputStream(file, StandardOpenOption.READ);
+				InputStream in = new CipherInputStream(raw, decrypt(copy.getKey()))) {
 			handler.excerpt(fileInfo, in, fragments, zipOut);
 		}
 		

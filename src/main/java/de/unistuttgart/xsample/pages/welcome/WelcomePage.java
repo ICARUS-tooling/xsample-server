@@ -21,7 +21,6 @@ import static de.unistuttgart.xsample.util.XSampleUtils._int;
 import static de.unistuttgart.xsample.util.XSampleUtils._long;
 import static de.unistuttgart.xsample.util.XSampleUtils.buffer;
 import static de.unistuttgart.xsample.util.XSampleUtils.encrypt;
-import static de.unistuttgart.xsample.util.XSampleUtils.makeKey;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
@@ -38,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,7 +71,9 @@ import de.unistuttgart.xsample.dv.XmpDataverse;
 import de.unistuttgart.xsample.dv.XmpDataverseUser;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.dv.XmpLocalCopy;
 import de.unistuttgart.xsample.dv.XmpResource;
+import de.unistuttgart.xsample.io.LocalCache;
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.mf.SourceFile;
 import de.unistuttgart.xsample.mf.SourceType;
@@ -115,6 +117,9 @@ public class WelcomePage extends XsamplePage {
 	XsampleInputData inputData;
 	
 	@Inject
+	LocalCache cache;
+	
+	@Inject
 	WelcomeView view;
 	
 	/** Returns text for current status or empty string */
@@ -129,10 +134,6 @@ public class WelcomePage extends XsamplePage {
 	/** Indicate that the outline for valid files should be shown */
 	public boolean isShowOutline() {
 		return workflow.getStatus().isFlagSet(Flag.FILE_VALID);
-	}
-	
-	public boolean isHasAnnotations() {
-		return isShowOutline() && excerptData.isHasAnnotation();
 	}
 	
 	/** Indicate that the choice for excerpt selection should be shown */
@@ -584,99 +585,125 @@ public class WelcomePage extends XsamplePage {
 
 	/** Load the entire source files */
 	boolean loadFiles(Context context) {
-		final String key = excerptData.getServer().getMasterKey();
+		final XmpDataverse server = excerptData.getServer();
+		final String key = requireNonNull(server.getMasterKey());
 		final DataverseClient client = requireNonNull(context.client);
 		
 		long totalSegmemnts = 0;
 		
 		for(Corpus corpus : excerptData.getManifest().getCorpora()) {
 			final SourceFile sourceFile = corpus.getPrimaryData();
+			final Long fileId = sourceFile.getId();
+			final XmpResource resource = services.findResource(server, fileId);
 			
-			final Call<ResponseBody> request;
-			if(sourceFile.getId()!=null) {
-				request = client.downloadFile(sourceFile.getId().longValue(), key);
-			} else if(sourceFile.getPersistentId()!=null) {
-				request = client.downloadFile(sourceFile.getPersistentId(), key);
-			} else {
-				message(FacesMessage.SEVERITY_FATAL, "welcome.msg.missingFileId", "manifest");
+			XmpLocalCopy copy = cache.ensureCopy(resource);
+			
+			if(copy==null) {
+				message(FacesMessage.SEVERITY_FATAL, "welcome.msg.cacheFail", sourceFile.getLabel());
 				return false;
 			}
-		
-			Response<ResponseBody> response;		
+			
 			try {
-				response = request.execute();
-			} catch (IOException e) {
-				logger.log(Level.SEVERE, "Failed to fetch resource", e);
-				ioErrorMessage(e);
-				return false;
-			}
+				copy.tryLockWrite(50, TimeUnit.MILLISECONDS);
+				
+				// We already have a valid copy of this resource
+				//TODO for a more precise check we should store the expected size and checksum for comparison
+				if(cache.isPopulated(copy)) {
+					continue;
+				}
+				
+				final Path tempFile = cache.getFile(copy);
+				
+				// No copy available ->
+				final Call<ResponseBody> request;
+				if(sourceFile.getId()!=null) {
+					request = client.downloadFile(sourceFile.getId().longValue(), key);
+				} else if(sourceFile.getPersistentId()!=null) {
+					request = client.downloadFile(sourceFile.getPersistentId(), key);
+				} else {
+					message(FacesMessage.SEVERITY_FATAL, "welcome.msg.missingFileId", "manifest");
+					return false;
+				}
 			
-			if(!response.isSuccessful()) {
-				httpErrorMessage(response);
-				return false;
-			}
-			
-			// Successfully opened and accessed data, now load content
-			try(ResponseBody body = response.body()) {
-				final MediaType mediaType = body.contentType();
-				if(mediaType==null) {
-					logger.log(Level.SEVERE, "Failed to obtain media type");
-					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.noMediaType");
+				Response<ResponseBody> response;		
+				try {
+					response = request.execute();
+				} catch (IOException e) {
+					logger.log(Level.SEVERE, "Failed to fetch resource", e);
+					ioErrorMessage(e);
 					return false;
 				}
 				
-				final FileInfo fileInfo = new FileInfo(corpus);
-				fileInfo.setContentType(mediaType.type()+"/"+mediaType.subtype());
-				fileInfo.setEncoding(mediaType.charset(StandardCharsets.UTF_8));
-				fileInfo.setTitle(extractName(mediaType.toString()));
-
-				final SourceType sourceType = sourceFile.getSourceType();
-				final ExcerptHandler handler = ExcerptHandlers.forSourceType(sourceType);
-				
-				// Ensure an encrypted copy of the resource
-				final Path tempFile = Files.createTempFile("xsample_", ".tmp");
-				final SecretKey secret = makeKey();
-				long size = 0;
-				try(OutputStream out = new CipherOutputStream(buffer(Files.newOutputStream(tempFile)), encrypt(secret));
-						CountingSplitStream in = new CountingSplitStream(body.byteStream(), out)) {
-					// Let handler do the actual work. Any acquired information is stored in fileInfo
-					handler.analyze(fileInfo, in);
-					size = in.getCount();
+				if(!response.isSuccessful()) {
+					httpErrorMessage(response);
+					return false;
 				}
 				
-				// If everything went well, finally complete
-				fileInfo.setSize(size);
-				fileInfo.setTempFile(tempFile);
-				fileInfo.setKey(secret);
-				fileInfo.setExcerptHandler(handler);
-				
-				// Override segment count with value from manfiest if present
-				long segments = fileInfo.getSegments();
-				Long segmentsOverride = sourceFile.getSegments();
-				if(segmentsOverride!=null && segmentsOverride.longValue()>0 && segmentsOverride.longValue()<segments) {
-					fileInfo.setSegments(segmentsOverride.longValue());
+				// Successfully opened and accessed data, now load content
+				try(ResponseBody body = response.body()) {
+					final MediaType mediaType = body.contentType();
+					if(mediaType==null) {
+						logger.log(Level.SEVERE, "Failed to obtain media type");
+						message(FacesMessage.SEVERITY_ERROR, "welcome.msg.noMediaType");
+						return false;
+					}
+					
+					final FileInfo fileInfo = new FileInfo(corpus);
+					fileInfo.setContentType(mediaType.type()+"/"+mediaType.subtype());
+					fileInfo.setEncoding(mediaType.charset(StandardCharsets.UTF_8));
+					fileInfo.setTitle(extractName(mediaType.toString()));
+	
+					final SourceType sourceType = sourceFile.getSourceType();
+					final ExcerptHandler handler = ExcerptHandlers.forSourceType(sourceType);
+					
+					// Ensure an encrypted copy of the resource
+					final SecretKey secret = copy.getKey();
+					long size = 0;
+					try(OutputStream out = new CipherOutputStream(buffer(Files.newOutputStream(tempFile)), encrypt(secret));
+							CountingSplitStream in = new CountingSplitStream(body.byteStream(), out)) {
+						// Let handler do the actual work. Any acquired information is stored in fileInfo
+						handler.analyze(fileInfo, in);
+						size = in.getCount();
+					}
+					
+					// If everything went well, finally complete
+					fileInfo.setSize(size);
+					fileInfo.setExcerptHandler(handler);
+					
+					// Override segment count with value from manfiest if present
+					long segments = fileInfo.getSegments();
+					Long segmentsOverride = sourceFile.getSegments();
+					if(segmentsOverride!=null && segmentsOverride.longValue()>0 && segmentsOverride.longValue()<segments) {
+						fileInfo.setSegments(segmentsOverride.longValue());
+					}
+					
+					totalSegmemnts += fileInfo.getSegments();
+					
+					// Update info in current config
+					excerptData.addFileInfo(fileInfo);
+				} catch (IOException e) {
+					logger.log(Level.SEVERE, "Failed to load file content", e);
+					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.loadFailed");
+					return false;
+				} catch (UnsupportedContentTypeException e) {
+					logger.log(Level.SEVERE, "Content type of file not supported", e);
+					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.unsupportedType");
+					return false;
+				} catch (EmptyResourceException e) {
+					logger.log(Level.SEVERE, "Source file empty", e);
+					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.emptyResource");
+					return false;
+				} catch (GeneralSecurityException e) {
+					logger.log(Level.SEVERE, "Failed to prepare cipher", e);
+					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.cipherPreparation");
+					return false;
 				}
-				
-				totalSegmemnts += fileInfo.getSegments();
-				
-				// Update info in current config
-				excerptData.addFileInfo(fileInfo);
-			} catch (IOException e) {
-				logger.log(Level.SEVERE, "Failed to load file content", e);
-				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.loadFailed");
+			} catch (InterruptedException e) {
+				logger.log(Level.SEVERE, "Unable to lock copy for write: "+copy, e);
+				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.cacheBusy", corpus.getId());
 				return false;
-			} catch (UnsupportedContentTypeException e) {
-				logger.log(Level.SEVERE, "Content type of file not supported", e);
-				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.unsupportedType");
-				return false;
-			} catch (EmptyResourceException e) {
-				logger.log(Level.SEVERE, "Source file empty", e);
-				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.emptyResource");
-				return false;
-			} catch (GeneralSecurityException e) {
-				logger.log(Level.SEVERE, "Failed to prepare cipher", e);
-				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.cipherPreparation");
-				return false;
+			} finally {
+				copy.unlockWrite();
 			}
 		}
 		

@@ -75,7 +75,6 @@ public class XsampleExcerptData implements Serializable {
 	private long staticExcerptBegin = 0;
 	private long staticExcerptEnd = 10;
 	private boolean staticExcerptFixed = false;
-	private boolean hasAnnotation = false;
 	
 	/** Switc hto prevent redundant calls to verification chains */
 	private boolean verified = false;
@@ -103,9 +102,6 @@ public class XsampleExcerptData implements Serializable {
 	
 	public long getSegments() { return segments; }
 	public void setSegments(long segments) { this.segments = segments; }
-	
-	public boolean isHasAnnotation() { return hasAnnotation; }
-	public void setHasAnnotation(boolean hasAnnotation) { this.hasAnnotation = hasAnnotation; }
 	
 	public boolean isVerified() { return verified; }
 	public void setVerified(boolean verified) { this.verified = verified; }

@@ -15,9 +15,9 @@ import javax.inject.Named;
 @Named
 @ViewScoped
 public class SliceView implements Serializable {
-
-	private static final long serialVersionUID = 8541628961742394679L;
-
+	
+	private static final long serialVersionUID = 5111464214456376898L;
+	
 	private String selectedCorpus;
 
 	public String getSelectedCorpus() {

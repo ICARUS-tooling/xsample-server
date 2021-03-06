@@ -26,9 +26,6 @@ import static java.util.Objects.requireNonNull;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-
-import javax.crypto.SecretKey;
 
 import de.unistuttgart.xsample.mf.Corpus;
 
@@ -55,11 +52,6 @@ public class FileInfo implements Serializable {
 	
 	/** Id of the associated {@link Corpus} in the manifest. */
 	private String corpusId;
-	
-	/** Temporary file on the server, encrypted with {@link #key}.  */
-	private Path tempFile;
-	/** Key for encrypting/decrypting temporary file. */
-	private SecretKey key;
 
 	/** The designated handler to manage excerpt generation and analysis of the source file */
 	private ExcerptHandler excerptHandler;
@@ -108,18 +100,7 @@ public class FileInfo implements Serializable {
 	public void setSegments(long segments) {
 		this.segments = segments;
 	}
-	public Path getTempFile() {
-		return tempFile;
-	}
-	public void setTempFile(Path tempFile) {
-		this.tempFile = requireNonNull(tempFile);
-	}
-	public SecretKey getKey() {
-		return key;
-	}
-	public void setKey(SecretKey key) {
-		this.key = key;
-	}
+	
 	public ExcerptHandler getExcerptHandler() { return excerptHandler; }
 	public void setExcerptHandler(ExcerptHandler excerptHandler) { this.excerptHandler = excerptHandler; }
 	
@@ -135,7 +116,7 @@ public class FileInfo implements Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("FileInfo@%d[title=%s, contentType=%s, encoding)%s, size=%d, segments=%d, tempFile=%s, key=%s]", 
-				_int(hashCode()), title, contentType, encoding, _long(size), _long(segments), tempFile, key);
+		return String.format("FileInfo@%d[title=%s, contentType=%s, encoding)%s, size=%d, segments=%d]", 
+				_int(hashCode()), title, contentType, encoding, _long(size), _long(segments));
 	}
 }

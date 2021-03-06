@@ -10,6 +10,11 @@
 			<p:staticMessage severity="info" escape="false" summary="#{bundle['download.message']}" />
 		</div>
 		
+		<div jsf:rendered="#{downloadPage.hasAnnotations}">
+			<p:selectBooleanCheckbox value="#{downloadView.includeAnnotations}"
+				itemLabel="#{bundle['download.includeAnnotations']}" />
+		</div>
+		
 		<div>
 			<p:commandButton widgetVar="wv_back" value="#{bundle['back']}" action="#{downloadPage.back}" process="@this" />
 			<p:commandButton widgetVar="wv_download" ajax="false" value="#{bundle['download.continue']}" 

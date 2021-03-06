@@ -36,7 +36,7 @@
 						</p:dataTable>
 					</div>
 					<div class="p-col">
-						<div jsf:rendered="#{true or xsampleExcerptData.isMultiPartCorpus}">
+						<div jsf:rendered="#{xsampleExcerptData.isMultiPartCorpus}">
 							<h:outputText value="#{bundle['selectFile']}" />
 							<p:selectOneMenu value="#{welcomeView.selectedCorpus}" style="width:300px"
 									valueChangeListener="#{welcomePage.refreshFileProperties}"
@@ -76,9 +76,6 @@
 						<f:selectItem itemLabel="#{bundle['welcome.excerptType.query']}"
 							itemValue="QUERY" />
 					</p:selectOneRadio>
-					<p:selectBooleanCheckbox rendered="#{welcomePage.hasAnnotations}" 
-						value="#{welcomeView.includeAnnotations}"
-						itemLabel="#{bundle['welcome.includeAnnotations']}" />
 				</div>
 				
 				<f:facet name="footer">

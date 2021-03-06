@@ -23,6 +23,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -37,6 +38,7 @@ import de.unistuttgart.xsample.dv.UserId;
 import de.unistuttgart.xsample.dv.XmpDataverse;
 import de.unistuttgart.xsample.dv.XmpDataverseUser;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
+import de.unistuttgart.xsample.dv.XmpLocalCopy;
 import de.unistuttgart.xsample.dv.XmpResource;
 
 
@@ -96,6 +98,10 @@ public class XsampleServices {
 		
 		return result;
 	}
+	
+	public <T> void delete(T obj) { em.remove(obj); }
+	
+	public void sync() { em.flush(); }
 	
 	public XmpResource findResource(XmpDataverse dataverse, Long file) {
 		requireNonNull(file);
@@ -191,6 +197,32 @@ public class XsampleServices {
 		return excerpt;
 	}
 	
+	public List<XmpLocalCopy> findExpiredCopies() {
+		return em.createNamedQuery("LocalCopy.findExpired")
+				.setParameter("timestamp", LocalDateTime.now())
+				.getResultList();
+	}
+	
+	public Optional<XmpLocalCopy> findCopy(XmpResource resource) {
+		requireNonNull(resource);
+
+		List<XmpLocalCopy> copies = em.createNamedQuery("LocalCopy.findByResource")
+					.setParameter("resource", resource)
+					.getResultList();
+		
+		return copies.isEmpty() ? Optional.empty() : Optional.of(copies.get(0));
+	}
+	
+	public Optional<XmpLocalCopy> findCopy(String filename) {
+		requireNonNull(filename);
+
+		List<XmpLocalCopy> copies = em.createNamedQuery("LocalCopy.findByFilename")
+					.setParameter("filename", filename)
+					.getResultList();
+		
+		return copies.isEmpty() ? Optional.empty() : Optional.of(copies.get(0));
+	}
+	
 	// SETTINGS METHODS
 
 	public String getSetting(Key key) {
@@ -206,4 +238,5 @@ public class XsampleServices {
 	public double getDoubleSetting(Key key) { return Double.parseDouble(getSetting(key)); }
 	
 	public boolean getBooleanSetting(Key key) { return Boolean.parseBoolean(getSetting(key)); }
+	
 }
