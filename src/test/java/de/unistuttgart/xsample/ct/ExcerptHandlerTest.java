@@ -42,6 +42,7 @@ import org.junit.jupiter.api.TestFactory;
 
 import de.unistuttgart.xsample.XSampleTestUtils;
 import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.io.FileInfo;
 import it.unimi.dsi.fastutil.io.FastByteArrayInputStream;
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream;
 

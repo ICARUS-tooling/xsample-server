@@ -33,12 +33,12 @@ import javax.annotation.Nullable;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
-import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.dv.XmpDataverse;
 import de.unistuttgart.xsample.dv.XmpDataverseUser;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.dv.XmpResource;
+import de.unistuttgart.xsample.io.FileInfo;
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.mf.XsampleManifest;
 

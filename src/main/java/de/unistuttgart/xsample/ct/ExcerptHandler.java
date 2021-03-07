@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.io.FileInfo;
 import de.unistuttgart.xsample.mf.SourceType;
  
 /**

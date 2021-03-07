@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample.util;
+package de.unistuttgart.xsample.io;
 
 import static de.unistuttgart.xsample.util.XSampleUtils.strictToInt;
 import static java.util.Objects.requireNonNull;

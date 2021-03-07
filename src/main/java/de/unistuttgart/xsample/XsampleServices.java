@@ -216,7 +216,7 @@ public class XsampleServices {
 	public Optional<XmpLocalCopy> findCopy(String filename) {
 		requireNonNull(filename);
 
-		List<XmpLocalCopy> copies = em.createNamedQuery("LocalCopy.findByFilename")
+		List<XmpLocalCopy> copies = em.createNamedQuery("LocalCopy.findByTempFile")
 					.setParameter("filename", filename)
 					.getResultList();
 		

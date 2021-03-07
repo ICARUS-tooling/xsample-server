@@ -50,11 +50,12 @@ import javax.transaction.Transactional;
 import org.omnifaces.util.Messages;
 
 import de.unistuttgart.xsample.ct.ExcerptHandler;
-import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.dv.XmpLocalCopy;
+import de.unistuttgart.xsample.io.FileInfo;
 import de.unistuttgart.xsample.io.LocalCache;
+import de.unistuttgart.xsample.io.NonClosingOutputStreamDelegate;
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
@@ -116,7 +117,7 @@ public class DownloadPage extends XsamplePage {
 					copies.get(j).unlockRead();
 				}
 				// Notify user and bail
-				Messages.addGlobalError(BundleUtil.format("download.msg.cacheBusy", copy.getFilename()));
+				Messages.addGlobalError(BundleUtil.format("download.msg.cacheBusy", copy.getDataFile()));
 				return;
 			}
 		}
@@ -167,13 +168,16 @@ public class DownloadPage extends XsamplePage {
 	private void addIndex(ZipOutputStream zipOut, List<ExcerptEntry> entries) throws IOException {
 		zipOut.putNextEntry(new ZipEntry("INDEX.txt"));
 		
-		try(OutputStreamWriter osw = new OutputStreamWriter(zipOut, StandardCharsets.UTF_8);
+		try(OutputStream out = new NonClosingOutputStreamDelegate(zipOut);
+				OutputStreamWriter osw = new OutputStreamWriter(out, StandardCharsets.UTF_8);
 				BufferedWriter writer = new BufferedWriter(osw)) {
 			for(ExcerptEntry entry : entries) {
 				final FileInfo fileInfo = excerptData.findFileInfo(entry.getCorpusId());
 
 				writer.write(fileInfo.getTitle());
 				writer.newLine();
+				
+				out.flush();
 			}
 			writer.newLine();
 		}
@@ -185,13 +189,17 @@ public class DownloadPage extends XsamplePage {
 		final ZipEntry zipEntry = new ZipEntry("excerpt_"+fileInfo.getTitle());
 		final ExcerptHandler handler = fileInfo.getExcerptHandler();
 		final List<XmpFragment> fragments = entry.getFragments();
-		final Path file = cache.getFile(copy);
+		final Path file = cache.getCopyFile(copy);
 		
 		zipOut.putNextEntry(zipEntry);
 		// Now produce excerpt and add file to zip
 		try(InputStream raw = Files.newInputStream(file, StandardOpenOption.READ);
-				InputStream in = new CipherInputStream(raw, decrypt(copy.getKey()))) {
-			handler.excerpt(fileInfo, in, fragments, zipOut);
+				InputStream in = new CipherInputStream(raw, decrypt(copy.getKey()));
+				OutputStream out = new NonClosingOutputStreamDelegate(zipOut);) {
+			
+			handler.excerpt(fileInfo, in, fragments, out);
+			
+			out.flush();
 		}
 		
 		//TODO in the future also split and add annotations here
@@ -200,10 +208,13 @@ public class DownloadPage extends XsamplePage {
 	private void addLegalNote(ZipOutputStream zipOut) throws IOException {
 		zipOut.putNextEntry(new ZipEntry("LEGAL.txt"));
 		
-		try(OutputStreamWriter osw = new OutputStreamWriter(zipOut, StandardCharsets.UTF_8);
+		try(OutputStream out = new NonClosingOutputStreamDelegate(zipOut);
+				OutputStreamWriter osw = new OutputStreamWriter(out, StandardCharsets.UTF_8);
 				BufferedWriter writer = new BufferedWriter(osw)) {
 			writer.write("<here be legal notes>");
 			writer.newLine();
+			
+			out.flush();
 		}
 	}
 }

@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.crypto.SecretKey;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
@@ -32,6 +33,7 @@ import javax.transaction.Transactional;
 
 import org.omnifaces.cdi.Eager;
 
+import de.unistuttgart.xsample.XsampleApp;
 import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.dv.XmpLocalCopy;
 import de.unistuttgart.xsample.dv.XmpResource;
@@ -54,10 +56,14 @@ public class LocalCache {
 	
 	private static final String CACHE_FOLDER = "xsample_cache";
 	private static final String TMP_PREFIX = "xsample_file_";
-	private static final String TMP_SUFFIX = ".tmp";
+	private static final String DATA_SUFFIX = ".tmp";
+	private static final String INFO_SUFFIX = ".info";
 	
 	@Inject
 	XsampleServices services;
+	
+	@Inject
+	XsampleApp app;
 	
 	private final Object lock = new Object();
 	
@@ -68,17 +74,34 @@ public class LocalCache {
 	private void init() {
 		Path dir = Paths.get(System.getProperty("java.io.tmpdir"));
 		tempFolder = dir.resolve(CACHE_FOLDER);
-		if(!Files.exists(tempFolder, LinkOption.NOFOLLOW_LINKS)) {
-			try {
-				Files.createDirectory(tempFolder);
-			} catch (IOException e) {
-				throw new IllegalStateException("Failed to initialize cache folder", e);
-			}
+		tempFolder = tempFolder.resolve(app.getVersion());
+		try {
+			Files.createDirectories(tempFolder);
+		} catch (IOException e) {
+			throw new IllegalStateException("Failed to initialize cache folder", e);
 		}
 	}
 	
-	private Path createTempFile() throws IOException { return Files.createTempFile(tempFolder, TMP_PREFIX, TMP_SUFFIX); }
+	@PreDestroy
+	private void cleanup() {
+		//TODO add a GC queue and weak references to copies we give out and ensure upon cleanup that they are released?
+	}
+	
+	private Path createTempFile() throws IOException { return Files.createTempFile(tempFolder, TMP_PREFIX, DATA_SUFFIX); }
 
+	private Path getInfoFile(Path dataFile) {
+		String name = dataFile.getFileName().toString();
+		String infoName = name.substring(0, name.length()-DATA_SUFFIX.length()) + INFO_SUFFIX;
+		Path infoFile = file(infoName);
+		return infoFile;
+	}
+	
+	private Path createInfoFile(Path dataFile) throws IOException {
+		Path infoFile = getInfoFile(dataFile);
+		Files.createFile(infoFile);
+		return infoFile;
+	}
+	
 	private Path file(String name) {
 		requireNonNull(name);
 		return tempFolder.resolve(name); 
@@ -90,10 +113,10 @@ public class LocalCache {
     		final List<XmpLocalCopy> expired = services.findExpiredCopies();
     		for(XmpLocalCopy copy : expired) {
     			try {
-    				Path file = file(copy.getFilename());
+    				Path file = file(copy.getDataFile());
     				Files.deleteIfExists(file);
     			} catch (IOException e) {
-    				log.log(Level.SEVERE, "Failed to purge expired file: "+copy.getFilename(), e);
+    				log.log(Level.SEVERE, "Failed to purge expired file: "+copy.getDataFile(), e);
 				} finally {
     				services.delete(copy);
     			}
@@ -116,11 +139,12 @@ public class LocalCache {
     	synchronized (lock) {
     		try(DirectoryStream<Path> stream = Files.newDirectoryStream(tempFolder, STALE_FILES)) {
     			for(Iterator<Path> it = stream.iterator(); it.hasNext();) {
-    				Path file = it.next();
+    				final Path file = it.next();
+    				final boolean isDataFile = file.endsWith(DATA_SUFFIX);
     				Optional<XmpLocalCopy> copy = services.findCopy(file.toString());
     				if(copy.isPresent()) {
     					services.delete(copy);
-    				} else {
+    				} else if(isDataFile) {
     					log.severe("Cache inconsistency: missing copy entry for cache file "+file);
     				}
     				
@@ -157,21 +181,34 @@ public class LocalCache {
 				return null;
 			}
 			
-			Path file;
+			Path dataFile;
 			try {
-				file = createTempFile();
-				touch(file);
+				dataFile = createTempFile();
+				touch(dataFile);
 			} catch (IOException e) {
 				log.log(Level.SEVERE, "Failed to create/touch temporary file", e);
+				return null;
+			}
+			
+			Path infoFile;
+			try {
+				infoFile = createInfoFile(dataFile);
+				touch(infoFile);
+			} catch (IOException e) {
+				log.log(Level.SEVERE, "Failed to create/touch info file", e);
 				return null;
 			}
 			
 			XmpLocalCopy copy = new XmpLocalCopy();
 			copy.setExpiresAt(LocalDateTime.now().plusDays(MIN_EXPIRE_DAYS));
 			copy.setResource(resource);
-			copy.setFilename(file.toString());
+			copy.setDataFile(dataFile.toString());
+			copy.setInfoFile(infoFile.toString());
 			copy.setKey(key);
 			services.save(copy);
+			
+			log.info(String.format("Local copy created: filename=%s key=%s resource=%s expiresAt=%s", 
+					copy.getDataFile(), copy.getKey(), copy.getResource(), copy.getExpiresAt()));
 			
 			return copy;
 		}
@@ -194,14 +231,18 @@ public class LocalCache {
 		}
 	}
 	
-	public Path getFile(XmpLocalCopy copy) {
-		return tempFolder.resolve(copy.getFilename());
+	public Path getCopyFile(XmpLocalCopy copy) {
+		return tempFolder.resolve(copy.getDataFile());
+	}
+	
+	public Path getInfoFile(XmpLocalCopy copy) {
+		return tempFolder.resolve(copy.getInfoFile());
 	}
 	
 	public boolean isPopulated(XmpLocalCopy copy) {
-		Path file = getFile(copy);
+		Path file = getCopyFile(copy);
 		try {
-			return Files.size(file)>0;
+			return Files.exists(file, LinkOption.NOFOLLOW_LINKS) && Files.size(file)>0;
 		} catch (IOException e) {
 			log.log(Level.SEVERE, "Failed to check size of file: "+file, e);
 			return false;

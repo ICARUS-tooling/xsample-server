@@ -24,6 +24,9 @@ import static de.unistuttgart.xsample.util.XSampleUtils.encrypt;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.net.MalformedURLException;
@@ -62,7 +65,6 @@ import de.unistuttgart.xsample.XsampleSession;
 import de.unistuttgart.xsample.ct.EmptyResourceException;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.ExcerptHandlers;
-import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
 import de.unistuttgart.xsample.dv.DataverseClient;
 import de.unistuttgart.xsample.dv.DvResult;
@@ -73,6 +75,8 @@ import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.dv.XmpLocalCopy;
 import de.unistuttgart.xsample.dv.XmpResource;
+import de.unistuttgart.xsample.io.CountingSplitStream;
+import de.unistuttgart.xsample.io.FileInfo;
 import de.unistuttgart.xsample.io.LocalCache;
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.mf.SourceFile;
@@ -90,7 +94,6 @@ import de.unistuttgart.xsample.pages.shared.XsampleWorkflow.Flag;
 import de.unistuttgart.xsample.pages.shared.XsampleWorkflow.Status;
 import de.unistuttgart.xsample.pages.slice.SlicePage;
 import de.unistuttgart.xsample.util.BundleUtil;
-import de.unistuttgart.xsample.util.CountingSplitStream;
 import de.unistuttgart.xsample.util.Property;
 import de.unistuttgart.xsample.util.XSampleUtils;
 import okhttp3.MediaType;
@@ -109,6 +112,8 @@ public class WelcomePage extends XsamplePage {
 	public static final String PAGE = "welcome";
 	
 	private static final Logger logger = Logger.getLogger(WelcomePage.class.getCanonicalName());
+	
+	private static final long DEFAULT_LOCK_TIMEOUT_MIMLLIS = 50L;
 	
 	@Inject
 	XsampleSession session;
@@ -329,6 +334,9 @@ public class WelcomePage extends XsamplePage {
 		
 		workflow.setStatus(status);
 		excerptData.setVerified(true);
+	
+		refreshManifestProperties();
+		refreshFileProperties();
 	}
 
 	private static void message(Severity severity, String key, Object...args) {
@@ -586,8 +594,6 @@ public class WelcomePage extends XsamplePage {
 	/** Load the entire source files */
 	boolean loadFiles(Context context) {
 		final XmpDataverse server = excerptData.getServer();
-		final String key = requireNonNull(server.getMasterKey());
-		final DataverseClient client = requireNonNull(context.client);
 		
 		long totalSegmemnts = 0;
 		
@@ -602,115 +608,183 @@ public class WelcomePage extends XsamplePage {
 				message(FacesMessage.SEVERITY_FATAL, "welcome.msg.cacheFail", sourceFile.getLabel());
 				return false;
 			}
-			
-			try {
-				copy.tryLockWrite(50, TimeUnit.MILLISECONDS);
-				
-				// We already have a valid copy of this resource
-				//TODO for a more precise check we should store the expected size and checksum for comparison
-				if(cache.isPopulated(copy)) {
-					continue;
-				}
-				
-				final Path tempFile = cache.getFile(copy);
-				
-				// No copy available ->
-				final Call<ResponseBody> request;
-				if(sourceFile.getId()!=null) {
-					request = client.downloadFile(sourceFile.getId().longValue(), key);
-				} else if(sourceFile.getPersistentId()!=null) {
-					request = client.downloadFile(sourceFile.getPersistentId(), key);
-				} else {
-					message(FacesMessage.SEVERITY_FATAL, "welcome.msg.missingFileId", "manifest");
-					return false;
-				}
-			
-				Response<ResponseBody> response;		
+		
+			FileInfo fileInfo;
+			// We already have a valid copy of this resource
+			//TODO for a more precise check we should store the expected size and checksum for comparison
+			if(cache.isPopulated(copy)) {
 				try {
-					response = request.execute();
-				} catch (IOException e) {
-					logger.log(Level.SEVERE, "Failed to fetch resource", e);
-					ioErrorMessage(e);
+					copy.tryLockRead(DEFAULT_LOCK_TIMEOUT_MIMLLIS, TimeUnit.MILLISECONDS);
+				} catch (InterruptedException e) {
+					logger.log(Level.SEVERE, "Unable to lock copy for read: "+copy, e);
+					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.cacheBusy", corpus.getId());
 					return false;
 				}
-				
-				if(!response.isSuccessful()) {
-					httpErrorMessage(response);
+				try {					
+					fileInfo = readInfo(corpus, copy);
+				} finally {
+					copy.unlockRead();
+				}
+			} else {
+				try {
+					copy.tryLockWrite(DEFAULT_LOCK_TIMEOUT_MIMLLIS, TimeUnit.MILLISECONDS);
+				} catch (InterruptedException e) {
+					logger.log(Level.SEVERE, "Unable to lock copy for write: "+copy, e);
+					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.cacheBusy", corpus.getId());
 					return false;
 				}
-				
-				// Successfully opened and accessed data, now load content
-				try(ResponseBody body = response.body()) {
-					final MediaType mediaType = body.contentType();
-					if(mediaType==null) {
-						logger.log(Level.SEVERE, "Failed to obtain media type");
-						message(FacesMessage.SEVERITY_ERROR, "welcome.msg.noMediaType");
-						return false;
-					}
-					
-					final FileInfo fileInfo = new FileInfo(corpus);
-					fileInfo.setContentType(mediaType.type()+"/"+mediaType.subtype());
-					fileInfo.setEncoding(mediaType.charset(StandardCharsets.UTF_8));
-					fileInfo.setTitle(extractName(mediaType.toString()));
-	
-					final SourceType sourceType = sourceFile.getSourceType();
-					final ExcerptHandler handler = ExcerptHandlers.forSourceType(sourceType);
-					
-					// Ensure an encrypted copy of the resource
-					final SecretKey secret = copy.getKey();
-					long size = 0;
-					try(OutputStream out = new CipherOutputStream(buffer(Files.newOutputStream(tempFile)), encrypt(secret));
-							CountingSplitStream in = new CountingSplitStream(body.byteStream(), out)) {
-						// Let handler do the actual work. Any acquired information is stored in fileInfo
-						handler.analyze(fileInfo, in);
-						size = in.getCount();
-					}
-					
-					// If everything went well, finally complete
-					fileInfo.setSize(size);
-					fileInfo.setExcerptHandler(handler);
-					
-					// Override segment count with value from manfiest if present
-					long segments = fileInfo.getSegments();
-					Long segmentsOverride = sourceFile.getSegments();
-					if(segmentsOverride!=null && segmentsOverride.longValue()>0 && segmentsOverride.longValue()<segments) {
-						fileInfo.setSegments(segmentsOverride.longValue());
-					}
-					
-					totalSegmemnts += fileInfo.getSegments();
-					
-					// Update info in current config
-					excerptData.addFileInfo(fileInfo);
-				} catch (IOException e) {
-					logger.log(Level.SEVERE, "Failed to load file content", e);
-					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.loadFailed");
-					return false;
-				} catch (UnsupportedContentTypeException e) {
-					logger.log(Level.SEVERE, "Content type of file not supported", e);
-					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.unsupportedType");
-					return false;
-				} catch (EmptyResourceException e) {
-					logger.log(Level.SEVERE, "Source file empty", e);
-					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.emptyResource");
-					return false;
-				} catch (GeneralSecurityException e) {
-					logger.log(Level.SEVERE, "Failed to prepare cipher", e);
-					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.cipherPreparation");
-					return false;
+				try {						
+					final DataverseClient client = requireNonNull(context.client);
+					fileInfo = copySource(corpus, copy, client);
+				} finally {
+					copy.unlockWrite();
 				}
-			} catch (InterruptedException e) {
-				logger.log(Level.SEVERE, "Unable to lock copy for write: "+copy, e);
-				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.cacheBusy", corpus.getId());
-				return false;
-			} finally {
-				copy.unlockWrite();
 			}
+			
+			// Final sanity check
+			if(fileInfo==null) {
+				// Error messages have already been displayed and/or logged!
+				return false;
+			}
+			
+			// Accumulate segments globally
+			totalSegmemnts += fileInfo.getSegments();
+			
+			// Update info in current config
+			excerptData.addFileInfo(fileInfo);				
 		}
 		
 		excerptData.setSegments(totalSegmemnts);
 		
 		return true;
-	}	
+	}
+	
+	private FileInfo readInfo(Corpus corpus, XmpLocalCopy copy) {
+		logger.fine("Reading cached info for "+corpus.getId());
+		
+		// Store file info in local cache
+		final Path infoFile = cache.getInfoFile(copy);
+		try(InputStream fileIn = Files.newInputStream(infoFile);
+				ObjectInputStream objIn = new ObjectInputStream(fileIn)) {
+			final FileInfo fileInfo = FileInfo.class.cast(objIn.readObject());
+			final SourceType sourceType = corpus.getPrimaryData().getSourceType();
+			final ExcerptHandler handler = ExcerptHandlers.forSourceType(sourceType);
+			fileInfo.setExcerptHandler(handler);
+			return fileInfo;
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, "Failed to read cached file info "+infoFile, e);
+			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.readInfoFailed", corpus.getId());
+		} catch (ClassNotFoundException e) {
+			logger.log(Level.SEVERE, "Corrupted file info in "+infoFile, e);
+			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.corruptedInfoFile", corpus.getId());
+		} catch (UnsupportedContentTypeException e) {
+			logger.log(Level.SEVERE, "Content type of file not supported (this should never happen, as this is a checked copy!!)", e);
+			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.unsupportedType", corpus.getId());
+		}
+		
+		return null;
+	}
+	
+	private FileInfo copySource(Corpus corpus, XmpLocalCopy copy, DataverseClient client) {
+		logger.fine("Downloading data and creating info for "+corpus.getId());
+
+		final XmpDataverse server = excerptData.getServer();
+		final String key = requireNonNull(server.getMasterKey());
+		
+		try {
+			final SourceFile sourceFile = corpus.getPrimaryData();
+			final Call<ResponseBody> request;
+			if(sourceFile.getId()!=null) {
+				request = client.downloadFile(sourceFile.getId().longValue(), key);
+			} else if(sourceFile.getPersistentId()!=null) {
+				request = client.downloadFile(sourceFile.getPersistentId(), key);
+			} else {
+				message(FacesMessage.SEVERITY_FATAL, "welcome.msg.missingFileId", "manifest");
+				return null;
+			}
+		
+			Response<ResponseBody> response;		
+			try {
+				response = request.execute();
+			} catch (IOException e) {
+				logger.log(Level.SEVERE, "Failed to fetch resource", e);
+				ioErrorMessage(e);
+				return null;
+			}
+			
+			if(!response.isSuccessful()) {
+				httpErrorMessage(response);
+				return null;
+			}
+			
+			final Path tempFile = cache.getCopyFile(copy);
+			final FileInfo fileInfo;
+
+			// Successfully opened and accessed data, now load content
+			try(ResponseBody body = response.body()) {
+				final MediaType mediaType = body.contentType();
+				if(mediaType==null) {
+					logger.log(Level.SEVERE, "Failed to obtain media type");
+					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.noMediaType");
+					return null;
+				}
+				
+				fileInfo = new FileInfo(corpus);
+				fileInfo.setContentType(mediaType.type()+"/"+mediaType.subtype());
+				fileInfo.setEncoding(mediaType.charset(StandardCharsets.UTF_8));
+				fileInfo.setTitle(extractName(mediaType.toString()));
+
+				final SourceType sourceType = sourceFile.getSourceType();
+				final ExcerptHandler handler = ExcerptHandlers.forSourceType(sourceType);
+				
+				// Ensure an encrypted copy of the resource
+				final SecretKey secret = copy.getKey();
+				long size = 0;
+				try(OutputStream out = buffer(Files.newOutputStream(tempFile));
+						OutputStream cout = new CipherOutputStream(out, encrypt(secret));
+						CountingSplitStream in = new CountingSplitStream(body.byteStream(), cout)) {
+					// Let handler do the actual work. Any acquired information is stored in fileInfo
+					handler.analyze(fileInfo, in);
+					size = in.getCount();
+					out.flush();
+				}
+				
+				// If everything went well, finally complete
+				fileInfo.setSize(size);
+				fileInfo.setExcerptHandler(handler);
+				
+				// Override segment count with value from manfiest if present
+				long segments = fileInfo.getSegments();
+				Long segmentsOverride = sourceFile.getSegments();
+				if(segmentsOverride!=null && segmentsOverride.longValue()>0 && segmentsOverride.longValue()<segments) {
+					fileInfo.setSegments(segmentsOverride.longValue());
+				}
+			}
+			
+			// Store file info in local cache
+			final Path infoFile = cache.getInfoFile(copy);
+			try(OutputStream fileOut = Files.newOutputStream(infoFile);
+					ObjectOutputStream objOut = new ObjectOutputStream(fileOut)) {
+				objOut.writeObject(fileInfo);
+			}
+			
+			return fileInfo;
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, "Failed to load and cache file content", e);
+			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.loadFailed", corpus.getId());
+		} catch (UnsupportedContentTypeException e) {
+			logger.log(Level.SEVERE, "Content type of file not supported", e);
+			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.unsupportedType", corpus.getId());
+		} catch (EmptyResourceException e) {
+			logger.log(Level.SEVERE, "Source file empty", e);
+			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.emptyResource", corpus.getId());
+		} catch (GeneralSecurityException e) {
+			logger.log(Level.SEVERE, "Failed to prepare cipher", e);
+			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.cipherPreparation", corpus.getId());
+		}
+		
+		return null;
+	}
 	
 	/** Verify manifest excerpt data - needs file info for loaded target resource!! */
 	boolean validateExcerpt(Context context) {
@@ -831,9 +905,6 @@ public class WelcomePage extends XsamplePage {
 				view.setSelectedCorpus(fileInfos.get(0).getCorpusId());
 			}
 		}
-		
-		refreshManifestProperties();
-		refreshFileProperties();
 		
 		return true;
 	}

@@ -17,7 +17,7 @@
 /**
  * 
  */
-package de.unistuttgart.xsample.ct;
+package de.unistuttgart.xsample.io;
 
 import static de.unistuttgart.xsample.util.XSampleUtils._int;
 import static de.unistuttgart.xsample.util.XSampleUtils._long;
@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.mf.Corpus;
 
 /**
@@ -42,7 +43,7 @@ public class FileInfo implements Serializable {
 	/** MIME type of the source file */
 	private String contentType;
 	/** Character encoding used for source file */
-	private Charset encoding;
+	private String encoding;
 	/** Size in bytes of the source file */
 	private long size;
 	/** Number of segments that can be extracted. */
@@ -54,7 +55,7 @@ public class FileInfo implements Serializable {
 	private String corpusId;
 
 	/** The designated handler to manage excerpt generation and analysis of the source file */
-	private ExcerptHandler excerptHandler;
+	private transient ExcerptHandler excerptHandler;
 	
 	public FileInfo() { /* no-op */ }
 	
@@ -82,11 +83,11 @@ public class FileInfo implements Serializable {
 		this.contentType = contentType;
 	}
 	public Charset getEncoding() {
-		return encoding==null ? StandardCharsets.UTF_8 : encoding;
+		return encoding==null ? StandardCharsets.UTF_8 : Charset.forName(encoding);
 	}
 	public void setEncoding(Charset encoding) {
 		requireNonNull(encoding);
-		this.encoding = encoding;
+		this.encoding = encoding.name();
 	}
 	public long getSize() {
 		return size;

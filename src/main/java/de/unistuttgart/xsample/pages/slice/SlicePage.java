@@ -31,8 +31,8 @@ import javax.inject.Named;
 
 import org.omnifaces.util.Messages;
 
-import de.unistuttgart.xsample.ct.FileInfo;
 import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.io.FileInfo;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.download.DownloadPage;
 import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
