@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javax.crypto.SecretKey;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -56,7 +55,7 @@ public class XmpLocalCopy {
 	private String infoFile;
 	
 	@Column(nullable = false)
-	private SecretKey key;
+	private String key;
 	
 	private transient final ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -111,11 +110,11 @@ public class XmpLocalCopy {
 	public void setInfoFile(String infoFile) {
 		this.infoFile = infoFile;
 	}
-	public SecretKey getKey() {
+	public String getKey() {
 		return key;
 	}
 
-	public void setKey(SecretKey key) {
+	public void setKey(String key) {
 		this.key = key;
 	}
 }

@@ -30,6 +30,7 @@ import java.io.Reader;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
@@ -39,6 +40,7 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import de.unistuttgart.xsample.dv.XmpFragment;
 
@@ -129,6 +131,18 @@ public class XSampleUtils {
 	
 	public static SecretKey makeKey() throws NoSuchAlgorithmException {
 		return KeyGenerator.getInstance("AES").generateKey();
+	}
+	
+	public static SecretKey deserializeKey(String s) {
+		// decode the base64 encoded string
+		byte[] decodedKey = Base64.getDecoder().decode(s);
+		// rebuild key using SecretKeySpec
+		return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES"); 
+	}
+	
+	public static String serializeKey(SecretKey key) {
+		// get base64 encoded version of the key
+		return Base64.getEncoder().encodeToString(key.getEncoded());
 	}
  
 	private static final int KB = 1024;

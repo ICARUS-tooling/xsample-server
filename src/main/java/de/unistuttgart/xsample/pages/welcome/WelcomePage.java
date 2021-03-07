@@ -47,8 +47,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
-import javax.crypto.SecretKey;
 import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.application.FacesMessage.Severity;
@@ -738,10 +738,10 @@ public class WelcomePage extends XsamplePage {
 				final ExcerptHandler handler = ExcerptHandlers.forSourceType(sourceType);
 				
 				// Ensure an encrypted copy of the resource
-				final SecretKey secret = copy.getKey();
+				final Cipher cipher = encrypt(XSampleUtils.deserializeKey(copy.getKey()));
 				long size = 0;
 				try(OutputStream out = buffer(Files.newOutputStream(tempFile));
-						OutputStream cout = new CipherOutputStream(out, encrypt(secret));
+						OutputStream cout = new CipherOutputStream(out, cipher);
 						CountingSplitStream in = new CountingSplitStream(body.byteStream(), cout)) {
 					// Let handler do the actual work. Any acquired information is stored in fileInfo
 					handler.analyze(fileInfo, in);

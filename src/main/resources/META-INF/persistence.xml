@@ -19,8 +19,8 @@
         <properties>   
 	    	<property name="eclipselink.deploy-on-startup" value="true"/>
 	    	<property name="eclipselink.weaving" value="true"/>
-	    	<!-- create-or-extend-tables drop-and-create-tables -->
-            <property name="eclipselink.ddl-generation" value="create-or-extend-tables"/>
+	    	<!-- create-or-extend-tables / drop-and-create-tables -->
+            <property name="eclipselink.ddl-generation" value="drop-and-create-tables"/>
             <property name="eclipselink.ddl-generation.output-mode" value="both"/>
             <property name="eclipselink.flush-clear.cache" value="Drop"/>
 			<property name="eclipselink.cache.shared" value="false"/>
@@ -29,7 +29,7 @@
 			<property name="eclipselink.create-ddl-jdbc-file-name" value="sql-create-script"/>
 	 		<property name="eclipselink.drop-ddl-jdbc-file-name" value="sql-drop-script"/> 
             
-            <property name="javax.persistence.schema-generation.database.action" value="create" />
+            <property name="javax.persistence.schema-generation.database.action" value="drop-and-create" />
 			
             <!-- configure logging -->
             <property name="eclipselink.logging.level" value="FINE"/>

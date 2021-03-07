@@ -164,6 +164,12 @@ public class LocalCache {
     	}
     	return copy;
     }
+    
+    private Path relativize(Path file) {
+    	if(!file.startsWith(tempFolder))
+    		throw new IllegalArgumentException("Corrupted or foreign cache file: "+file);
+    	return tempFolder.relativize(file);
+    }
 	
     @Nullable
 	public XmpLocalCopy ensureCopy(XmpResource resource) {
@@ -202,9 +208,9 @@ public class LocalCache {
 			XmpLocalCopy copy = new XmpLocalCopy();
 			copy.setExpiresAt(LocalDateTime.now().plusDays(MIN_EXPIRE_DAYS));
 			copy.setResource(resource);
-			copy.setDataFile(dataFile.toString());
-			copy.setInfoFile(infoFile.toString());
-			copy.setKey(key);
+			copy.setDataFile(relativize(dataFile).toString());
+			copy.setInfoFile(relativize(infoFile).toString());
+			copy.setKey(XSampleUtils.serializeKey(key));
 			services.save(copy);
 			
 			log.info(String.format("Local copy created: filename=%s key=%s resource=%s expiresAt=%s", 

@@ -39,6 +39,7 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
@@ -60,6 +61,7 @@ import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
 import de.unistuttgart.xsample.util.BundleUtil;
+import de.unistuttgart.xsample.util.XSampleUtils;
 
 /**
  * @author Markus Gärtner
@@ -190,11 +192,12 @@ public class DownloadPage extends XsamplePage {
 		final ExcerptHandler handler = fileInfo.getExcerptHandler();
 		final List<XmpFragment> fragments = entry.getFragments();
 		final Path file = cache.getCopyFile(copy);
+		final Cipher cipher = decrypt(XSampleUtils.deserializeKey(copy.getKey()));
 		
 		zipOut.putNextEntry(zipEntry);
 		// Now produce excerpt and add file to zip
 		try(InputStream raw = Files.newInputStream(file, StandardOpenOption.READ);
-				InputStream in = new CipherInputStream(raw, decrypt(copy.getKey()));
+				InputStream in = new CipherInputStream(raw, cipher);
 				OutputStream out = new NonClosingOutputStreamDelegate(zipOut);) {
 			
 			handler.excerpt(fileInfo, in, fragments, out);
