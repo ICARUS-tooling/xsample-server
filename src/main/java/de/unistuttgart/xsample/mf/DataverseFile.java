@@ -32,11 +32,11 @@ public abstract class DataverseFile implements Serializable, SelfValidating {
 	@SerializedName(XsampleManifest.NS+"id")
 	private Long id;
 
-	/** Internal persistent identifier used by dataverse */
-	@Expose
-	@Nullable
-	@SerializedName(XsampleManifest.NS+"persistentId")
-	private String persistentId;
+//	/** Internal persistent identifier used by dataverse */
+//	@Expose
+//	@Nullable
+//	@SerializedName(XsampleManifest.NS+"persistentId")
+//	private String persistentId;
 
 	/** 
 	 * Optional label for identification within the XSample manifest. 
@@ -50,8 +50,8 @@ public abstract class DataverseFile implements Serializable, SelfValidating {
 	@Nullable
 	public Long getId() { return id; }
 
-	@Nullable
-	public String getPersistentId() { return persistentId; }
+//	@Nullable
+//	public String getPersistentId() { return persistentId; }
 
 	@Nullable
 	public String getLabel() { return label; }
@@ -59,7 +59,8 @@ public abstract class DataverseFile implements Serializable, SelfValidating {
 	@Override
 	public void validate() {
 //		checkState("Missing 'label' field", label!=null);
-		checkState("Must define either id or persistent-id", id!=null || persistentId!=null);
+		checkState("Missing 'id' field", id!=null);
+//		checkState("Must define either id or persistent-id", id!=null || persistentId!=null);
 	}
 
 	protected static abstract class AbstractBuilder<B extends DataverseFile.AbstractBuilder<B, F>, F extends DataverseFile> 
@@ -75,13 +76,13 @@ public abstract class DataverseFile implements Serializable, SelfValidating {
 			return thisAsCast();
 		}
 		
-		public B persistentId(String persistentId) {
-			requireNonNull(persistentId);
-			DataverseFile file = instance;
-			checkState("Persistent ID already set", file.persistentId==null);
-			file.persistentId = persistentId;
-			return thisAsCast();
-		}
+//		public B persistentId(String persistentId) {
+//			requireNonNull(persistentId);
+//			DataverseFile file = instance;
+//			checkState("Persistent ID already set", file.persistentId==null);
+//			file.persistentId = persistentId;
+//			return thisAsCast();
+//		}
 		
 		public B label(String label) {
 			requireNonNull(label);
