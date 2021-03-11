@@ -38,6 +38,7 @@ import de.unistuttgart.xsample.dv.UserId;
 import de.unistuttgart.xsample.dv.XmpDataverse;
 import de.unistuttgart.xsample.dv.XmpDataverseUser;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
+import de.unistuttgart.xsample.dv.XmpFileInfo;
 import de.unistuttgart.xsample.dv.XmpLocalCopy;
 import de.unistuttgart.xsample.dv.XmpResource;
 
@@ -221,6 +222,26 @@ public class XsampleServices {
 					.getResultList();
 		
 		return copies.isEmpty() ? Optional.empty() : Optional.of(copies.get(0));
+	}
+
+	public XmpFileInfo findFileInfo(XmpResource resource) {
+		requireNonNull(resource);
+		
+		List<XmpFileInfo> fileInfos = em.createNamedQuery("FileInfo.findbyResource")
+					.setParameter("resource", resource)
+					.getResultList();
+		
+		XmpFileInfo fileInfo;
+		if(fileInfos.isEmpty()) {
+			log.finer("creating file info for resource: "+resource);
+			fileInfo = new XmpFileInfo();
+			fileInfo.setResource(resource);
+			fileInfo = em.merge(fileInfo);
+		} else {
+			fileInfo = fileInfos.get(0);
+		}
+		
+		return fileInfo;
 	}
 	
 	// SETTINGS METHODS

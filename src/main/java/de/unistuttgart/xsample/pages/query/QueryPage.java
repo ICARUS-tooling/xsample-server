@@ -37,6 +37,12 @@ public class QueryPage extends XsamplePage {
 	
 	@Inject
 	XsampleQueryData queryData;
+	
+	@Inject
+	QueryView view;
+	
+	@Inject
+	QueryEngine queryEngine;
 
 	public void init() {
 		initQuota(queryData);
@@ -45,7 +51,7 @@ public class QueryPage extends XsamplePage {
 	
 	/** Callback for button to run ICARUS2 query */
 	public void runQuery() {
-		
+		String rawQuery = view.getQuery();
 	}
 
 	/** Callback for button to continue workflow */

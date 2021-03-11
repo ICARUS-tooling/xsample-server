@@ -19,8 +19,6 @@
  */
 package de.unistuttgart.xsample.dv;
 
-import java.net.URL;
-
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -40,7 +38,7 @@ import retrofit2.http.Streaming;
  */
 public interface DataverseClient {
 	
-	public static DataverseClient forServer(URL url) {		
+	public static DataverseClient forServer(String url) {		
 		final Retrofit retrofit = new Retrofit.Builder()
 				.baseUrl(url)
 				.addConverterFactory(GsonConverterFactory.create())

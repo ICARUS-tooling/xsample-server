@@ -3,50 +3,72 @@
  */
 package de.unistuttgart.xsample.io;
 
+import static de.unistuttgart.xsample.util.XSampleUtils.buffer;
+import static de.unistuttgart.xsample.util.XSampleUtils.checkNotEmpty;
+import static de.unistuttgart.xsample.util.XSampleUtils.decrypt;
+import static de.unistuttgart.xsample.util.XSampleUtils.encrypt;
 import static java.util.Objects.requireNonNull;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
+import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.ejb.Schedule;
-import javax.ejb.Singleton;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.transaction.Transactional;
 
-import org.omnifaces.cdi.Eager;
+import org.apache.commons.io.IOUtils;
 
 import de.unistuttgart.xsample.XsampleApp;
 import de.unistuttgart.xsample.XsampleServices;
+import de.unistuttgart.xsample.dv.DataverseClient;
 import de.unistuttgart.xsample.dv.XmpLocalCopy;
 import de.unistuttgart.xsample.dv.XmpResource;
 import de.unistuttgart.xsample.util.XSampleUtils;
+import okhttp3.MediaType;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Response;
 
 /**
  * @author Markus Gärtner
  *
  */
-@Named
-@Eager
-@Singleton
-public class LocalCache {
+public abstract class LocalCache {
 	
 	private static final Logger log = Logger.getLogger(LocalCache.class.getCanonicalName());
 	
@@ -57,7 +79,6 @@ public class LocalCache {
 	private static final String CACHE_FOLDER = "xsample_cache";
 	private static final String TMP_PREFIX = "xsample_file_";
 	private static final String DATA_SUFFIX = ".tmp";
-	private static final String INFO_SUFFIX = ".info";
 	
 	@Inject
 	XsampleServices services;
@@ -68,6 +89,8 @@ public class LocalCache {
 	private final Object lock = new Object();
 	
 	private Path tempFolder;
+	
+	private Map<String, DataverseClient> clientCache = new HashMap<>();
 
 	@PostConstruct
 	@Transactional
@@ -89,19 +112,6 @@ public class LocalCache {
 	
 	private Path createTempFile() throws IOException { return Files.createTempFile(tempFolder, TMP_PREFIX, DATA_SUFFIX); }
 
-	private Path getInfoFile(Path dataFile) {
-		String name = dataFile.getFileName().toString();
-		String infoName = name.substring(0, name.length()-DATA_SUFFIX.length()) + INFO_SUFFIX;
-		Path infoFile = file(infoName);
-		return infoFile;
-	}
-	
-	private Path createInfoFile(Path dataFile) throws IOException {
-		Path infoFile = getInfoFile(dataFile);
-		Files.createFile(infoFile);
-		return infoFile;
-	}
-	
 	private Path file(String name) {
 		requireNonNull(name);
 		return tempFolder.resolve(name); 
@@ -113,10 +123,10 @@ public class LocalCache {
     		final List<XmpLocalCopy> expired = services.findExpiredCopies();
     		for(XmpLocalCopy copy : expired) {
     			try {
-    				Path file = file(copy.getDataFile());
+    				Path file = file(copy.getFilename());
     				Files.deleteIfExists(file);
     			} catch (IOException e) {
-    				log.log(Level.SEVERE, "Failed to purge expired file: "+copy.getDataFile(), e);
+    				log.log(Level.SEVERE, "Failed to purge expired file: "+copy.getFilename(), e);
 				} finally {
     				services.delete(copy);
     			}
@@ -172,7 +182,7 @@ public class LocalCache {
     }
 	
     @Nullable
-	public XmpLocalCopy ensureCopy(XmpResource resource) {
+	public XmpLocalCopy getCopy(XmpResource resource) {
 		synchronized (lock) {
 			Optional<XmpLocalCopy> existing = services.findCopy(resource);
 			if(existing.isPresent()) {
@@ -196,40 +206,159 @@ public class LocalCache {
 				return null;
 			}
 			
-			Path infoFile;
-			try {
-				infoFile = createInfoFile(dataFile);
-				touch(infoFile);
-			} catch (IOException e) {
-				log.log(Level.SEVERE, "Failed to create/touch info file", e);
-				return null;
-			}
-			
 			XmpLocalCopy copy = new XmpLocalCopy();
 			copy.setExpiresAt(LocalDateTime.now().plusDays(MIN_EXPIRE_DAYS));
 			copy.setResource(resource);
-			copy.setDataFile(relativize(dataFile).toString());
-			copy.setInfoFile(relativize(infoFile).toString());
+			copy.setFilename(relativize(dataFile).toString());
 			copy.setKey(XSampleUtils.serializeKey(key));
 			services.save(copy);
 			
 			log.info(String.format("Local copy created: filename=%s key=%s resource=%s expiresAt=%s", 
-					copy.getDataFile(), copy.getKey(), copy.getResource(), copy.getExpiresAt()));
+					copy.getFilename(), copy.getKey(), copy.getResource(), copy.getExpiresAt()));
 			
 			return copy;
 		}
 	}
 	
-    @Nullable
-	public XmpLocalCopy getCopy(XmpResource resource) {
-		synchronized (lock) {
-			Optional<XmpLocalCopy> existing = services.findCopy(resource);
-			if(existing.isPresent()) {
-				return keepAlive(existing.get());
+//    @Nullable
+//	public XmpLocalCopy getCopy(XmpResource resource) {
+//		synchronized (lock) {
+//			Optional<XmpLocalCopy> existing = services.findCopy(resource);
+//			if(existing.isPresent()) {
+//				return keepAlive(existing.get());
+//			}
+//		}
+//		return null;
+//    }
+    
+    private DataverseClient getClient(XmpResource resource) {
+    	requireNonNull(resource);
+    	final String url = resource.getDataverse().getUrl();
+    	return clientCache.computeIfAbsent(url, DataverseClient::forServer);
+    }
+    
+    /**
+     * Opens the local copy of the specified resource,
+     * fetching it from the remote source if requried.
+     * This method must be called under {@link XmpLocalCopy#getLock() lock} 
+     * of the {@link XmpLocalCopy copy}!!
+     * @throws AccessException indicating a 4xx HTTP error
+     * @throws InternalServerException indicating a 5xx HTTP error
+     * @throws TransmissionException indicating a general I/O error during web transfer
+     * @throws GeneralSecurityException should never happen - this signals a corrupt secret key situatin
+     * @throws LocalIOException general I/O error on the client side while accessing the local copy
+     */
+    public InputStream open(XmpLocalCopy copy) throws TransmissionException, 
+    		InternalServerException, AccessException, GeneralSecurityException, LocalIOException {
+    	requireNonNull(copy);
+    	ensureLocal(copy);
+    	
+    	return openLocal(copy);
+    }
+    
+    public void ensureLocal(XmpLocalCopy copy) throws TransmissionException, InternalServerException, AccessException, GeneralSecurityException {
+    	requireNonNull(copy);
+    	if(!isPopulated(copy)) {
+    		loadRemote(copy);
+    	}
+    }
+    
+    public InputStream openLocal(XmpLocalCopy copy) throws GeneralSecurityException, LocalIOException {    	
+    	requireNonNull(copy);
+    	try {
+			return accessLocal(copy);
+		} catch (IOException e) {
+			throw new LocalIOException("Failed to access local copy file", e);
+		}
+    }
+    
+    private void loadRemote(XmpLocalCopy copy) throws TransmissionException, 
+    		InternalServerException, AccessException, GeneralSecurityException {
+    	final XmpResource resource = copy.getResource();
+    	final long fileId = resource.getFile().longValue();
+    	final DataverseClient client = getClient(resource);
+    	final String key = resource.getDataverse().getMasterKey();
+		final Cipher cipher = encrypt(XSampleUtils.deserializeKey(copy.getKey()));
+    	final Call<ResponseBody> request;
+		request = client.downloadFile(fileId, key);
+	
+		Response<ResponseBody> response;		
+		try {
+			response = request.execute();
+		} catch (IOException e) {
+			throw new TransmissionException("Failed to fetch resource", e);
+		}
+		
+		if(!response.isSuccessful()) {			
+			// Fetch complete error message from remote
+			String msg;
+			try(ResponseBody body = response.errorBody()) {
+				msg = body.string();
+			} catch (IOException e) {
+				throw new TransmissionException("Failed to fetch error body", e);
+			}
+			
+			if(response.code()>=500) {
+				throw new InternalServerException(msg, response.code());
+			} else if(response.code()>=400) {
+				throw new AccessException(msg, response.code());
+			} else {
+				throw new TransmissionException(msg);
+			}
+		}
+		
+		// Successfully opened and accessed data, now load content
+		try(ResponseBody body = response.body()) {
+			final MediaType mediaType = body.contentType();
+			if(mediaType==null)
+				throw new TransmissionException("Missing media type");
+			
+			copy.setContentType(mediaType.type()+"/"+mediaType.subtype());
+			copy.setEncoding(mediaType.charset(StandardCharsets.UTF_8).name());
+			copy.setTitle(extractName(mediaType.toString()));
+			
+			final Path file = getDataFile(copy);
+			try(InputStream rawIn = body.byteStream();
+					OutputStream out = buffer(Files.newOutputStream(file));
+					OutputStream cout = new CipherOutputStream(out, cipher)) {
+				final long size = IOUtils.copyLarge(rawIn, cout);
+				copy.setSize(size);
+			} catch (IOException e) {
+				throw new TransmissionException("Failed to load remote resoruce", e);
+			}
+		}
+    }
+
+	private static final String TOKEN = "([a-zA-Z0-9-!#$%&'*+.^_`{|}~]+)";
+	private static final String QUOTED = "\"([^\"]*)\"";
+	private final Pattern PARAMETER = Pattern
+			.compile(";\\s*(?:" + TOKEN + "=(?:" + TOKEN + "|" + QUOTED + "))?");
+	
+	private String extractName(String mediaType) {
+		final Matcher m = PARAMETER.matcher(mediaType);
+		while(m.find()) {
+			String name = m.group(1);
+			if(name==null) {
+				continue;
+			}
+			String value = m.group(2);
+			if(value==null) {
+				value = m.group(3);
+			}
+			if(value!=null && "name".equals(name)) {
+				return value;
 			}
 		}
 		return null;
-    }
+	}
+	
+	private InputStream accessLocal(XmpLocalCopy copy) throws GeneralSecurityException, IOException {
+		final Path file = getDataFile(copy);
+		final Cipher cipher = decrypt(XSampleUtils.deserializeKey(copy.getKey()));
+		touch(file);
+		return new CipherInputStream(Files.newInputStream(file, StandardOpenOption.READ), cipher);
+	}
+    
 	
 	private static void touch(Path file) throws IOException {
 		if(Files.exists(file, LinkOption.NOFOLLOW_LINKS)) {
@@ -237,21 +366,53 @@ public class LocalCache {
 		}
 	}
 	
-	public Path getCopyFile(XmpLocalCopy copy) {
-		return tempFolder.resolve(copy.getDataFile());
-	}
-	
-	public Path getInfoFile(XmpLocalCopy copy) {
-		return tempFolder.resolve(copy.getInfoFile());
+	public Path getDataFile(XmpLocalCopy copy) {
+		return tempFolder.resolve(copy.getFilename());
 	}
 	
 	public boolean isPopulated(XmpLocalCopy copy) {
-		Path file = getCopyFile(copy);
+		Path file = getDataFile(copy);
 		try {
 			return Files.exists(file, LinkOption.NOFOLLOW_LINKS) && Files.size(file)>0;
 		} catch (IOException e) {
 			log.log(Level.SEVERE, "Failed to check size of file: "+file, e);
 			return false;
+		}
+	}
+	
+	/**
+	 * Encodes a serializable object into a base64 string.
+	 */
+	public static <T extends Serializable> String encode(T data) {
+		requireNonNull(data);
+		try(ByteArrayOutputStream out = new ByteArrayOutputStream();
+				ObjectOutputStream objOut = new ObjectOutputStream(out)) {
+			objOut.writeObject(data);
+			byte[] bytes = out.toByteArray();
+			return Base64.getEncoder().encodeToString(bytes);
+		} catch (IOException e) {
+			log.log(Level.SEVERE, "Unable to serialize data: "+data, e);
+			throw new IllegalArgumentException("Object not properly serializable", e);
+		}
+	}
+	
+	/**
+	 * Deserialize a base64 string into a specific type.
+	 */
+	public static <T extends Serializable> T decode(String s, Class<T> type) {
+		checkNotEmpty(s);
+		requireNonNull(type);
+		byte[] data = Base64.getDecoder().decode(s);
+		try(ByteArrayInputStream in = new ByteArrayInputStream(data);
+				ObjectInputStream objIn = new ObjectInputStream(in)) {
+			Object obj = objIn.readObject();
+			return type.cast(obj);
+		} catch (IOException e) {
+			log.log(Level.SEVERE, "Unable to deserialize data of type "+type, e);
+			throw new IllegalArgumentException("Object not properly deserializable", e);
+		} catch (ClassNotFoundException e) {
+			log.log(Level.SEVERE, "Corrupted data - unable to deserialue as type "+type, e);
+			throw new IllegalArgumentException("Corrutped or outdated serialized data", e);
 		}
 	}
 }

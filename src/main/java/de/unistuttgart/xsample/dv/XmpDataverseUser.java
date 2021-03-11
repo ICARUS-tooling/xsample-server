@@ -19,6 +19,8 @@
  */
 package de.unistuttgart.xsample.dv;
 
+import java.io.Serializable;
+
 import javax.persistence.CascadeType;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
@@ -35,9 +37,11 @@ import javax.persistence.NamedQuery;
 	@NamedQuery(name = "DataverseUser.findAll", query = "SELECT u FROM DataverseUser u ORDER BY u.id"),
 	@NamedQuery(name = "DataverseUser.find", query = "SELECT u FROM DataverseUser u WHERE u.id.dataverseUrl = :url AND u.id.persistentUserId = :id"), 
 })
-public class XmpDataverseUser {
+public class XmpDataverseUser implements Serializable {
 	
-    public static final String TABLE_NAME= "DataverseUser";
+	private static final long serialVersionUID = -4273755436767371955L;
+
+	public static final String TABLE_NAME= "DataverseUser";
 	
 	@ManyToOne(optional = false, cascade = CascadeType.ALL)
 	private XmpDataverse dataverse;

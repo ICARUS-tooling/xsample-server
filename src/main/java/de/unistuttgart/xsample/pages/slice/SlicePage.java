@@ -32,7 +32,6 @@ import javax.inject.Named;
 import org.omnifaces.util.Messages;
 
 import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.io.FileInfo;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.download.DownloadPage;
 import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
@@ -66,8 +65,8 @@ public class SlicePage extends XsamplePage {
 		initQuota(sliceData);
 		sliceData.setBegin(1);
 		sliceData.setEnd(1);
-		FileInfo info = excerptData.getFileInfos().get(0);
-		view.setSelectedCorpus(info.getCorpusId());
+		assert excerptData.getSelectedCorpus()!=null : "no corpus selected";
+		view.setSelectedCorpus(excerptData.getSelectedCorpus());
 	}
 	
 	@Override

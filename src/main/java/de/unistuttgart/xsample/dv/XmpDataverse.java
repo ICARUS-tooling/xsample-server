@@ -19,6 +19,8 @@
  */
 package de.unistuttgart.xsample.dv;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -34,9 +36,11 @@ import javax.persistence.NamedQuery;
 	@NamedQuery(name = "Dataverse.findAll", query = "SELECT d FROM Dataverse d ORDER BY d.url"),
 	@NamedQuery(name = "Dataverse.findByUrl", query = "SELECT d FROM Dataverse d WHERE d.url = :url"), 
 })
-public class XmpDataverse {
+public class XmpDataverse implements Serializable {
 	
-    public static final String TABLE_NAME= "Dataverse";
+	private static final long serialVersionUID = -8182208410331899396L;
+
+	public static final String TABLE_NAME= "Dataverse";
 
 	@Column(length = 36, nullable = false, unique = true)
 	private String masterKey;

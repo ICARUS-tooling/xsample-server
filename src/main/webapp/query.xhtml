@@ -15,7 +15,7 @@
 		
 		<div>
 			<p:textEditor widgetVar="editor" height="300" placeholder="#{bundle['query.editor.placeholder']}"
-					secure="false" required="true">
+					value="#{queryView.query}" secure="false" required="true">
 				<f:facet name="toolbar">
 					<span class="ql-formats">
 						There be cool stuff for customizing queries...
@@ -25,8 +25,9 @@
 			</p:textEditor>
 		</div>
 		<div>
-			<p:messages for="queryMsgs" closable="true" redisplay="false" skipDetailIfEqualsSummary="true" />
-			<p:commandButton value="#{bundle['query.runQuery']}"  action="#{queryPage.runQuery}" />
+			<p:messages for="queryMsgs" id="queryMsg" closable="true" redisplay="false" skipDetailIfEqualsSummary="true" />
+			<p:commandButton value="#{bundle['query.runQuery']}" action="#{queryPage.runQuery}"
+					update="queryMsg" />
 		</div>
 		<div>				
 			<ui:include src="/outline.xhtml" />

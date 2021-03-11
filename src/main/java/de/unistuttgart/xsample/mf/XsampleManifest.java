@@ -92,8 +92,8 @@ public class XsampleManifest implements Serializable, SelfValidating {
 
 	@Expose
 	@Nullable
-	@SerializedName(NS+"staticExcerptFile")
-	private String staticExcerptFile;
+	@SerializedName(NS+"staticExcerptCorpus")
+	private String staticExcerptCorpus;
 	
 	public String getDescription() { return description; }
 	public Span getStaticExcerpt() { return staticExcerpt; }
@@ -101,7 +101,7 @@ public class XsampleManifest implements Serializable, SelfValidating {
 		return metadata==null ? Collections.emptyMap() : new HashMap<>(metadata);
 	}
 	public List<Corpus> getCorpora() { return corpora; }
-	public String getStaticExcerptFile() { return staticExcerptFile; }
+	public String getStaticExcerptCorpus() { return staticExcerptCorpus; }
 	
 	// Helpers
 	public boolean hasMetadata() { return metadata!=null && !metadata.isEmpty(); }
@@ -194,10 +194,10 @@ public class XsampleManifest implements Serializable, SelfValidating {
 			return this;
 		}
 		
-		public Builder staticExcerptFile(String staticExcerptFile) {
-			requireNonNull(staticExcerptFile);
-			checkState("Static excerpt file already set", instance.staticExcerptFile==null);
-			instance.staticExcerptFile = staticExcerptFile;
+		public Builder staticExcerptCorpus(String staticExcerptCorpus) {
+			requireNonNull(staticExcerptCorpus);
+			checkState("Static excerpt corpus already set", instance.staticExcerptCorpus==null);
+			instance.staticExcerptCorpus = staticExcerptCorpus;
 			return this;
 		}
 	}

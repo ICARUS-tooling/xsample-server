@@ -41,8 +41,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
 import de.unistuttgart.xsample.XSampleTestUtils;
+import de.unistuttgart.xsample.dv.XmpFileInfo;
 import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.io.FileInfo;
+import de.unistuttgart.xsample.mf.SourceType;
 import it.unimi.dsi.fastutil.io.FastByteArrayInputStream;
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream;
 
@@ -70,7 +71,7 @@ interface ExcerptHandlerTest<H extends ExcerptHandler> {
 	
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#analyze(FileInfo, InputStream)}.
+	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#analyze(XmpFileInfo, InputStream)}.
 	 */
 	@TestFactory
 	default Stream<DynamicTest> testAnalyze() {
@@ -78,54 +79,64 @@ interface ExcerptHandlerTest<H extends ExcerptHandler> {
 				.map(contentType -> dynamicTest(contentType, () -> {
 					H handler = create();
 					InputStream in = new FastByteArrayInputStream(input(10));
-					handler.analyze(new FileInfo(contentType, defaultEncoding()), in);
+					handler.analyze(new XmpFileInfo(), defaultEncoding(), in);
 				}));
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#analyze(FileInfo, InputStream)}.
+	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#analyze(XmpFileInfo, InputStream)}.
 	 */
 	@Test
 	default void testAnalyzeNullFileInfo() throws Exception {
 		H handler = create();
-		assertThatNullPointerException().isThrownBy(() -> handler.analyze(null, new FastByteArrayInputStream(new byte[1])));
+		assertThatNullPointerException().isThrownBy(() -> handler.analyze(
+				null, defaultEncoding(), new FastByteArrayInputStream(new byte[1])));
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#analyze(FileInfo, InputStream)}.
+	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#analyze(XmpFileInfo, InputStream)}.
+	 */
+	@Test
+	default void testAnalyzeNullEncoding() throws Exception {
+		H handler = create();
+		assertThatNullPointerException().isThrownBy(() -> handler.analyze(
+				new XmpFileInfo(), null, new FastByteArrayInputStream(new byte[1])));
+	}
+
+	/**
+	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#analyze(XmpFileInfo, InputStream)}.
 	 */
 	@Test
 	default void testAnalyzeNullStream() throws Exception {
 		H handler = create();
-		assertThatNullPointerException().isThrownBy(() -> handler.analyze(new FileInfo(), null));
+		assertThatNullPointerException().isThrownBy(() -> handler.analyze(
+				new XmpFileInfo(), defaultEncoding(), null));
 	}
 
-	/**
-	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#analyze(FileInfo, InputStream)}.
-	 */
-	@Test
-	default void testAnalyzeInvalidContentType() throws Exception {
-		H handler = create();
-		assertThatExceptionOfType(UnsupportedContentTypeException.class)
-			.isThrownBy(() -> {
-				FileInfo fileInfo = new FileInfo(INVALID_CONTENT_TYPE, defaultEncoding());
-				InputStream in = new FastByteArrayInputStream(input(1));
-				handler.analyze(fileInfo, in);
-			});
-	}
+//	/**
+//	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#analyze(XmpFileInfo, InputStream)}.
+//	 */
+//	@Test
+//	default void testAnalyzeInvalidContentType() throws Exception {
+//		H handler = create();
+//		assertThatExceptionOfType(UnsupportedContentTypeException.class)
+//			.isThrownBy(() -> {
+//				InputStream in = new FastByteArrayInputStream(input(1));
+//				handler.analyze(new XmpFileInfo(), defaultEncoding(), in);
+//			});
+//	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#analyze(FileInfo, InputStream)}.
+	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#analyze(XmpFileInfo, InputStream)}.
 	 */
 	@TestFactory
 	default Stream<DynamicTest> testAnalyzeEmpty() {
 		return Stream.of(supportedContentTypes())
 				.map(contentType -> dynamicTest(contentType, () -> {
 					H handler = create();
-					FileInfo fileInfo = new FileInfo(contentType, defaultEncoding());
 					InputStream in = new FastByteArrayInputStream(input(0));
 					assertThatExceptionOfType(EmptyResourceException.class)
-						.isThrownBy(() -> handler.analyze(fileInfo, in));
+						.isThrownBy(() -> handler.analyze(new XmpFileInfo(), defaultEncoding(), in));
 				}));
 	}
 
@@ -142,23 +153,25 @@ interface ExcerptHandlerTest<H extends ExcerptHandler> {
 						IntStream.of(1, 2, 3, 10, 100, 101).mapToObj(
 								size -> dynamicTest(String.valueOf(size), () -> {
 					H handler = create();
-					FileInfo fileInfo = new FileInfo(contentType, defaultEncoding());
+					XmpFileInfo fileInfo = new XmpFileInfo();
 					byte[] data = input(size, contentType, defaultEncoding());
 					InputStream in = new FastByteArrayInputStream(data);
-					handler.analyze(fileInfo, in);
+					handler.analyze(fileInfo, defaultEncoding(), in);
 					assertThat(fileInfo.getSegments()).isEqualTo(size);
 				}))));
 	}
 
 	/**
-	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#excerpt(FileInfo, InputStream, List, java.io.OutputStream)}.
+	 * Test method for {@link de.unistuttgart.xsample.ct.ExcerptHandler#excerpt(XmpFileInfo, InputStream, List, java.io.OutputStream)}.
 	 */
 	@TestFactory
 	default Stream<DynamicNode> testExcerpt() {
 		int[][] config = {
-			new int[] {1, 0, 0},
-			new int[] {2, 0, 0},
-			new int[] {2, 1, 1}
+			new int[] {1, 1, 1},
+			new int[] {2, 1, 1},
+			new int[] {2, 2, 2},
+			new int[] {2, 1, 2},
+			new int[] {4, 2, 3},
 		};
 		
 		
@@ -172,7 +185,9 @@ interface ExcerptHandlerTest<H extends ExcerptHandler> {
 							final int to = params[2];
 							final Charset encoding = defaultEncoding();
 							
-							FileInfo fileInfo = new FileInfo(contentType, encoding);
+							XmpFileInfo fileInfo = new XmpFileInfo();
+							fileInfo.setSegments(size);
+							fileInfo.setSourceType(SourceType.forMimeType(contentType));
 							
 							H handler = create();
 							byte[] data = input(size, contentType, encoding);
@@ -180,7 +195,7 @@ interface ExcerptHandlerTest<H extends ExcerptHandler> {
 							
 							List<XmpFragment> fragments = Arrays.asList(XmpFragment.of(from, to));
 							FastByteArrayOutputStream out = new FastByteArrayOutputStream();
-							handler.excerpt(fileInfo, in, fragments, out);
+							handler.excerpt(fileInfo, encoding, in, fragments, out);
 							
 							in = new FastByteArrayInputStream(out.array, 0, out.length);
 							assertExcerpt(data, in, XSampleTestUtils.asIndices(fragments));

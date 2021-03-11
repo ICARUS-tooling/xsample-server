@@ -172,7 +172,7 @@ public class ManifestGenerator {
 		return XsampleManifest.builder()
 				.description("Manifest that lists an invalid target")
 				.staticExcerpt(span(SpanType.RELATIVE, 0, 10))
-				.corpus(monoCorpus(file(Integer.MAX_VALUE, size, sourceType)))
+				.corpus(monoCorpus(file(999999, size, sourceType)))
 				.build();
 	}
 	

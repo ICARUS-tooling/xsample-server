@@ -26,10 +26,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import javax.annotation.Nullable;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
@@ -38,7 +36,6 @@ import de.unistuttgart.xsample.dv.XmpDataverseUser;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.dv.XmpResource;
-import de.unistuttgart.xsample.io.FileInfo;
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.mf.XsampleManifest;
 
@@ -59,10 +56,7 @@ public class XsampleExcerptData implements Serializable {
 	/** Wrapper for remote server to download data from */
 	private XmpDataverse server;
 	/** User to be used for tracking excerpt quota */
-	private XmpDataverseUser dataverseUser;
-	
-	/** Physical info about primary source file(s) */
-	private List<FileInfo> fileInfos = new ArrayList<>();	
+	private XmpDataverseUser dataverseUser;	
 	
 	/** The root manifest for the current workflow. */
 	private XsampleManifest manifest;
@@ -75,9 +69,12 @@ public class XsampleExcerptData implements Serializable {
 	private long staticExcerptBegin = 0;
 	private long staticExcerptEnd = 10;
 	private boolean staticExcerptFixed = false;
+	private boolean onlySmallFiles = false;
 	
-	/** Switc hto prevent redundant calls to verification chains */
+	/** Switch to prevent redundant calls to verification chains */
 	private boolean verified = false;
+	
+	private String selectedCorpus;
 	
 	public XmpDataverse getServer() { return server; }
 	public void setServer(XmpDataverse server) { this.server = server; }
@@ -87,9 +84,6 @@ public class XsampleExcerptData implements Serializable {
 	
 	public XsampleManifest getManifest() { return manifest; }
 	public void setManifest(XsampleManifest manifest) { this.manifest = manifest; }
-	
-	public List<FileInfo> getFileInfos() { return fileInfos; }
-	public void setFileInfos(List<FileInfo> fileInfos) { this.fileInfos = requireNonNull(fileInfos); }
 	
 	public long getStaticExcerptBegin() { return staticExcerptBegin; }
 	public void setStaticExcerptBegin(long staticExcerptBegin) { this.staticExcerptBegin = staticExcerptBegin; }
@@ -109,19 +103,21 @@ public class XsampleExcerptData implements Serializable {
 	public List<ExcerptEntry> getExcerpt() { return excerpt; }
 	public void setExcerpt(List<ExcerptEntry> excerpt) { this.excerpt = requireNonNull(excerpt); }
 	
-	// Utility
+	public boolean isOnlySmallFiles() { return onlySmallFiles; }
+	public void setOnlySmallFiles(boolean onlySmallFiles) { this.onlySmallFiles = onlySmallFiles; }
+
+	public String getSelectedCorpus() { return selectedCorpus; }
+	public void setSelectedCorpus(String selectedCorpus) { this.selectedCorpus = selectedCorpus; }
 	
-	/** Find file info with given corpus id */
-	@Nullable
-	public FileInfo findFileInfo(String corpusId) { 
-		requireNonNull(corpusId);
-		for(FileInfo fileInfo : fileInfos) {
-			if(corpusId.equals(fileInfo.getCorpusId())) {
-				return fileInfo;
-			}
-		}
-		return null;
+	// Utility
+	public Corpus getStaticExcerptCorpus() {
+		checkState("No manifest available", manifest!=null);
+		return Optional.of(manifest)
+				.map(XsampleManifest::getStaticExcerptCorpus)
+				.map(this::findCorpus)
+				.orElse(manifest.getCorpora().get(0));
 	}
+	
 	/** Find top-level corpus in manifest (if present) with given id */
 	public Corpus findCorpus(String corpusId) {
 		requireNonNull(corpusId);
@@ -134,10 +130,18 @@ public class XsampleExcerptData implements Serializable {
 		}
 		return null;
 	}
-	/** Find corpus associated with given file info */
-	public Corpus findCorpus(FileInfo fileInfo) {
-		requireNonNull(fileInfo);
-		return findCorpus(fileInfo.getCorpusId());
+	/** Find top-level corpus in manifest (if present) pointing to given resource */
+	public Corpus findCorpus(XmpResource resource) {
+		requireNonNull(resource);
+		if(manifest!=null) {
+			final Long fileId = resource.getFile();
+			for(Corpus corpus : manifest.getCorpora()) {
+				if(fileId.equals(corpus.getPrimaryData().getId())) {
+					return corpus;
+				}
+			}
+		}
+		return null;
 	}
 	/** Find our entry (if present) matching given id */
 	public ExcerptEntry findEntry(String corpusId) {
@@ -149,25 +153,18 @@ public class XsampleExcerptData implements Serializable {
 		}
 		return null;
 	}
-	/** Fetch file info matching manifest entry or first registered file info if no such label is set. */
-	public FileInfo getStaticExcerptFileInfo() {
-		checkState("No file infos registered", !fileInfos.isEmpty());
-		return Optional.ofNullable(manifest)
-				.map(XsampleManifest::getStaticExcerptFile)
-				.map(this::findFileInfo)
-				.orElse(fileInfos.get(0));
+	public boolean getIsMultiPartCorpus() { 
+		if(manifest==null) {
+			return false;
+		}
+		List<Corpus> corpora = manifest.getCorpora();
+		return corpora.size()>1 || corpora.get(0).getParts().size()>1;
 	}
-	public boolean getIsMultiPartCorpus() { return fileInfos.size()>1; }
-	public void forEachFileInfo(Consumer<FileInfo> action) { fileInfos.forEach(action); }
 	
-	public boolean hasFileInfo(Predicate<? super FileInfo> pred) {
-		return fileInfos.stream().anyMatch(pred);
-	}
 	public boolean hasCorpus(Predicate<? super Corpus> pred) {
 		return manifest.getCorpora().stream().anyMatch(pred);
 	}
 	
-	public void addFileInfo(FileInfo file) { fileInfos.add(requireNonNull(file)); }
 	public void addExcerptEntry(ExcerptEntry entry) { excerpt.add(requireNonNull(entry)); }
 	public void resetExcerpt() { excerpt = new ArrayList<>(); }
 	

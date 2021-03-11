@@ -58,7 +58,7 @@ class PdfHandlerTest implements ExcerptHandlerTest<PdfHandler> {
 					stream.beginText();
 					stream.setFont(PDType1Font.TIMES_ROMAN, 30);
 					stream.newLineAtOffset(200, 500);
-					stream.showText(String.valueOf(i));
+					stream.showText(String.valueOf(i+1));
 					stream.endText();
 				}
 				doc.addPage(page);
@@ -72,19 +72,20 @@ class PdfHandlerTest implements ExcerptHandlerTest<PdfHandler> {
 	
 	@Override
 	public void assertExcerpt(byte[] original, InputStream in, long[] fragments) throws IOException {
-		PDDocument doc = PDDocument.load(in);
-		assertThat(doc.getNumberOfPages()).as("Page count mismatch").isEqualTo(fragments.length);
-		
-		for (int i = 0; i < fragments.length; i++) {
-			PDFTextStripper stripper = new PDFTextStripper();
-			stripper.setStartPage(i+1);
-			stripper.setEndPage(i+1);
+		try(PDDocument doc = PDDocument.load(in)) {
+			assertThat(doc.getNumberOfPages()).as("Page count mismatch").isEqualTo(fragments.length);
 			
-			int origIndex = strictToInt(fragments[i]);
-			int storedIndex = Integer.parseInt(stripper.getText(doc).trim());
-			assertThat(storedIndex)
-				.as("Page mismath in excerpt at page %d", _int(i))
-				.isEqualTo(origIndex);
-		}		
+			for (int i = 0; i < fragments.length; i++) {
+				PDFTextStripper stripper = new PDFTextStripper();
+				stripper.setStartPage(i+1);
+				stripper.setEndPage(i+1);
+				
+				int origIndex = strictToInt(fragments[i]);
+				int storedIndex = Integer.parseInt(stripper.getText(doc).trim());
+				assertThat(storedIndex)
+					.as("Page mismath in excerpt at page %d", _int(i))
+					.isEqualTo(origIndex);
+			}	
+		}
 	}
 }

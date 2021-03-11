@@ -23,10 +23,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.List;
 
+import de.unistuttgart.xsample.dv.XmpFileInfo;
 import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.io.FileInfo;
 import de.unistuttgart.xsample.mf.SourceType;
  
 /**
@@ -42,7 +43,7 @@ public interface ExcerptHandler extends Serializable {
 
 	/**
 	 * Initialize the handler with the given {@link InputStream input}.
-	 * Store any metadata gathered during analysis in the provided {@link FileInfo} object.
+	 * Store any metadata gathered during analysis in the provided {@link XmpFileInfo} object.
 	 * 
 	 * @param source
 	 * @return
@@ -51,7 +52,7 @@ public interface ExcerptHandler extends Serializable {
 	 * is not supported by this handler
 	 * @throws EmptyResourceException if the data source represents an empty file
 	 */
-	void analyze(FileInfo file, InputStream in) throws IOException, UnsupportedContentTypeException, EmptyResourceException;
+	void analyze(XmpFileInfo file, Charset encoding, InputStream in) throws IOException, UnsupportedContentTypeException, EmptyResourceException;
 	
 	/**
 	 * Splits the underlying resource based on the specified fragments and stores
@@ -61,9 +62,7 @@ public interface ExcerptHandler extends Serializable {
 	 * @param output the destination for the excerpt generation
 	 * @throws IOException
 	 */
-	void excerpt(FileInfo file, InputStream in, List<XmpFragment> xmpFragments, OutputStream out) throws IOException;
-	
-	//TODO add methods for fetching localized strings related to segment names etc
+	void excerpt(XmpFileInfo file, Charset encoding, InputStream in, List<XmpFragment> xmpFragments, OutputStream out) throws IOException;
 	
 	String getSegmentLabel(boolean plural);
 }

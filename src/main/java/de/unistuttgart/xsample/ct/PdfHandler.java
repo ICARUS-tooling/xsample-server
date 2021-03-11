@@ -26,6 +26,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -33,11 +34,10 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 
+import de.unistuttgart.xsample.dv.XmpFileInfo;
 import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.io.FileInfo;
 import de.unistuttgart.xsample.mf.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
-import de.unistuttgart.xsample.util.XSampleUtils;
 
 /**
  * @author Markus Gärtner
@@ -51,12 +51,10 @@ public class PdfHandler implements ExcerptHandler {
 	public SourceType getType() { return SourceType.PDF; }
 
 	@Override
-	public void analyze(FileInfo file, InputStream in) throws IOException, UnsupportedContentTypeException, EmptyResourceException {
+	public void analyze(XmpFileInfo file, Charset encoding, InputStream in) throws IOException, UnsupportedContentTypeException, EmptyResourceException {
 		requireNonNull(file);
+		requireNonNull(encoding);
 		requireNonNull(in);
-		if(!XSampleUtils.MIME_PDF.equals(file.getContentType()))
-			throw new UnsupportedContentTypeException(
-					"Not an '"+XSampleUtils.MIME_PDF+"' resource: "+file.getContentType());
 		
 		try(PDDocument document = PDDocument.load(in)) {			
 			if(document.getNumberOfPages()==0)
@@ -69,8 +67,9 @@ public class PdfHandler implements ExcerptHandler {
 	}
 
 	@Override
-	public void excerpt(FileInfo file, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
+	public void excerpt(XmpFileInfo file, Charset encoding, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
 		requireNonNull(file);
+		requireNonNull(encoding);
 		requireNonNull(in);
 		requireNonNull(fragments);
 		requireNonNull(out);

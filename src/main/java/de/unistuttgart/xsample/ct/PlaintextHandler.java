@@ -25,10 +25,11 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.Charset;
 import java.util.List;
 
+import de.unistuttgart.xsample.dv.XmpFileInfo;
 import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.io.FileInfo;
 import de.unistuttgart.xsample.mf.SourceType;
 import de.unistuttgart.xsample.util.BundleUtil;
 
@@ -46,9 +47,9 @@ public class PlaintextHandler implements ExcerptHandler {
 	//TODO currently we're not really unicode aware here
 
 	@Override
-	public void analyze(FileInfo file, InputStream in) throws IOException, UnsupportedContentTypeException, EmptyResourceException {
+	public void analyze(XmpFileInfo file, Charset encoding, InputStream in) throws IOException, UnsupportedContentTypeException, EmptyResourceException {
 		ReadableByteChannel ch = Channels.newChannel(in);
-		Reader reader = Channels.newReader(ch, file.getEncoding().newDecoder(), -1);
+		Reader reader = Channels.newReader(ch, encoding.newDecoder(), -1);
 		StringBuilder sb = new StringBuilder();
 		char[] buffer = new char[1<<13];
 		int read;
@@ -62,7 +63,7 @@ public class PlaintextHandler implements ExcerptHandler {
 	 * @see de.unistuttgart.xsample.ct.ExcerptHandler#excerpt(de.unistuttgart.xsample.dv.XmpFragment[])
 	 */
 	@Override
-	public void excerpt(FileInfo file, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
+	public void excerpt(XmpFileInfo file, Charset encoding, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
 		// TODO Auto-generated method stub
 	}
 

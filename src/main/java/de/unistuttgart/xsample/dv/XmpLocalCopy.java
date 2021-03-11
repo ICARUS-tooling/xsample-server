@@ -3,10 +3,11 @@
  */
 package de.unistuttgart.xsample.dv;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,7 +31,7 @@ import javax.persistence.OneToOne;
 @Entity(name = XmpLocalCopy.TABLE_NAME)
 @NamedQueries({
 	@NamedQuery(name = "LocalCopy.findByResource", query = "SELECT c FROM LocalCopy c WHERE c.resource = :resource"), 
-	@NamedQuery(name = "LocalCopy.findByDataFile", query = "SELECT c FROM LocalCopy c WHERE c.dataFile = :filename"), 
+	@NamedQuery(name = "LocalCopy.findByDataFile", query = "SELECT c FROM LocalCopy c WHERE c.filename = :filename"), 
 	@NamedQuery(name = "LocalCopy.findExpired", query = "SELECT c FROM LocalCopy c WHERE c.expiresAt < :timestamp"), 
 })
 public class XmpLocalCopy {
@@ -49,28 +50,31 @@ public class XmpLocalCopy {
 	private XmpResource resource;
 	
 	@Column(nullable = false)
-	private String dataFile;
+	private String filename;
 	
-	@Column(nullable = false)
-	private String infoFile;
+	@Column(nullable = true)
+	private Serializable metadata;
 	
 	@Column(nullable = false)
 	private String key;
-	
-	private transient final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-	public void lockWrite() { lock.writeLock().lock(); }
-	public void unlockWrite() { lock.writeLock().unlock(); }
-	public void lockRead() { lock.readLock().lock(); }
-	public void unlockRead() { lock.readLock().unlock(); }
+	/** Size in bytes of the source file */
+	@Column
+	private long size = 0;
+
+	/** Display name of the source file */
+	@Column
+	private String title;
+	/** MIME type of the source file */
+	@Column
+	private String contentType;
+	/** Character encoding used for source file */
+	@Column
+	private String encoding;
 	
-	public boolean tryLockWrite(long amount, TimeUnit unit) throws InterruptedException { 
-		return lock.writeLock().tryLock(amount, unit); 
-	}
+	private transient final Lock lock = new ReentrantLock();
 	
-	public boolean tryLockRead(long amount, TimeUnit unit) throws InterruptedException { 
-		return lock.readLock().tryLock(amount, unit); 
-	}
+	public Lock getLock() { return lock; }
 	
 	public Long getId() {
 		return id;
@@ -96,19 +100,22 @@ public class XmpLocalCopy {
 		this.resource = resource;
 	}
 
-	public String getDataFile() {
-		return dataFile;
+	public String getFilename() {
+		return filename;
 	}
 
-	public void setDataFile(String dataFile) {
-		this.dataFile = dataFile;
+	public void setFilename(String dataFile) {
+		this.filename = dataFile;
 	}
 
-	public String getInfoFile() {
-		return infoFile;
+	public Serializable getMetadata() {
+		return metadata;
 	}
-	public void setInfoFile(String infoFile) {
-		this.infoFile = infoFile;
+	public <T extends Serializable> T getMetadata(Class<T> type) {
+		return type.cast(metadata);
+	}
+	public void setMetadata(Serializable infoFile) {
+		this.metadata = infoFile;
 	}
 	public String getKey() {
 		return key;
@@ -117,4 +124,36 @@ public class XmpLocalCopy {
 	public void setKey(String key) {
 		this.key = key;
 	}
+	
+	public long getSize() {
+		return size;
+	}
+	public void setSize(long size) {
+		this.size = size;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	public String getEncoding() {
+		return encoding;
+	}
+
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
+	}
+	
 }
