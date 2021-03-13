@@ -48,7 +48,9 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.ejb.Schedule;
+import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.transaction.Transactional;
 
 import org.apache.commons.io.IOUtils;
@@ -68,8 +70,12 @@ import retrofit2.Response;
  * @author Markus Gärtner
  *
  */
-public abstract class LocalCache {
+@Named
+@SessionScoped
+public class LocalCache implements Serializable {
 	
+	private static final long serialVersionUID = -6969800383991211733L;
+
 	private static final Logger log = Logger.getLogger(LocalCache.class.getCanonicalName());
 	
 	private static final int MIN_EXPIRE_DAYS = 1;
@@ -86,23 +92,25 @@ public abstract class LocalCache {
 	@Inject
 	XsampleApp app;
 	
-	private final Object lock = new Object();
+	private transient final Object lock = new Object();
 	
-	private Path tempFolder;
+	private String tempFolder;
 	
-	private Map<String, DataverseClient> clientCache = new HashMap<>();
+	private transient final Map<String, DataverseClient> clientCache = new HashMap<>();
 
 	@PostConstruct
 	@Transactional
 	private void init() {
 		Path dir = Paths.get(System.getProperty("java.io.tmpdir"));
-		tempFolder = dir.resolve(CACHE_FOLDER);
+		Path tempFolder = dir.resolve(CACHE_FOLDER);
 		tempFolder = tempFolder.resolve(app.getVersion());
 		try {
 			Files.createDirectories(tempFolder);
 		} catch (IOException e) {
 			throw new IllegalStateException("Failed to initialize cache folder", e);
 		}
+		
+		this.tempFolder = tempFolder.toAbsolutePath().toString();
 	}
 	
 	@PreDestroy
@@ -110,11 +118,13 @@ public abstract class LocalCache {
 		//TODO add a GC queue and weak references to copies we give out and ensure upon cleanup that they are released?
 	}
 	
-	private Path createTempFile() throws IOException { return Files.createTempFile(tempFolder, TMP_PREFIX, DATA_SUFFIX); }
+	private Path tempFolder() { return Paths.get(tempFolder); }
+	
+	private Path createTempFile() throws IOException { return Files.createTempFile(tempFolder(), TMP_PREFIX, DATA_SUFFIX); }
 
 	private Path file(String name) {
 		requireNonNull(name);
-		return tempFolder.resolve(name); 
+		return tempFolder().resolve(name); 
 	}
 	
     @Schedule(hour="0", minute="0", second="0", persistent=false)
@@ -147,7 +157,7 @@ public abstract class LocalCache {
     @Schedule(hour="1", minute="0", second="0", persistent=false)
 	private void purgeStaleFiles() {
     	synchronized (lock) {
-    		try(DirectoryStream<Path> stream = Files.newDirectoryStream(tempFolder, STALE_FILES)) {
+    		try(DirectoryStream<Path> stream = Files.newDirectoryStream(tempFolder(), STALE_FILES)) {
     			for(Iterator<Path> it = stream.iterator(); it.hasNext();) {
     				final Path file = it.next();
     				final boolean isDataFile = file.endsWith(DATA_SUFFIX);
@@ -178,7 +188,7 @@ public abstract class LocalCache {
     private Path relativize(Path file) {
     	if(!file.startsWith(tempFolder))
     		throw new IllegalArgumentException("Corrupted or foreign cache file: "+file);
-    	return tempFolder.relativize(file);
+    	return tempFolder().relativize(file);
     }
 	
     @Nullable
@@ -211,7 +221,7 @@ public abstract class LocalCache {
 			copy.setResource(resource);
 			copy.setFilename(relativize(dataFile).toString());
 			copy.setKey(XSampleUtils.serializeKey(key));
-			services.save(copy);
+			services.store(copy);
 			
 			log.info(String.format("Local copy created: filename=%s key=%s resource=%s expiresAt=%s", 
 					copy.getFilename(), copy.getKey(), copy.getResource(), copy.getExpiresAt()));
@@ -324,14 +334,14 @@ public abstract class LocalCache {
 				final long size = IOUtils.copyLarge(rawIn, cout);
 				copy.setSize(size);
 			} catch (IOException e) {
-				throw new TransmissionException("Failed to load remote resoruce", e);
+				throw new TransmissionException("Failed to load remote resource", e);
 			}
 		}
     }
 
 	private static final String TOKEN = "([a-zA-Z0-9-!#$%&'*+.^_`{|}~]+)";
 	private static final String QUOTED = "\"([^\"]*)\"";
-	private final Pattern PARAMETER = Pattern
+	private static final Pattern PARAMETER = Pattern
 			.compile(";\\s*(?:" + TOKEN + "=(?:" + TOKEN + "|" + QUOTED + "))?");
 	
 	private String extractName(String mediaType) {
@@ -367,7 +377,7 @@ public abstract class LocalCache {
 	}
 	
 	public Path getDataFile(XmpLocalCopy copy) {
-		return tempFolder.resolve(copy.getFilename());
+		return tempFolder().resolve(copy.getFilename());
 	}
 	
 	public boolean isPopulated(XmpLocalCopy copy) {

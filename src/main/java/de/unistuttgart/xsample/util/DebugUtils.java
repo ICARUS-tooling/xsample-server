@@ -73,7 +73,7 @@ public class DebugUtils {
 		Optional<XmpDataverse> current = services.findDataverseByUrl(url);
 		if(!current.isPresent()) {
 			XmpDataverse dv = new XmpDataverse(url, token);
-			services.save(dv);
+			services.store(dv);
 		} else {
 			current.get().setMasterKey(token);
 		}

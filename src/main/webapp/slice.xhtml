@@ -50,10 +50,14 @@
 			</div>
 			<br/>
 			
-			<ui:include src="/outline.xhtml" />
+			<ui:include src="/outline.xhtml">
+				<ui:param name="canvasId" value="outline" />
+				<ui:param name="canvasWidth" value="700" />
+				<ui:param name="showLegend" value="true" />
+			</ui:include>
 		
 			<f:facet name="footer">
-	        	<p:messages id="navMsg" showSummary="true" showDetail="false" redisplay="false" />
+	        	<p:messages id="navMsg" for="navMsgs" showSummary="true" showDetail="false" redisplay="false" />
 				<p:commandButton value="#{bundle['back']}" action="#{slicePage.back}" process="@this" />
 				<p:commandButton widgetVar="wv_continue" value="#{bundle['continue']}" 
 					action="#{slicePage.next}" />
@@ -72,7 +76,7 @@
 			var end = ui.values[1];
 			var count = end - begin + 1;
 			var range = Number(document.getElementById('slice:excerptRange').value);
-			var percent = Math.ceil(count / range * 100.0);
+			var percent = (count / range * 100.0).toFixed(1);
 			var limit = Number(document.getElementById('slice:excerptThreshold').value);
 			var canvas = document.getElementById('outline');
 			var excerpt = [toFragment(begin, end)];
@@ -85,7 +89,7 @@
 			document.getElementById('slice:excerptSize').textContent = count;
 			document.getElementById('slice:excerptPercent').textContent = percent + "%";
 			if(quota.length>0) {				
-				var totalPercent = Math.ceil(used / range * 100.0);
+				var totalPercent = (used / range * 100.0).toFixed(1);
 				document.getElementById('slice:totalPercent').textContent = totalPercent + "%";
 			}
 			if(exceeded) {
@@ -111,7 +115,7 @@
 				
 			if(quota.length>0) {			
 			var used = combinedSize(quota, excerpt, limit);	
-				var totalPercent = Math.ceil(used / range * 100.0);
+				var totalPercent = (used / range * 100.0).toFixed(1);
 				document.getElementById('slice:totalPercent').textContent = totalPercent + "%";
 			}
 		}

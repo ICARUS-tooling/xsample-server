@@ -34,4 +34,8 @@ public class XsampleQueryData extends ExcerptUtilityData {
 
 	private static final long serialVersionUID = -3741300128814073907L;
 	
+	/** The raw (sub)segments returned by the query engine. */
+	private long[] hits;
+	
+	
 }

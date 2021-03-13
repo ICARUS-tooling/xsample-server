@@ -174,7 +174,7 @@ public class DownloadPage extends XsamplePage {
 		for(ExcerptEntry entry : entries) {
 			final XmpExcerpt quota = entry.getQuota();
 			quota.merge(entry.getFragments());
-			services.save(quota);
+			services.update(quota);
 		}
 	}
 	

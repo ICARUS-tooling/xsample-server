@@ -58,4 +58,9 @@ public class QueryPage extends XsamplePage {
 	public void next() {
 		
 	}
+	
+	public boolean isHasResult() {
+		//TODO
+		return true;
+	}
 }

@@ -92,13 +92,15 @@ public class XsampleServices {
 	
 	// DB LOOKUP METHODS
 	
-	public <T> T save(T obj) {
+	public <T> T update(T obj) {
 		T result = em.merge(obj);
 		
-		em.flush();
+//		em.flush();
 		
 		return result;
 	}
+	
+	public <T> void store(T obj) { em.persist(obj); }
 	
 	public <T> void delete(T obj) { em.remove(obj); }
 	
@@ -227,7 +229,7 @@ public class XsampleServices {
 	public XmpFileInfo findFileInfo(XmpResource resource) {
 		requireNonNull(resource);
 		
-		List<XmpFileInfo> fileInfos = em.createNamedQuery("FileInfo.findbyResource")
+		List<XmpFileInfo> fileInfos = em.createNamedQuery("FileInfo.findByResource")
 					.setParameter("resource", resource)
 					.getResultList();
 		

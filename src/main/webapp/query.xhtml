@@ -25,18 +25,29 @@
 			</p:textEditor>
 		</div>
 		<div>
-			<p:messages for="queryMsgs" id="queryMsg" closable="true" redisplay="false" skipDetailIfEqualsSummary="true" />
+			<p:messages for="queryMsgs" for="navMsgs" id="queryMsg" closable="true" redisplay="false" skipDetailIfEqualsSummary="true" />
 			<p:commandButton value="#{bundle['query.runQuery']}" action="#{queryPage.runQuery}"
 					update="queryMsg" />
 		</div>
-		<div>				
-			<ui:include src="/outline.xhtml" />
+		<div>
+			<ui:include src="/outline.xhtml">
+				<ui:param name="canvasId" value="result" />
+				<ui:param name="canvasWidth" value="700" />
+				<ui:param name="showLegend" value="false" />
+			</ui:include>
+		</div>
+		<div>
+			<ui:include src="/outline.xhtml">
+				<ui:param name="canvasId" value="outline" />
+				<ui:param name="canvasWidth" value="700" />
+				<ui:param name="showLegend" value="true" />
+			</ui:include>
 		</div>
 		<div>
         	<p:messages id="navMsg" showSummary="true" showDetail="false" redisplay="false" />
 			<p:commandButton value="#{bundle['back']}" action="#{queryPage.back}" process="@this" />
 			<p:commandButton widgetVar="wv_continue" value="#{bundle['continue']}" 
-				action="#{queryPage.next}" disabled="true"/>
+				action="#{queryPage.next}" disabled="#{queryPage.hasResult}"/>
 		</div>
 	</h:form>
 

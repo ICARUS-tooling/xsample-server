@@ -3,7 +3,9 @@
  */
 package de.unistuttgart.xsample.pages.query;
 
-import javax.faces.view.ViewScoped;
+import java.io.Serializable;
+
+import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 
 /**
@@ -11,8 +13,10 @@ import javax.inject.Named;
  *
  */
 @Named
-@ViewScoped
-public class QueryEngine {
+@SessionScoped
+public class QueryEngine implements Serializable {
+
+	private static final long serialVersionUID = 4603513765690341840L;
 
 	
 }

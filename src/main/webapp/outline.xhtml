@@ -5,8 +5,8 @@
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
 
-	<canvas id="outline" class="excerpt-outline" width="700" height="15" />	
-	<div>
+	<canvas id="#{canvasId}" class="excerpt-outline" width="#{canvasWidth}" height="15" />	
+	<div jsf:rendered="#{showLegend}">
 		<div class="color-box" style="background-color: var(--outline-bg);" />
 		<h:outputText value="#{bundle['color.unused']}" />
 		<div class="color-box" style="background-color: var(--outline-quota);" />

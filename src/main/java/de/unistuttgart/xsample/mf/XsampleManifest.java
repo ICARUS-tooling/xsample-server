@@ -60,8 +60,11 @@ public class XsampleManifest implements Serializable, SelfValidating {
 		}
 	}
 	
+	/** Napespace prefix for XSample manifest elements. */
 	static final String NS = "xmp:";
+	/** Type identifier (from JSON-LD). */
 	static final String TYPE = "@type";
+	/** Context scheme identifier (from JSON-LD). */
 	private static final String CONTEXT = "@context";
 	
 	@Expose

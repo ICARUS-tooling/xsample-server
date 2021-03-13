@@ -178,7 +178,7 @@ public class WelcomePage extends XsamplePage {
 		final Corpus corpus = excerptData.findCorpus(corpusId);
 		final XmpResource resource = services.findResource(excerptData.getServer(), 
 				corpus.getPrimaryData().getId());
-		final XmpLocalCopy copy = services.findCopy(resource).get();
+		final XmpLocalCopy copy = cache.getCopy(resource);
 		final XmpFileInfo fileInfo = services.findFileInfo(resource);
 		
 		final List<Property> properties = new ArrayList<>();
@@ -582,7 +582,9 @@ public class WelcomePage extends XsamplePage {
 		
 		long totalSegmemnts = 0;
 		
-		for(Corpus corpus : excerptData.getManifest().getCorpora()) {
+		final List<Corpus> corpora = excerptData.getManifest().getCorpora();
+		
+		for(Corpus corpus : corpora) {
 			final String corpusId = corpus.getId();
 			final SourceFile sourceFile = corpus.getPrimaryData();
 
@@ -605,6 +607,7 @@ public class WelcomePage extends XsamplePage {
 			} catch (InterruptedException e) {
 				logger.log(Level.SEVERE, "Unable to lock copy for corpus: "+corpusId, e);
 				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.cacheBusy", corpusId);
+				return false;
 			}
 			try {
 				// Ensure local copy, i.e. load remote data if needed
@@ -627,12 +630,14 @@ public class WelcomePage extends XsamplePage {
 				} catch (TransmissionException e) {
 					logger.log(Level.SEVERE, "Failed to load remote content", e);
 					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.loadFailed", corpusId);
+					return false;
 				}
 				
 				// Ensure we have metadata about the file
 				final XmpFileInfo fileInfo = services.findFileInfo(resource);
 				if(!fileInfo.isSet()) {
 					final Charset encoding = Charset.forName(copy.getEncoding());
+					fileInfo.setSourceType(sourceType);
 					try(InputStream in = cache.openLocal(copy)) {
 						excerptHandler.analyze(fileInfo, encoding, in);
 					} catch (UnsupportedContentTypeException e) {
@@ -657,12 +662,15 @@ public class WelcomePage extends XsamplePage {
 				// Accumulate segments globally
 				totalSegmemnts += fileInfo.getSegments();
 				
+				context.fileInfos.add(fileInfo);
 			} finally {
 				copy.getLock().unlock();
 			}
 		}
 		
 		excerptData.setSegments(totalSegmemnts);
+		
+		assert context.fileInfos.size()==corpora.size() : "Missed files in loading process";
 		
 		return true;
 	}
