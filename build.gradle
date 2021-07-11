@@ -69,7 +69,7 @@ dependencies {
 	
 	// Collection implementations for primitive types
 	// https://mvnrepository.com/artifact/it.unimi.dsi/fastutil
-	compile group: 'it.unimi.dsi', name: 'fastutil', version: '8.4.2'
+	compile group: 'it.unimi.dsi', name: 'fastutil', version: '8.5.2'
 	
 	// https://mvnrepository.com/artifact/com.sun.faces/jsf-api
 	//compile group: 'com.sun.faces', name: 'jsf-api', version: '2.2.20'
@@ -87,6 +87,10 @@ dependencies {
 	
 	// https://mvnrepository.com/artifact/javax.faces/javax.faces-api
 	// providedCompile group: 'javax.faces', name: 'javax.faces-api', version: '2.3'
+	
+	// https://mvnrepository.com/artifact/com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer
+	implementation group: 'com.googlecode.owasp-java-html-sanitizer', name: 'owasp-java-html-sanitizer', version: 'r136'
+	
 	
 	// DEPLOYMENT
 
