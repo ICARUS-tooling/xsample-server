@@ -42,3 +42,4 @@ local.properties
 /100p_dummy.pdf
 /deployment.ini
 /dataverse_setup.ini
+/gen/
