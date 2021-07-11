@@ -48,6 +48,9 @@ public class XmpDataverse implements Serializable {
 	@Id
 	private String url;
 	
+	@Column(nullable = true, unique = true)
+	private String overrideUrl;
+	
 	public XmpDataverse() { /* no-op */ }
 	
 	public XmpDataverse(String url, String masterKey) {
@@ -58,9 +61,14 @@ public class XmpDataverse implements Serializable {
 	public String getUrl() { return url; }
 	public void setUrl(String url) { this.url = url; }
 
+	public String getOverrideUrl() { return overrideUrl; }
+	public void setOverrideUrl(String overrideUrl) { this.overrideUrl = overrideUrl; }
+
 	public String getMasterKey() { return masterKey; }
 	public void setMasterKey(String masterKey) { this.masterKey = masterKey; }
 
 	@Override
 	public String toString() { return "Dataverse@"+url; }
+	
+	public String getUsableUrl() { return overrideUrl==null ? url : overrideUrl; }
 }

@@ -12,10 +12,13 @@
 		<h:inputHidden id="excerptThreshold" value="#{xsampleQueryData.limit}" readonly="#{true}" />
 		<h:inputHidden id="excerptRange" value="#{xsampleQueryData.range}" readonly="#{true}" />
 		<h:inputHidden id="excerptQuota" value="#{xsampleQueryData.quota}" readonly="#{true}" />
+		<h:inputHidden id="resultRange" value="#{xsampleQueryData.resultRange}" readonly="#{true}" />
+		<h:inputHidden id="resultHits" value="#{xsampleQueryData.resultHits}" readonly="#{true}" />
+		<h:inputHidden id="resultSegments" value="#{xsampleQueryData.resultSegments}" readonly="#{true}" />
 		
 		<div>
-			<p:textEditor widgetVar="editor" height="300" placeholder="#{bundle['query.editor.placeholder']}"
-					value="#{queryView.query}" secure="false" required="true">
+			<p:textEditor widgetVar="editor" height="150" placeholder="#{bundle['query.editor.placeholder']}"
+					value="#{queryView.query}" secure="true" required="true">
 				<f:facet name="toolbar">
 					<span class="ql-formats">
 						There be cool stuff for customizing queries...
@@ -25,29 +28,63 @@
 			</p:textEditor>
 		</div>
 		<div>
-			<p:messages for="queryMsgs" for="navMsgs" id="queryMsg" closable="true" redisplay="false" skipDetailIfEqualsSummary="true" />
+			<p:messages for="queryMsgs" id="queryMsg" closable="true" redisplay="false" skipDetailIfEqualsSummary="true" />
 			<p:commandButton value="#{bundle['query.runQuery']}" action="#{queryPage.runQuery}"
-					update="queryMsg" />
+					update="resultRange resultHits resultSegments queryMsg slice" 
+					oncomplete="updateAllOutlines()" />
 		</div>
-		<div>
-			<ui:include src="/outline.xhtml">
-				<ui:param name="canvasId" value="result" />
-				<ui:param name="canvasWidth" value="700" />
-				<ui:param name="showLegend" value="false" />
-			</ui:include>
-		</div>
-		<div>
-			<ui:include src="/outline.xhtml">
-				<ui:param name="canvasId" value="outline" />
-				<ui:param name="canvasWidth" value="700" />
-				<ui:param name="showLegend" value="true" />
-			</ui:include>
+		<div jsf:id="slice">
+			<div jsf:rendered="#{xsampleQueryData.hasResults}" class="outline-box">
+				
+				<h:outputText value="#{bundle['query.rawHits']}:" />
+				<ui:include src="/outline.xhtml">
+					<ui:param name="canvasId" value="result" />
+					<ui:param name="canvasClass" value="excerpt-outline stack-intermediate" />
+					<ui:param name="showLegend" value="false" />
+				</ui:include>
+				
+				<h:outputText value="#{bundle['query.mappedHits']}:" />
+				<ui:include src="/outline.xhtml">
+					<ui:param name="canvasId" value="outline" />
+					<ui:param name="canvasClass" value="excerpt-outline stack-intermediate" />
+					<ui:param name="showLegend" value="false" />
+				</ui:include>
+				
+				<h:inputHidden id="sliceStart" value="#{xsampleQueryData.begin}" />
+				<h:inputHidden id="sliceEnd" value="#{xsampleQueryData.end}" />
+				
+				<h:outputText value="#{bundle['query.sliceInfo']}:" />
+				<br/>
+				<h:outputText id="sliceRangeText"
+					value="#{bundle['query.sliceBegin']} #{xsampleQueryData.begin} #{bundle['query.sliceEnd']} #{xsampleQueryData.end}" />
+				<p:slider widgetVar="sliceRangeSelect" for="sliceStart,sliceEnd" 
+					display="sliceRangeText" onSlide="updateSlice(event, ui);" 
+					styleClass="excerpt-select" range="true" displayTemplate="#{bundle['query.sliceBegin']} {min} #{bundle['query.sliceEnd']} {max}" 
+					minValue="1" maxValue="#{xsampleQueryData.range}" />    
+				
+				<h:outputLabel for="excerptSize" value="#{bundle['excerptSize']}: " />
+				<h:outputText id="excerptSize" value="#{xsampleSliceData.size}" /> 
+				<br/>
+				<h:outputLabel for="excerptPercent" value="#{bundle['excerptPercent']}: " />
+				<h:outputText id="excerptPercent" value="#{xsampleSliceData.percent}%" />
+				<br/>
+				<h:outputLabel for="totalPercent" value="#{bundle['totalPercent']}: " 
+					rendered="#{queryPage.showQuota}" />
+				<h:outputText id="totalPercent" rendered="#{queryPage.showQuota}" />
+				<br/>
+				
+				<ui:include src="/outline.xhtml">
+					<ui:param name="canvasId" value="excerpt" />
+					<ui:param name="canvasClass" value="excerpt-outline stack-intermediate" />
+					<ui:param name="showLegend" value="true" />
+				</ui:include>
+			</div>
 		</div>
 		<div>
         	<p:messages id="navMsg" showSummary="true" showDetail="false" redisplay="false" />
 			<p:commandButton value="#{bundle['back']}" action="#{queryPage.back}" process="@this" />
 			<p:commandButton widgetVar="wv_continue" value="#{bundle['continue']}" 
-				action="#{queryPage.next}" disabled="#{queryPage.hasResult}"/>
+				action="#{queryPage.next}" update="navMsg" />
 		</div>
 	</h:form>
 
@@ -55,25 +92,113 @@
 	<h:outputScript library="js" name="xsample-common.js" target="body" />
 	<h:outputScript library="js" name="xsample-slice.js" target="body" />
 	<h:outputScript>	
-		var excerpt = [];
+		var matches = [];
 		var quota = [];
 		
-		function updateOutline() {	
+		/** Called when user uses the "slice" slider */
+		function updateSlice(_, ui) {
+			var begin = ui.values[0];
+			var end = ui.values[1];
+			updateSlice0(begin, end);
+		}
+		
+		function updateSlice0(begin, end) {
 			var range = Number(document.getElementById('query:excerptRange').value);
 			var limit = Number(document.getElementById('query:excerptThreshold').value);
-			var canvas = document.getElementById('outline');
+			var slice = [toFragment(begin, end)];
+			var excerpt = intersect(slice, matches);
+			//console.log(excerpt);
+			var count = fragmentsSize(excerpt);
+			var percent = (count / range * 100.0).toFixed(1);
 			var used = combinedSize(quota, excerpt, limit);
 			var exceeded = used>limit;
 			var style = exceeded ? OUTLINE_EXCEEDED : OUTLINE_EXCERPT;
 		
+			var canvas = document.getElementById('excerpt');
 			paintExcerpt(canvas, quota, excerpt, range, style);	
+			
+			document.getElementById('query:excerptSize').textContent = count;
+			document.getElementById('query:excerptPercent').textContent = percent + "%";
+			if(quota.length>0) {				
+				var totalPercent = (used / range * 100.0).toFixed(1);
+				document.getElementById('query:totalPercent').textContent = totalPercent + "%";
+			}
+			if(exceeded) {
+				PF('wv_continue').disable();
+			} else {
+				PF('wv_continue').enable();
+			}
 		}
 		
-		function initOutline() {		
+		/** Called after search finished */
+		function updateAllOutlines() {
+			updateResults();
+			updateOutline();
+			updateExcerpt();
+			
+			//TODO update the final excerpt outline!!
+			
+			PF('wv_continue').disable();
+		}
+		
+		function updateExcerpt() {	
+			var canvas = document.getElementById('excerpt');
+			if(canvas == null) {
+				PF('wv_continue').disable();
+				return;
+			} else {
+				resizeCanvas(canvas);	
+			}
+			
+			var slider = PF('sliceRangeSelect');
+			var values = slider.getValues();
+			
+			updateSlice0(values[0], values[1]);
+		}
+		
+		function updateResults() {	
+			var canvas = document.getElementById('result');
+			if(canvas == null) {
+				PF('wv_continue').disable();
+				return;
+			} else {
+				resizeCanvas(canvas);	
+			}
+			
+			var encodedResults = document.getElementById('query:resultHits').value;	
+			var hits = parseFragments(encodedResults);
+			//console.log(hits);
+			
+			var range = Number(document.getElementById('query:resultRange').value);
+		
+			paintExcerpt(canvas, [], hits, range, OUTLINE_MATCHES);	
+		}
+		
+		function updateOutline() {	
+			var canvas = document.getElementById('outline');
+			if(canvas == null) {
+				PF('wv_continue').disable();
+				return;
+			} else {
+				resizeCanvas(canvas);	
+			}
+			
+			var encodedSegments = document.getElementById('query:resultSegments').value;	
+			matches = parseFragments(encodedSegments);
+			//console.log(matches);
+			
+			var range = Number(document.getElementById('query:excerptRange').value);
+		
+			paintExcerpt(canvas, [], matches, range, OUTLINE_MATCHES);	
+		}
+		
+		function initOutline() {							
 			var encodedQuota = document.getElementById('query:excerptQuota').value;			
 			quota = parseFragments(encodedQuota);
 			//console.log(quota);
+			updateResults();
 			updateOutline();
+			updateExcerpt();
 		}
 		
 		$('document').ready(function(){

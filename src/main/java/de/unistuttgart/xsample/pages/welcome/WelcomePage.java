@@ -106,6 +106,8 @@ public class WelcomePage extends XsamplePage {
 	
 	private static final long DEFAULT_LOCK_TIMEOUT_MIMLLIS = 50L;
 	
+	static final String NAV_MSG = "navMsgs";
+	
 	@Inject
 	XsampleSession session;
 	
@@ -241,7 +243,7 @@ public class WelcomePage extends XsamplePage {
 			String text = BundleUtil.format("welcome.msg.staticExcerptExceedsQuota", 
 					_long(begin), _long(end), corpus.getId());
 			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
-			FacesContext.getCurrentInstance().addMessage("navMsgs", msg);
+			FacesContext.getCurrentInstance().addMessage(NAV_MSG, msg);
 			return false;			
 		}
 
@@ -297,7 +299,7 @@ public class WelcomePage extends XsamplePage {
 				logger.severe("Unknown page result from routing in welcome page for type: "+excerptType);
 				String text = BundleUtil.format("welcome.msg.unknownPage", excerptType);
 				FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
-				FacesContext.getCurrentInstance().addMessage("navMsgs", msg);
+				FacesContext.getCurrentInstance().addMessage(NAV_MSG, msg);
 				return;
 			}
 		}
@@ -438,6 +440,17 @@ public class WelcomePage extends XsamplePage {
 		}
 		return valid;
 	}
+	
+	private String errorBody(Response<?> response) {
+		String msg;
+		try {
+			msg = response.errorBody().string();
+		} catch (IOException e) {
+			logger.severe("Failed to obtain error body for API response: "+e.getMessage());
+			msg = "=== failed to obtain error body ===";
+		}
+		return msg;
+	}
 
 	/** Verify that the dataverse server is registered and we have a master API key */
 	boolean checkDataverse(Context context) {
@@ -457,7 +470,7 @@ public class WelcomePage extends XsamplePage {
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.invalidDataverseUrl", address);
 			return false;
 		}
-		context.client = DataverseClient.forServer(address);
+		context.client = DataverseClient.forServer(dataverse.get().getUrl()); //TODO change to getUsableUrl()
 		
 		return true;
 	}
@@ -478,7 +491,7 @@ public class WelcomePage extends XsamplePage {
 		if(!response.isSuccessful()) {
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.userInfoFailed");
 			logger.severe(String.format("Failed to fetch user info for key '%s': code=%d body='%s'", 
-					key, _int(response.code()), response.errorBody()));
+					key, _int(response.code()), errorBody(response)));
 			return false;
 		}
 		
@@ -766,6 +779,7 @@ public class WelcomePage extends XsamplePage {
 	//TODO we need a better way to compute global quota across all the involved resouruces
 	boolean checkQuota(Context context) {
 		final XmpDataverseUser user = excerptData.getDataverseUser();
+		final double limitFactor = services.getDoubleSetting(Key.ExcerptLimit);
 		
 		long globalQuota = 0;
 		
@@ -774,17 +788,19 @@ public class WelcomePage extends XsamplePage {
 			final XmpLocalCopy copy = cache.getCopy(resource);
 			final XmpExcerpt excerpt = services.findQuota(user, resource);
 			final Corpus corpus = excerptData.findCorpus(resource);
+
+			final long segments = info.getSegments();
+			final long limit = (long) Math.floor(segments * limitFactor);
 			
 			final ExcerptEntry entry = new ExcerptEntry();
 			entry.setCorpusId(corpus.getId());
 			entry.setResource(resource);
 			entry.setQuota(excerpt);
+			entry.setLimit(limit);
 			excerptData.addExcerptEntry(entry);
 			
 			if(!info.isSmallFile() && !excerpt.isEmpty()) {
 				final long quota = excerpt.size();
-				final long segments = excerptData.getSegments();
-				final long limit = (long) (segments * services.getDoubleSetting(Key.ExcerptLimit));
 				
 				if(quota>=limit) {
 					logger.log(Level.SEVERE, String.format("Quota of %d used up on resource %s by user %s", 
@@ -796,7 +812,6 @@ public class WelcomePage extends XsamplePage {
 				}
 			}
 		}
-		
 		
 		return true;
 	}

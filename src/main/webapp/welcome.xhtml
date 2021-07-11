@@ -5,88 +5,86 @@
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
 	
-	<h:form>
-	
-	<div>
+	<h:form>	
+		<div>
 	        <p:messages id="msg" for="initMsgs" closable="true" showSummary="true" 
 	        	showDetail="false" redisplay="false" />
 			<h:outputText id="status" value="#{welcomePage.statusInfo}" />
 			<p:remoteCommand name="loadResource" action="#{welcomePage.verifyInput}" 
 				update="status msg outline" />
-	</div>
+		</div>
 	
-	<div>
-		<p:outputPanel id="outline">
-			<p:panel rendered="#{welcomePage.showOutline}">
-				<f:facet name="header">
-					<h:outputText value="#{bundle['welcome.infoHeader']}" />
-				</f:facet>
-				<div class="p-grid">
-					<div class="p-col">
-						<p:dataTable var="property" value="#{welcomeView.manifestProperties}">
-							<f:facet name="header">
-								<h:outputText value="#{bundle['welcome.manifestInfoHeader']}" />
-							</f:facet>
-							<p:column headerText="#{bundle['property']}">
-								<h:outputText value="#{property.key}" />
-							</p:column>
-							<p:column headerText="#{bundle['value']}">
-								<h:outputText value="#{property.value}" />
-							</p:column>
-						</p:dataTable>
-					</div>
-					<div class="p-col">
-						<div jsf:rendered="#{xsampleExcerptData.isMultiPartCorpus}">
-							<h:outputText value="#{bundle['selectFile']}" />
-							<p:selectOneMenu value="#{welcomeView.selectedCorpus}" style="width:300px"
-									valueChangeListener="#{welcomePage.refreshFileProperties}"
-									hideNoSelectionOption="true">
-								<f:selectItem itemLabel="#{bundle['selectFile']}" itemValue="" noSelectionOption="true"/>
-	                   	 		<f:selectItems value="#{xsampleExcerptData.fileInfos}" var="info" 
-	                   	 			itemLabel="#{info.title}" itemValue="#{info.corpusId}" />
-	                   	 		<p:ajax update="fileInfo" />
-							</p:selectOneMenu>
+		<div>
+			<p:outputPanel id="outline">
+				<p:panel rendered="#{welcomePage.showOutline}">
+					<f:facet name="header">
+						<h:outputText value="#{bundle['welcome.infoHeader']}" />
+					</f:facet>
+					<div class="p-grid">
+						<div class="p-col">
+							<p:dataTable var="property" value="#{welcomeView.manifestProperties}">
+								<f:facet name="header">
+									<h:outputText value="#{bundle['welcome.manifestInfoHeader']}" />
+								</f:facet>
+								<p:column headerText="#{bundle['property']}">
+									<h:outputText value="#{property.key}" />
+								</p:column>
+								<p:column headerText="#{bundle['value']}">
+									<h:outputText value="#{property.value}" />
+								</p:column>
+							</p:dataTable>
 						</div>
-						<p:dataTable id="fileInfo" var="property" value="#{welcomeView.fileProperties}">
-							<f:facet name="header">
-								<h:outputText value="#{bundle['welcome.fileInfoHeader']}" />
-							</f:facet>
-							<p:column headerText="#{bundle['property']}">
-								<h:outputText value="#{property.key}" />
-							</p:column>
-							<p:column headerText="#{bundle['value']}">
-								<h:outputText value="#{property.value}" />
-							</p:column>
-						</p:dataTable>
+						<div class="p-col">
+							<div jsf:rendered="#{welcomePage.isMultiPartCorpus}">
+								<h:outputText value="#{bundle['selectFile']}" />
+								<p:selectOneMenu value="#{welcomeView.selectedCorpus}" style="width:300px"
+										valueChangeListener="#{welcomePage.refreshFileProperties}"
+										hideNoSelectionOption="true">
+									<f:selectItem itemLabel="#{bundle['selectFile']}" itemValue="" noSelectionOption="true"/>
+		                   	 		<f:selectItems value="#{xsampleExcerptData.fileInfos}" var="info" 
+		                   	 			itemLabel="#{info.title}" itemValue="#{info.corpusId}" />
+		                   	 		<p:ajax update="fileInfo" />
+								</p:selectOneMenu>
+							</div>
+							<p:dataTable id="fileInfo" var="property" value="#{welcomeView.fileProperties}">
+								<f:facet name="header">
+									<h:outputText value="#{bundle['welcome.fileInfoHeader']}" />
+								</f:facet>
+								<p:column headerText="#{bundle['property']}">
+									<h:outputText value="#{property.key}" />
+								</p:column>
+								<p:column headerText="#{bundle['value']}">
+									<h:outputText value="#{property.value}" />
+								</p:column>
+							</p:dataTable>
+						</div>
 					</div>
-				</div>
-				
-				<div jsf:rendered="#{!welcomePage.showExcerptSelection}">
-					<h:outputText value="#{bundle['welcome.smallFile']}" />
-				</div>
-				
-				<div jsf:rendered="#{welcomePage.showExcerptSelection}">
-					<h:outputText value="#{bundle['welcome.excerptType']}:" />
-					<p:selectOneRadio layout="pageDirection"
-						value="#{welcomeView.excerptType}">
-						<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']} (#{welcomeView.staticExcerptLabel})"
-							itemValue="STATIC" />
-						<f:selectItem itemLabel="#{bundle['welcome.excerptType.slice']}"
-							itemValue="SLICE" />
-						<f:selectItem itemLabel="#{bundle['welcome.excerptType.query']}"
-							itemValue="QUERY" />
-					</p:selectOneRadio>
-				</div>
-				
-				<f:facet name="footer">
-	        		<p:messages id="navMsg" for="navMsgs" showSummary="true" closable="true" showDetail="false" redisplay="false" />
-					<p:commandButton value="#{bundle['continue']}" 
-						action="#{welcomePage.next}" update="navMsg" />
-				</f:facet>
-			</p:panel>
-		</p:outputPanel>
-	</div>
-	
+					
+					<div jsf:rendered="#{!welcomePage.showExcerptSelection}">
+						<h:outputText value="#{bundle['welcome.smallFile']}" />
+					</div>
+					
+					<div jsf:rendered="#{welcomePage.showExcerptSelection}">
+						<h:outputText value="#{bundle['welcome.excerptType']}:" />
+						<p:selectOneRadio layout="pageDirection"
+							value="#{welcomeView.excerptType}">
+							<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']} (#{welcomeView.staticExcerptLabel})"
+								itemValue="STATIC" />
+							<f:selectItem itemLabel="#{bundle['welcome.excerptType.slice']}"
+								itemValue="SLICE" />
+							<f:selectItem itemLabel="#{bundle['welcome.excerptType.query']}"
+								itemValue="QUERY" />
+						</p:selectOneRadio>
+					</div>
+					
+					<f:facet name="footer">
+		        		<p:messages id="navMsg" for="navMsgs" showSummary="true" closable="true" showDetail="false" redisplay="false" />
+						<p:commandButton value="#{bundle['continue']}" 
+							action="#{welcomePage.next}" update="navMsg" />
+					</f:facet>
+				</p:panel>
+			</p:outputPanel>
+		</div>	
 	</h:form>
 
 	<script type="text/javascript">

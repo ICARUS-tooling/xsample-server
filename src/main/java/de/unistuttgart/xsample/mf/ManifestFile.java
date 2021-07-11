@@ -1,3 +1,19 @@
+/*
+ * XSample Server
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /**
  * 
  */
@@ -26,14 +42,22 @@ public class ManifestFile extends DataverseFile {
 	/** Type indicator for the manifest. Currently we only support {@link ManifestType#IMF}! */
 	@Expose
 	@SerializedName(XsampleManifest.NS+"manifestType")
-	private ManifestType manifestType = ManifestType.IMF;
+	private ManifestType manifestType;
+	
+	/** File containing mapping information for the primary layer of this manifest. */
+	@Expose
+	@SerializedName(XsampleManifest.NS+"mappingFile")
+	private MappingFile mappingFile;
 
 	public ManifestType getManifestType() { return manifestType; }
+	public MappingFile getMappingFile() { return mappingFile; }
 	
 	@Override
 	public void validate() {
 		super.validate();
-		checkState("Missing 'manifest-type' field", manifestType!=null);
+		checkState("Missing 'label' field", getLabel()!=null);
+		checkState("Missing 'manifestType' field", manifestType!=null);
+		checkState("Missing 'mappingFile' field", mappingFile!=null);
 	}
 
 	public static ManifestFile.Builder builder() { return new Builder(); }
@@ -49,6 +73,13 @@ public class ManifestFile extends DataverseFile {
 			requireNonNull(manifestType);
 			checkState("Manifest type already set", instance.manifestType==null);
 			instance.manifestType = manifestType;
+			return this;
+		}
+		
+		public ManifestFile.Builder mappingFile(MappingFile mappingFile) {
+			requireNonNull(mappingFile);
+			checkState("Mapping file already set", instance.mappingFile==null);
+			instance.mappingFile = mappingFile;
 			return this;
 		}
 	}

@@ -28,11 +28,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import de.unistuttgart.xsample.XsampleServices;
-import de.unistuttgart.xsample.XsampleSession;
 import de.unistuttgart.xsample.XsampleServices.Key;
+import de.unistuttgart.xsample.XsampleSession;
 import de.unistuttgart.xsample.pages.shared.XsampleInputData;
 
 /**
+ * Helper bean to store relevant GET parameters in our {@link XsampleInputData} bean.
+ * We use this instead of the JSF {@code f:viewParam} tags since the actual parameter
+ * names are customizable for the XSample instance. 
+ * 
  * @author Markus Gärtner
  *
  */

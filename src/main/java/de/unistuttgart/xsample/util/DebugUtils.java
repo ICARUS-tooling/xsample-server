@@ -70,12 +70,15 @@ public class DebugUtils {
 		
 		String url = getProperty("dataverse.url");
 		String token = getProperty("dataverse.masterKey");
+		String overrideUrl = getProperty("dataverse.overrideUrl");
 		Optional<XmpDataverse> current = services.findDataverseByUrl(url);
 		if(!current.isPresent()) {
 			XmpDataverse dv = new XmpDataverse(url, token);
+			dv.setOverrideUrl(overrideUrl);
 			services.store(dv);
 		} else {
 			current.get().setMasterKey(token);
+			current.get().setOverrideUrl(overrideUrl);
 		}
 	}
 	

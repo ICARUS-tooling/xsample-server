@@ -30,6 +30,7 @@ import java.io.Reader;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.atomic.LongAdder;
@@ -43,6 +44,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.qe.Result;
 
 /**
  * @author Markus Gärtner
@@ -78,6 +80,46 @@ public class XSampleUtils {
 		return acc.size();
 	}
 	
+	public static List<XmpFragment> intersect(List<XmpFragment> a1, List<XmpFragment> a2) {
+		requireNonNull(a1);
+		requireNonNull(a2);
+		
+		List<XmpFragment> result = new ArrayList<>();
+		
+
+		int i1 = 0;
+		int i2 = 0; 
+		
+		for (; i1 < a1.size() && i2 < a2.size(); ) {
+			XmpFragment f1 = a1.get(i1);
+			XmpFragment f2 = a2.get(i2);
+			
+			if(f1.getBeginIndex() > f2.getEndIndex()) { // no overlap, f1 > f2
+				i2++;
+			} else if(f2.getBeginIndex() > f1.getEndIndex()) { // no overlap, f2 > f1
+				i1++;
+			} else if(f1.contains(f2)) { // f2 completely contained in f1
+				result.add(f2);
+				i2++;
+			} else if(f2.contains(f1)) { // f1 completely contained in f2
+				result.add(f1);
+				i1++;
+			} else { // true overlap, need to create new fragment
+				long left = Math.max(f1.getBeginIndex(), f2.getBeginIndex());
+				long right = Math.min(f1.getEndIndex(), f2.getEndIndex());
+				result.add(XmpFragment.of(left, right));
+				if(f1.getEndIndex() >= f2.getEndIndex()) {
+					i2++;
+				} 
+				if(f2.getEndIndex() >= f1.getEndIndex()) {
+					i1++;
+				}
+			}
+		}
+		
+		return result;
+	}
+	
 	public static void merge(List<XmpFragment> a1, List<XmpFragment> a2, 
 			Consumer<? super XmpFragment> distinct,
 			BiConsumer<? super XmpFragment, ? super XmpFragment> overlap) {
@@ -93,7 +135,7 @@ public class XSampleUtils {
 			XmpFragment f2 = a2.get(i2);
 			
 			if(f1.getBeginIndex() > f2.getEndIndex()) { // no overlap, f1 > f2
-				distinct.accept( f2);
+				distinct.accept(f2);
 				i2++;
 			} else if(f2.getBeginIndex() > f1.getEndIndex()) { // no overlap, f2 > f1
 				distinct.accept(f1);
@@ -113,6 +155,26 @@ public class XSampleUtils {
 		for (; i2 < a2.size(); i2++) {
 			distinct.accept(a2.get(i2));
 		}
+	}
+	
+	public static List<XmpFragment> asFragments(Result result) {
+		requireNonNull(result);
+		checkArgument("Result is empty", !result.isEmpty());
+		List<XmpFragment> fragments = new ArrayList<>();
+		long[] hits = result.getHits();
+		XmpFragment current = XmpFragment.of(hits[0]);
+		
+		for (int i = 1; i < hits.length; i++) {
+			long value = hits[i];
+			if(!current.append(value)) {
+				fragments.add(current);
+				current = XmpFragment.of(value);
+			}
+		}
+		
+		fragments.add(current);
+		
+		return fragments;
 	}
 
 	private static final IvParameterSpec iv = new IvParameterSpec(new SecureRandom().generateSeed(16));
@@ -340,6 +402,9 @@ public class XSampleUtils {
 		}
 		return new BufferedReader(reader);
 	}
+	
+	
+	public static boolean isNullOrEmpty(String s) { return s==null || "".equals(s); }
 
 
 	public static void checkState(boolean condition) {

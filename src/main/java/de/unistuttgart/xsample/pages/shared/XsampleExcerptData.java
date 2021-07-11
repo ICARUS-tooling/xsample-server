@@ -37,6 +37,7 @@ import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.dv.XmpResource;
 import de.unistuttgart.xsample.mf.Corpus;
+import de.unistuttgart.xsample.mf.ManifestFile;
 import de.unistuttgart.xsample.mf.XsampleManifest;
 
 /**
@@ -153,20 +154,28 @@ public class XsampleExcerptData implements Serializable {
 		}
 		return null;
 	}
-	public boolean getIsMultiPartCorpus() { 
-		if(manifest==null) {
-			return false;
+	/** Find manifest file with given label */
+	public ManifestFile findManifest(String label) {
+		requireNonNull(label);
+		if(manifest!=null) {
+			for(ManifestFile manifestFile : manifest.getManifests()) {
+				if(label.equals(manifestFile.getLabel())) {
+					return manifestFile;
+				}
+			}
 		}
-		List<Corpus> corpora = manifest.getCorpora();
-		return corpora.size()>1 || corpora.get(0).getParts().size()>1;
+		return null;
 	}
 	
 	public boolean hasCorpus(Predicate<? super Corpus> pred) {
-		return manifest.getCorpora().stream().anyMatch(pred);
+		return manifest!=null && manifest.getCorpora().stream().anyMatch(pred);
+	}
+	
+	public boolean hasEntry(Predicate<? super ExcerptEntry> pred) {
+		return excerpt.stream().anyMatch(pred);
 	}
 	
 	public void addExcerptEntry(ExcerptEntry entry) { excerpt.add(requireNonNull(entry)); }
-	public void resetExcerpt() { excerpt = new ArrayList<>(); }
 	
 	/**
 	 * 
@@ -185,6 +194,8 @@ public class XsampleExcerptData implements Serializable {
 		private XmpResource resource;
 		/** Used up quota */
 		private XmpExcerpt quota;
+		/** Limit within the associated corpus */
+		private long limit;
 		
 		public String getCorpusId() {
 			return corpusId;
@@ -199,11 +210,19 @@ public class XsampleExcerptData implements Serializable {
 			this.fragments = fragments;
 		}
 		
+		/** Reset the fragment data on this excerpt */
+		public void clear() {
+			fragments = null;
+		}
+		
 		public XmpResource getResource() { return resource; }
 		public void setResource(XmpResource xmpResource) { this.resource = xmpResource; }
 		
 		public XmpExcerpt getQuota() { return quota; }
 		public void setQuota(XmpExcerpt quota) { this.quota = quota; }
+		
+		public long getLimit() { return limit; }
+		public void setLimit(long limit) { this.limit = limit; }
 		
 	}
 }

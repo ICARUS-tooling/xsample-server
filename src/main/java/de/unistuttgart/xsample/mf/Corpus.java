@@ -1,3 +1,19 @@
+/*
+ * XSample Server
+ * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /**
  * 
  */
@@ -61,12 +77,6 @@ public class Corpus implements Serializable, SelfValidating {
 	@SerializedName(XsampleManifest.NS+"parts")
 	@Nullable
 	private List<Corpus> parts;
-	
-	/** Optional (external) manifests sued by query engines and other utility modules. */
-	@Expose
-	@Nullable
-	@SerializedName(XsampleManifest.NS+"manifests")
-	private List<ManifestFile> manifests;
 
 	/** Link to optional primary file. Note that either the root corpus must define this or EVERY sub corpus must define a separate one */
 	public SourceFile getPrimaryData() { return primaryData; }
@@ -78,16 +88,10 @@ public class Corpus implements Serializable, SelfValidating {
 	public Span getSpan() { return span; }
 	/** Separate parts of the corpus with individual legal notes */
 	public List<Corpus> getParts() { return parts==null ? Collections.emptyList() : new ArrayList<>(parts); }
-	/** Optional (external) manifests sued by query engines and other utility modules. */
-	public List<ManifestFile> getManifests() {
-		return manifests==null ? Collections.emptyList() : new ArrayList<>(manifests);
-	}
 	/** Unique identifier of this corpus within a surrounding manifest */
 	public String getId() { return id; }
 	
 	// Helpers
-	
-	public boolean hasManifests() { return manifests!=null && !manifests.isEmpty(); }	
 	public boolean hasParts() { return parts!=null && !parts.isEmpty(); }	
 	
 	public void forEachPart(Consumer<? super Corpus> action) {
@@ -102,7 +106,6 @@ public class Corpus implements Serializable, SelfValidating {
 		SelfValidating.validateNested(primaryData, "primaryData");
 		SelfValidating.validateOptionalNested(span);
 		SelfValidating.validateOptionalNested(parts);
-		SelfValidating.validateOptionalNested(manifests);
 	}
 
 	
@@ -147,26 +150,6 @@ public class Corpus implements Serializable, SelfValidating {
 			requireNonNull(span);
 			checkState("Span already set", instance.span==null);
 			instance.span = span;
-			return this;
-		}
-		
-		private List<ManifestFile> ensureManifests() {
-			if(instance.manifests==null) {
-				instance.manifests = new ArrayList<>();
-			}
-			return instance.manifests;
-		}
-		
-		public Builder manifests(List<ManifestFile> manifests) {
-			requireNonNull(manifests);
-			checkArgument("Manifest list is empty", !manifests.isEmpty());
-			ensureManifests().addAll(manifests);
-			return this;
-		}
-		
-		public Builder manifest(ManifestFile manifest) {
-			requireNonNull(manifest);
-			ensureManifests().add(manifest);
 			return this;
 		}
 		

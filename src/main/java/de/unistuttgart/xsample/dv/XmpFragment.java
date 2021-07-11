@@ -53,14 +53,36 @@ public class XmpFragment implements Comparable<XmpFragment> {
 		return String.valueOf(f.getBeginIndex())+"-"+String.valueOf(f.getEndIndex());
 	}
 	
-	public static String encodeAll(List<XmpFragment> xmpFragments) {
-		StringBuilder sb = new StringBuilder(xmpFragments.size()*4);
-		for (int i = 0; i < xmpFragments.size(); i++) {
+	public static String encodeAll(List<XmpFragment> fragments) {
+		StringBuilder sb = new StringBuilder(fragments.size()*4);
+		for (int i = 0; i < fragments.size(); i++) {
 			if(i>0) {
 				sb.append(',');
 			}
-			sb.append(encode(xmpFragments.get(i)));
+			sb.append(encode(fragments.get(i)));
 		}
+		return sb.toString();
+	}
+	
+	public static String encodeAll(long[] fragments) {
+		StringBuilder sb = new StringBuilder(fragments.length*4);
+		for (int i = 0; i < fragments.length; i++) {
+			if(i>0) {
+				sb.append(',');
+			}
+			sb.append(String.valueOf(fragments[i]));
+		}
+		return sb.toString();
+	}
+	
+	public static String encodeAll(LongStream fragments) {
+		StringBuilder sb = new StringBuilder(100);
+		fragments.forEach(fragment -> {
+			if(sb.length()>0) {
+				sb.append(',');
+			}
+			sb.append(String.valueOf(fragment));
+		});
 		return sb.toString();
 	}
 	
@@ -156,4 +178,27 @@ public class XmpFragment implements Comparable<XmpFragment> {
 	}
 	
 	public void detach() { setExcerpt(null); }
+	
+	/** Check if this fragment completely covers the other one */
+	public boolean contains(XmpFragment other) {
+		return beginIndex<=other.beginIndex && endIndex>=other.endIndex;
+	}
+	
+	/** Check if this fragment contains the given value */
+	public boolean contains(long value) {
+		return beginIndex<=value && endIndex>=value;
+	}
+	
+	/** 
+	 * Tries to append the given value if it is adjacent to current 
+	 * end index and returns true if so. 
+	 */
+	public boolean append(long value) {
+		if(value==endIndex+1) {
+			endIndex = value;
+			return true;
+		}
+		
+		return false;
+	}
 }

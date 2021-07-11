@@ -3,6 +3,7 @@ var OUTLINE_BG = getCSSVariable('--outline-bg');
 var OUTLINE_QUOTA = getCSSVariable('--outline-quota');
 var OUTLINE_EXCERPT = getCSSVariable('--outline-excerpt');
 var OUTLINE_EXCEEDED = getCSSVariable('--outline-exceeded');
+var OUTLINE_MATCHES = getCSSVariable('--outline-matches');
 
 /**
  * Paint a horizontal outline on the canvas
@@ -18,12 +19,11 @@ function paintExcerpt(canvas, quota, excerpt, range, style){
 	// Reset canvas for new paint pass
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	ctx.globalCompositeOperation = 'source-over';
-	// Fill default background
-//	ctx.fillStyle = OUTLINE_BG;
-//	ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 	// Width in pixels of a single segment
 	var step = canvas.width / range;
+	
+//	console.log("width=%d range=%d step=%f", canvas.width, range, step);
 	
 	// Utility function to paint a continuous range of segments
 	var paintSpan = (begin, end, style) => {
@@ -31,6 +31,8 @@ function paintExcerpt(canvas, quota, excerpt, range, style){
 		var width = (end - begin + 1) * step;
 		ctx.fillStyle = style;
 		ctx.fillRect(x, 0, width, canvas.height);
+		
+//		console.log("(%d, %d) -> [%d, %d]", begin, end, x, x+width);
 	}
 
 	excerpt.forEach(f => paintSpan(f.begin, f.end, style));
@@ -43,4 +45,10 @@ function paintExcerpt(canvas, quota, excerpt, range, style){
 	*/
 	ctx.globalCompositeOperation = 'multiply';
 	quota.forEach(f => paintSpan(f.begin, f.end, OUTLINE_QUOTA));
+}
+
+
+function resizeCanvas(canvas) {
+	//canvas.width = canvas.parentNode.offsetWidth * 0.9;
+	canvas.width = canvas.offsetWidth;
 }

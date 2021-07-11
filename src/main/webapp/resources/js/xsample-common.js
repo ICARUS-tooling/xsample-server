@@ -1,6 +1,7 @@
 /**
  * Utility functions for communicating with the XSample server
- * and encoding/decoding excerpt data. 
+ * and encoding/decoding excerpt data. Note that all functions
+ * here expect fragment arrays to be sorted!!
  */
 
 function getCSSVariable(varName) {
@@ -134,6 +135,14 @@ function exceedsLimit(a1, a2, limit) {
 	return false;
 }
 
+function fragmentsSize(a) {
+	var size = 0;
+	for (var i=0; i < a.length; i++) {
+		size += sizeOf(a[i]);
+	}
+	return size;
+}
+
 /**
  * Helper function to compute the overlapping size of two fragment arrays.
  * @param a1 first array of fragment objects
@@ -173,4 +182,40 @@ function combinedSize(a1, a2) {
 	}
 	
 	return size;
+}
+
+/**
+ * Helper function to intersect two arrays of fragments.
+ * @param a1 first array of fragment objects
+ * @param a2 second array of fragment objects
+ * @returns a list of fragments that only cover intersecting slots from a1 and a2
+ */
+function intersect(a1, a2) {
+	var res = [];
+
+	var i1 = 0;
+	var i2 = 0; 
+	
+	for (; i1 < a1.length && i2 < a2.length; ) {
+		var f1 = a1[i1];
+		var f2 = a2[i2];
+		
+		if(f1.begin > f2.end) { // no overlap, f1 > f2
+			i2++;
+		} else if(f2.begin > f1.end) { // no overlap, f2 > f1
+			i1++;
+		} else { // overlap
+			var left = Math.max(f1.begin, f2.begin);
+			var right = Math.min(f1.end, f2.end);
+			res[res.length] = toFragment(left, right);
+			if(f1.end >= f2.end) {
+				i2++;
+			} 
+			if(f2.end >= f1.end) {
+				i1++;
+			}
+		}
+	}
+	
+	return res;
 }

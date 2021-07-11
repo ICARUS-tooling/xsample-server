@@ -3,6 +3,7 @@
   --outline-quota: #33662A;
   --outline-excerpt: #00FF00;
   --outline-exceeded: #FF0000;
+  --outline-matches: #0000a0;
 }
 
 .color-box {
@@ -16,10 +17,43 @@
 .excerpt-outline {
 	border:1px solid #000000; 
 	background-color: var(--outline-bg);
-	margin: 2em; 
+	margin-left: 2em;
+	margin-right: 2em;
 	display: block;
 	height: 15;
-	/* width: 700; */
+	width: 100%;
+}
+
+.stack-top {
+	margin-top: 2em;
+	margin-bottom: 1em;
+}
+
+.stack-intermediate {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+.stack-bottom {
+	margin-top: 1em;
+	margin-bottom: 2em;
+}
+
+.legend-box {
+	margin-top: 1em;
+	margin-bottom: 1em;
+	margin-left: 2em;
+	margin-right: 2em;
+}
+
+.outline-box {
+	width: 90%;
+	position: relative;
+}
+
+.excerpt-select {
+	width: 100%;
+	margin: 2em;
 }
 
 html, body {

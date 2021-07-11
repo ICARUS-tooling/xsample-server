@@ -49,6 +49,8 @@ public class SlicePage extends XsamplePage {
 	public static final String PAGE = "slice";
 	
 	private static final Logger logger = Logger.getLogger(SlicePage.class.getCanonicalName());
+	
+	static final String NAV_MSG = "navMsgs";
 
 	@Inject
 	XsampleSliceData sliceData;
@@ -71,7 +73,7 @@ public class SlicePage extends XsamplePage {
 	
 	@Override
 	protected void rollBack() {
-		excerptData.resetExcerpt();
+		currentEntry().clear();
 	}
 
 	/** Callback for button to continue workflow */
@@ -87,11 +89,11 @@ public class SlicePage extends XsamplePage {
 		 * or tampering with the JS code on the client side!
 		 */
 		long usedUpSlots = XSampleUtils.combinedSize(fragments, quota);
-		if(usedUpSlots>sliceData.getLimit()) {
+		if(usedUpSlots>entry.getLimit()) {
 			logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
-					_long(sliceData.getLimit()), entry.getResource(), excerptData.getServer(), excerptData.getDataverseUser()));
-			Messages.addError("navMsg", BundleUtil.get("slice.msg.quotaExceeded"), 
-					_long(usedUpSlots), _long(sliceData.getLimit()));
+					_long(entry.getLimit()), entry.getResource(), excerptData.getServer(), excerptData.getDataverseUser()));
+			Messages.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
+					_long(usedUpSlots), _long(entry.getLimit()));
 			return;
 		}
 		

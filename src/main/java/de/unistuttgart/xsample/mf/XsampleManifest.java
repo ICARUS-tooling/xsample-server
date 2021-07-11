@@ -98,6 +98,12 @@ public class XsampleManifest implements Serializable, SelfValidating {
 	@SerializedName(NS+"staticExcerptCorpus")
 	private String staticExcerptCorpus;
 	
+	/** Optional (external) manifests sued by query engines and other utility modules. */
+	@Expose
+	@Nullable
+	@SerializedName(XsampleManifest.NS+"manifests")
+	private List<ManifestFile> manifests = new ArrayList<>();
+	
 	public String getDescription() { return description; }
 	public Span getStaticExcerpt() { return staticExcerpt; }
 	public Map<String, String> getMetadata() {
@@ -105,8 +111,13 @@ public class XsampleManifest implements Serializable, SelfValidating {
 	}
 	public List<Corpus> getCorpora() { return corpora; }
 	public String getStaticExcerptCorpus() { return staticExcerptCorpus; }
+	/** Optional (external) manifests sued by query engines and other utility modules. */
+	public List<ManifestFile> getManifests() {
+		return manifests==null ? Collections.emptyList() : new ArrayList<>(manifests);
+	}
 	
-	// Helpers
+	// Helpers	
+	public boolean hasManifests() { return manifests!=null && !manifests.isEmpty(); }	
 	public boolean hasMetadata() { return metadata!=null && !metadata.isEmpty(); }
 	public boolean hasStaticExcerpt() { return staticExcerpt!=null; }
 	
@@ -137,6 +148,7 @@ public class XsampleManifest implements Serializable, SelfValidating {
 		checkState("Missing 'description' field", description!=null);
 		SelfValidating.validateNested(corpora, "corpora");
 		SelfValidating.validateOptionalNested(staticExcerpt);
+		SelfValidating.validateOptionalNested(manifests);
 	}
 	
 	public static Builder builder() { return new Builder(); }
@@ -185,7 +197,6 @@ public class XsampleManifest implements Serializable, SelfValidating {
 		
 		public Builder corpora(List<Corpus> corpora) {
 			requireNonNull(corpora);
-			checkState("Corpora already set", instance.corpora==null);
 			instance.corpora.clear();
 			instance.corpora.addAll(corpora);
 			return this;
@@ -194,6 +205,19 @@ public class XsampleManifest implements Serializable, SelfValidating {
 		public Builder corpus(Corpus corpus) {
 			requireNonNull(corpus);
 			checkState("Corpus already added", instance.corpora.add(corpus));
+			return this;
+		}
+		
+		public Builder manifests(List<ManifestFile> manifests) {
+			requireNonNull(manifests);
+			instance.manifests.clear();
+			instance.manifests.addAll(manifests);
+			return this;
+		}
+		
+		public Builder manifest(ManifestFile manifest) {
+			requireNonNull(manifest);
+			checkState("Manifest already added", instance.manifests.add(manifest));
 			return this;
 		}
 		

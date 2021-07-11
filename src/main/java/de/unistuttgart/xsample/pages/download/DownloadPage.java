@@ -20,6 +20,7 @@
 package de.unistuttgart.xsample.pages.download;
 
 import static de.unistuttgart.xsample.util.XSampleUtils.decrypt;
+import static de.unistuttgart.xsample.util.XSampleUtils.strictToInt;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -51,6 +52,8 @@ import javax.transaction.Transactional;
 
 import org.omnifaces.util.Messages;
 
+import com.google.common.io.CountingOutputStream;
+
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.ExcerptHandlers;
 import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
@@ -60,7 +63,7 @@ import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.dv.XmpLocalCopy;
 import de.unistuttgart.xsample.io.LocalCache;
 import de.unistuttgart.xsample.io.NonClosingOutputStreamDelegate;
-import de.unistuttgart.xsample.mf.Corpus;
+import de.unistuttgart.xsample.mf.XsampleManifest;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
 import de.unistuttgart.xsample.util.BundleUtil;
@@ -85,10 +88,13 @@ public class DownloadPage extends XsamplePage {
 
 	@Override
 	protected void rollBack() {
-		excerptData.resetExcerpt();
+		//TODO do we actually have anything to roll back here?
 	}
 	
-	public boolean isHasAnnotations() { return excerptData.hasCorpus(Corpus::hasManifests); }
+	public boolean isHasAnnotations() {
+		XsampleManifest manifest = excerptData.getManifest();
+		return manifest!=null && manifest.hasManifests();
+	}
 	
 	@Transactional
 	public void download() {
@@ -96,7 +102,7 @@ public class DownloadPage extends XsamplePage {
 		final List<ExcerptEntry> entries = excerptData.getExcerpt();
 		final List<XmpLocalCopy> copies = new ArrayList<>(entries.size());
 		
-		// Early check if we already downloaded the excerpt
+		// Early check if we already obsoleted the source data
 		for(ExcerptEntry entry : entries) {
 			XmpLocalCopy copy = cache.getCopy(entry.getResource());
 			if(copy==null || !cache.isPopulated(copy)) {
@@ -124,24 +130,27 @@ public class DownloadPage extends XsamplePage {
 					copies.get(j).getLock().unlock();
 				}
 				// Notify user and bail
-				Messages.addGlobalError(BundleUtil.format("download.msg.cacheBusy", copy.getFilename()));
+				logger.info(String.format("Copy %s of resource %s locked", copy.getFilename(), copy.getTitle()));
+				Messages.addGlobalError(BundleUtil.format("download.msg.cacheBusy", copy.getTitle()));
 				return;
 			}
 		}
 		
+		assert entries.size()==copies.size() : "Mismatch between entries and copies";
+		
 		try {
-			assert entries.size()==copies.size() : "Mismatch between entries and copies";
-			
 			final HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();			
 			response.reset();
 			response.setContentType("application/zip");
-	//	    response.setContentLength(strictToInt(fileInfo.getSize())); // disabled since we don't know size of excerpt
-		    response.setHeader("Content-Disposition", "attachment; filename=\"XSample_excerpt.zip\"");
+			response.setHeader("Content-Disposition", "attachment; filename=\"XSample_excerpt.zip\"");
 			
+		    final long zipSize;
+		    
 			try(OutputStream out = response.getOutputStream();
-					ZipOutputStream zipOut = new ZipOutputStream(out)) {
+					CountingOutputStream cout = new CountingOutputStream(out);
+					ZipOutputStream zipOut = new ZipOutputStream(cout)) {
 				
-				// First place a index list containing al lthe files to expect
+				// First place an index list containing all the files to expect
 				addIndex(zipOut, entries, copies);
 				
 				// Add all the excerpts
@@ -152,13 +161,25 @@ public class DownloadPage extends XsamplePage {
 				// Add the legal note
 				addLegalNote(zipOut);
 				
+				// Force flush of pending data
+				zipOut.finish();
+				
+				// Collect final size of the zip file for client information purposes
+				zipSize = cout.getCount();
 			} catch (IOException e) {
 				logger.log(Level.SEVERE, "Failed to create excerpt", e);
 				Messages.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
+				response.reset();
+				return;
 			} catch (GeneralSecurityException e) {
 				logger.log(Level.SEVERE, "Failed to prepare cipher", e);
 				Messages.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
+				response.reset();
+				return;
 			}
+			
+			response.setContentLength(strictToInt(zipSize));
+		    
 		} finally {
 			// Release all locks again (use reverse order of lock acquisition)
 			for(int i=copies.size()-1; i>=0; i--) {

@@ -28,10 +28,15 @@ import java.util.List;
 
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.mf.LegalNote;
+import de.unistuttgart.xsample.mf.ManifestFile;
+import de.unistuttgart.xsample.mf.ManifestType;
+import de.unistuttgart.xsample.mf.MappingFile;
+import de.unistuttgart.xsample.mf.MappingType;
 import de.unistuttgart.xsample.mf.SourceFile;
 import de.unistuttgart.xsample.mf.SourceType;
 import de.unistuttgart.xsample.mf.Span;
 import de.unistuttgart.xsample.mf.SpanType;
+import de.unistuttgart.xsample.mf.StandardMappingFormats;
 import de.unistuttgart.xsample.mf.XsampleManifest;
 
 /**
@@ -87,11 +92,35 @@ public class ManifestGenerator {
 				new Entry(name("_f003_unsupported"), failPath, unsupportedTarget()),
 				new Entry(name("_f004_invalid_target"), failPath, invalidTarget()),
 				new Entry(name("_f005_invalid_open_static_begin"), failPath, invalidOpenStaticBegin()),
-				new Entry(name("_f006_invalid_open_static_end"), failPath, invalidOpenStaticEnd())
+				new Entry(name("_f006_invalid_open_static_end"), failPath, invalidOpenStaticEnd()),
+				
+				// Special "live" manifest for query approach
+				new Entry(name("_q001_dummy_query"), validPath, dummyQuery())
+				
 		);
 	}
 	
 	// CORRECT FILES
+	
+	
+	/** Plain manifest that should work */
+	private XsampleManifest dummyQuery() {
+		return XsampleManifest.builder()
+				.description("Plain manifest with query metadata")
+				.staticExcerpt(span(SpanType.RELATIVE, 0, 10))
+				.corpus(monoCorpus(file()))
+				.manifest(ManifestFile.builder()
+						.label("ICARUS 1 dummy query")
+						.manifestType(ManifestType.ICARUS_LEGACY)
+						.id(-1)
+						.mappingFile(MappingFile.builder()
+								.format(StandardMappingFormats.SOURCE_TARGET_SPAN.toString())
+								.mappingType(MappingType.TABULAR)
+								.id(-1)
+								.build())
+						.build())
+				.build();
+	}
 	
 	/** Plain manifest that should work */
 	private XsampleManifest plain() {

@@ -1,0 +1,220 @@
+1	Icarus	icarus	icarus	NN	NN	_	_	2	2	SBJ	SBJ	_	_	_
+2	was	be	be	VBD	VBD	_	_	0	0	ROOT	ROOT	_	_	_
+3	the	the	the	DT	DT	_	_	4	4	NMOD	NMOD	_	_	_
+4	son	son	son	NN	NN	_	_	2	2	PRD	PRD	Y	son.01	A0
+5	of	of	of	IN	IN	_	_	4	4	NMOD	NMOD	_	_	A1
+6	Daedalus	daedalus	daedalus	NNP	NNP	_	_	5	5	PMOD	PMOD	_	_	_
+7	.	.	.	.	.	_	_	2	2	P	P	_	_	_
+
+1	Daedalus	daedalus	daedalus	NNP	NNP	_	_	2	2	SBJ	SBJ	_	_	A1	_	_	_	_	_	_
+2	was	be	be	VBD	VBD	_	_	0	0	ROOT	ROOT	_	_	_	_	_	_	_	_	_
+3	imprisoned	imprison	imprison	VBN	VBN	_	_	2	2	VC	VC	Y	imprison.01	_	_	_	_	_	_	_
+4	in	in	in	IN	IN	_	_	3	3	LOC	LOC	_	_	AM-LOC	_	_	_	_	_	_
+5	his	his	his	PRP$	PRP$	_	_	7	7	NMOD	NMOD	_	_	_	A0	_	_	_	_	_
+6	own	own	own	JJ	JJ	_	_	7	7	NMOD	NMOD	_	_	_	_	_	_	_	_	_
+7	invention	invention	invention	NN	NN	_	_	4	4	PMOD	PMOD	Y	invention.01	_	_	_	_	_	_	_
+8	,	,	,	,	,	_	_	3	3	P	P	_	_	_	_	_	_	_	_	_
+9	the	the	the	DT	DT	_	_	10	10	NMOD	NMOD	_	_	_	_	_	_	_	_	_
+10	labyrinth	labyrinth	labyrinth	NN	NN	_	_	3	3	ADV	ADV	_	_	A1	_	_	_	_	_	_
+11	because	because	because	IN	IN	_	_	3	3	PRP	PRP	_	_	AM-CAU	_	_	_	_	_	_
+12	he	he	he	PRP	PRP	_	_	13	13	SBJ	SBJ	_	_	_	_	A0	A0	_	_	_
+13	helped	help	help	VBD	VBD	_	_	11	11	SUB	SUB	Y	help.01	_	_	_	_	_	_	_
+14	the	the	the	DT	DT	_	_	16	16	NMOD	NMOD	_	_	_	_	_	_	_	_	_
+15	hero	hero	hero	NN	NN	_	_	16	16	NMOD	NMOD	_	_	_	_	_	A1	_	_	_
+16	Theses	these	these	NNS	NNS	_	_	13	13	OBJ	OBJ	Y	these.01	_	_	A1	_	A0	_	_
+17	kill	kill	kill	VBP	VBP	_	_	13	13	OPRD	OPRD	Y	kill.01	_	_	C-A1	_	_	_	_
+18	King	king	king	NNP	NNP	_	_	19	19	TITLE	TITLE	_	_	_	_	_	_	_	_	_
+19	Minos	minos	minos	NNP	NNP	_	_	21	21	NMOD	NMOD	_	_	_	_	_	_	_	_	_
+20	's	's	's	POS	POS	_	_	19	19	SUFFIX	SUFFIX	_	_	_	_	_	_	_	_	_
+21	beast	beast	beast	NN	NN	_	_	17	17	OBJ	OBJ	_	_	_	_	_	_	A1	_	_
+22	,	,	,	,	,	_	_	21	21	P	P	_	_	_	_	_	_	_	_	_
+23	the	the	the	DT	DT	_	_	24	24	NMOD	NMOD	_	_	_	_	_	_	_	_	_
+24	Minotaur	minotaur	minotaur	NNP	NNP	_	_	21	21	APPO	APPO	_	_	_	_	_	_	_	_	_
+25	,	,	,	,	,	_	_	21	21	P	P	_	_	_	_	_	_	_	_	_
+26	and	and	and	CC	CC	_	_	17	17	COORD	COORD	_	_	_	_	_	_	_	_	_
+27	run	run	run	VBP	VBP	_	_	26	26	CONJ	CONJ	Y	run.01	_	_	_	_	_	_	_
+28	away	away	away	RB	RB	_	_	27	27	DIR	DIR	_	_	_	_	_	_	_	AM-DIR	_
+29	with	with	with	IN	IN	_	_	27	27	ADV	ADV	_	_	_	_	_	_	_	AM-MNR	_
+30	King	king	king	NNP	NNP	_	_	31	31	TITLE	TITLE	_	_	_	_	_	_	_	_	_
+31	Minos	minos	minos	NNP	NNP	_	_	33	33	NMOD	NMOD	_	_	_	_	_	_	_	_	A1
+32	's	's	's	POS	POS	_	_	31	31	SUFFIX	SUFFIX	_	_	_	_	_	_	_	_	_
+33	daughter	daughter	daughter	NN	NN	_	_	29	29	PMOD	PMOD	Y	daughter.01	_	_	_	_	_	_	A0
+34	,	,	,	,	,	_	_	33	33	P	P	_	_	_	_	_	_	_	_	_
+35	Ariadne	ariadne	ariadne	NNP	NNP	_	_	33	33	APPO	APPO	_	_	_	_	_	_	_	_	A1
+36	.	.	.	.	.	_	_	2	2	P	P	_	_	_	_	_	_	_	_	_
+
+1	Daedelus	daedelus	daedelus	NNP	NNP	_	_	2	2	SBJ	SBJ	_	_	A0
+2	came	come	come	VBD	VBD	_	_	0	0	ROOT	ROOT	Y	come.11	_
+3	up	up	up	RP	RP	_	_	2	2	PRT	PRT	_	_	_
+4	with	with	with	IN	IN	_	_	2	2	ADV	ADV	_	_	A1
+5	a	a	a	DT	DT	_	_	6	6	NMOD	NMOD	_	_	_
+6	plan	plan	plan	NN	NN	_	_	4	4	PMOD	PMOD	_	_	_
+7	.	.	.	.	.	_	_	2	2	P	P	_	_	_
+
+1	He	he	he	PRP	PRP	_	_	2	2	SBJ	SBJ	_	_	A0	_	_	_	_
+2	knew	know	know	VBD	VBD	_	_	0	0	ROOT	ROOT	Y	know.01	_	_	_	_	_
+3	that	that	that	IN	IN	_	_	2	2	OBJ	OBJ	_	_	A1	_	_	_	_
+4	Minos	minos	minos	NNP	NNP	_	_	5	5	SBJ	SBJ	_	_	_	A0	_	_	_
+5	controlled	control	control	VBD	VBD	_	_	3	3	SUB	SUB	Y	control.01	_	_	_	_	_
+6	all	all	all	DT	DT	_	_	8	8	NMOD	NMOD	_	_	_	_	_	_	_
+7	escape	escape	escape	NN	NN	_	_	8	8	NMOD	NMOD	_	_	_	_	A0	_	_
+8	routes	route	route	NNS	NNS	_	_	5	5	OBJ	OBJ	Y	route.01	_	A1	_	_	_
+9	by	by	by	IN	IN	_	_	8	8	NMOD	NMOD	_	_	_	_	A0	_	_
+10	land	land	land	NN	NN	_	_	9	9	PMOD	PMOD	_	_	_	_	_	_	_
+11	or	or	or	CC	CC	_	_	10	10	COORD	COORD	_	_	_	_	_	_	_
+12	sea	sea	sea	NN	NN	_	_	11	11	CONJ	CONJ	_	_	_	_	_	_	_
+13	,	,	,	,	,	_	_	2	2	P	P	_	_	_	_	_	_	_
+14	so	so	so	RB	RB	_	_	2	2	COORD	COORD	_	_	_	_	_	_	_
+15	he	he	he	PRP	PRP	_	_	16	16	SBJ	SBJ	_	_	_	_	_	A0	A0
+16	decided	decide	decide	VBD	VBD	_	_	14	14	COORD	COORD	Y	decide.01	_	_	_	_	_
+17	to	to	to	TO	TO	_	_	16	16	OPRD	OPRD	_	_	_	_	_	A1	_
+18	go	go	go	VB	VB	_	_	17	17	IM	IM	Y	go.01	_	_	_	_	_
+19	by	by	by	IN	IN	_	_	18	18	MNR	MNR	_	_	_	_	_	_	AM-MNR
+20	air	air	air	NN	NN	_	_	19	19	PMOD	PMOD	_	_	_	_	_	_	_
+21	.	.	.	.	.	_	_	2	2	P	P	_	_	_	_	_	_	_
+
+1	He	he	he	PRP	PRP	_	_	2	2	SBJ	SBJ	_	_	A0	_
+2	built	build	build	VBD	VBD	_	_	0	0	ROOT	ROOT	Y	build.01	_	_
+3	wings	wings	wings	NNS	NNS	_	_	2	2	OBJ	OBJ	Y	wing.01	A1	_
+4	for	for	for	IN	IN	_	_	3	3	NMOD	NMOD	_	_	_	A1
+5	himself	himself	himself	PRP	PRP	_	_	4	4	PMOD	PMOD	_	_	_	_
+6	and	and	and	CC	CC	_	_	5	5	COORD	COORD	_	_	_	_
+7	Icarus	icarus	icarus	NNP	NNP	_	_	6	6	CONJ	CONJ	_	_	_	_
+8	.	.	.	.	.	_	_	2	2	P	P	_	_	_	_
+
+1	They	they	they	PRP	PRP	_	_	2	2	SBJ	SBJ	_	_	A0	_	A1
+2	found	found	found	VBD	VBD	_	_	0	0	ROOT	ROOT	Y	find.01	_	_	_
+3	their	their	their	PRP$	PRP$	_	_	4	4	NMOD	NMOD	_	_	_	A0	_
+4	way	way	way	NN	NN	_	_	2	2	OBJ	OBJ	Y	way.02	A1	_	_
+5	out	out	out	IN	IN	_	_	4	4	NMOD	NMOD	_	_	_	_	_
+6	of	of	of	IN	IN	_	_	5	5	PMOD	PMOD	_	_	_	_	_
+7	the	the	the	DT	DT	_	_	8	8	NMOD	NMOD	_	_	_	_	_
+8	labyrinth	labyrinth	labyrinth	NN	NN	_	_	6	6	PMOD	PMOD	_	_	_	_	_
+9	and	and	and	CC	CC	_	_	2	2	COORD	COORD	_	_	_	_	_
+10	flew	fly	fly	VBD	VBD	_	_	9	9	CONJ	CONJ	Y	fly.01	_	_	_
+11	out	out	out	IN	IN	_	_	10	10	DIR	DIR	_	_	_	_	AM-DIR
+12	of	of	of	IN	IN	_	_	11	11	PMOD	PMOD	_	_	_	_	_
+13	the	the	the	DT	DT	_	_	15	15	NMOD	NMOD	_	_	_	_	_
+14	highest	high	high	JJS	JJS	_	_	15	15	NMOD	NMOD	_	_	_	_	_
+15	tower	tower	tower	NN	NN	_	_	12	12	PMOD	PMOD	_	_	_	_	_
+16	.	.	.	.	.	_	_	2	2	P	P	_	_	_	_	_
+
+1	Icarus	icarus	icarus	NNP	NNP	_	_	3	3	SBJ	SBJ	_	_	A0	_	_	_	_	_
+2	foolishly	foolishly	foolishly	RB	RB	_	_	3	3	ADV	ADV	_	_	AM-TMP	_	_	_	_	_
+3	ignored	ignore	ignore	VBD	VBD	_	_	0	0	ROOT	ROOT	Y	ignore.01	_	_	_	_	_	_
+4	his	his	his	PRP$	PRP$	_	_	5	5	NMOD	NMOD	_	_	_	A1	_	_	_	_
+5	father	father	father	NN	NN	_	_	7	7	NMOD	NMOD	Y	father.01	_	A0	A0	_	_	_
+6	's	's	's	POS	POS	_	_	5	5	SUFFIX	SUFFIX	_	_	_	_	_	_	_	_
+7	advice	advice	advice	NN	NN	_	_	3	3	OBJ	OBJ	Y	advice.01	A1	_	_	_	_	_
+8	to	to	to	TO	TO	_	_	7	7	NMOD	NMOD	_	_	_	_	A1	_	_	_
+9	fly	fly	fly	VB	VB	_	_	8	8	IM	IM	Y	fly.01	_	_	_	_	_	_
+10	on	on	on	IN	IN	_	_	9	9	ADV	ADV	_	_	_	_	_	AM-LOC	_	_
+11	the	the	the	DT	DT	_	_	13	13	NMOD	NMOD	_	_	_	_	_	_	_	_
+12	same	same	same	JJ	JJ	_	_	13	13	NMOD	NMOD	_	_	_	_	_	_	_	_
+13	route	route	route	NN	NN	_	_	10	10	PMOD	PMOD	_	_	_	_	_	_	_	_
+14	as	as	as	IN	IN	_	_	13	13	NMOD	NMOD	_	_	_	_	_	_	_	_
+15	him	him	him	PRP	PRP	_	_	14	14	PMOD	PMOD	_	_	_	_	_	_	_	_
+16	so	so	so	IN	IN	_	_	3	3	ADV	ADV	_	_	AM-PNC	_	_	_	_	_
+17	that	that	that	IN	IN	_	_	16	16	DEP	DEP	_	_	_	_	_	_	_	_
+18	the	the	the	DT	DT	_	_	19	19	NMOD	NMOD	_	_	_	_	_	_	_	_
+19	sun	sun	sun	NN	NN	_	_	20	20	SBJ	SBJ	_	_	_	_	_	_	A0	_
+20	would	would	would	MD	MD	_	_	17	17	SUB	SUB	_	_	_	_	_	_	AM-MOD	_
+21	not	not	not	RB	RB	_	_	20	20	ADV	ADV	_	_	_	_	_	_	AM-NEG	_
+22	melt	melt	melt	VB	VB	_	_	20	20	VC	VC	Y	melt.01	_	_	_	_	_	_
+23	the	the	the	DT	DT	_	_	24	24	NMOD	NMOD	_	_	_	_	_	_	_	_
+24	wings	wings	wings	NNS	NNS	_	_	22	22	OBJ	OBJ	_	_	_	_	_	_	A1	_
+25	and	and	and	CC	CC	_	_	20	20	COORD	COORD	_	_	_	_	_	_	_	_
+26	the	the	the	DT	DT	_	_	27	27	NMOD	NMOD	_	_	_	_	_	_	_	_
+27	sea	sea	sea	NN	NN	_	_	28	28	SBJ	SBJ	_	_	_	_	_	_	_	A0
+28	would	would	would	MD	MD	_	_	25	25	CONJ	CONJ	_	_	_	_	_	_	_	AM-MOD
+29	not	not	not	RB	RB	_	_	28	28	ADV	ADV	_	_	_	_	_	_	_	AM-NEG
+30	dampen	dampen	dampen	VB	VB	_	_	28	28	VC	VC	Y	dampen.02	_	_	_	_	_	_
+31	them	them	them	PRP	PRP	_	_	30	30	OBJ	OBJ	_	_	_	_	_	_	_	A1
+32	.	.	.	.	.	_	_	3	3	P	P	_	_	_	_	_	_	_	_
+
+1	Icarus	icarus	icarus	NNS	NNS	_	_	2	2	SBJ	SBJ	_	_	A1	_	A1	_	_	_
+2	got	get	get	VBD	VBD	_	_	0	0	ROOT	ROOT	Y	get.03	_	_	_	_	_	_
+3	wily	wily	wily	RB	RB	_	_	2	2	PRD	PRD	_	_	A2	_	_	_	_	_
+4	because	because	because	IN	IN	_	_	2	2	PRP	PRP	_	_	AM-CAU	_	_	_	_	_
+5	of	of	of	IN	IN	_	_	4	4	DEP	DEP	_	_	_	_	_	_	_	_
+6	being	be	be	VBG	VBG	_	_	4	4	PMOD	PMOD	_	_	_	_	_	_	_	_
+7	able	able	able	JJ	JJ	_	_	6	6	PRD	PRD	_	_	_	_	_	_	_	_
+8	to	to	to	TO	TO	_	_	7	7	AMOD	AMOD	_	_	_	_	_	_	_	_
+9	fly	fly	fly	VB	VB	_	_	8	8	IM	IM	Y	fly.01	_	_	_	_	_	_
+10	,	,	,	,	,	_	_	2	2	P	P	_	_	_	_	_	_	_	_
+11	and	and	and	CC	CC	_	_	2	2	COORD	COORD	_	_	_	_	_	_	_	_
+12	flew	fly	fly	VBD	VBD	_	_	11	11	CONJ	CONJ	Y	fly.01	_	_	_	_	_	_
+13	up	up	up	RP	RP	_	_	12	12	DIR	DIR	_	_	_	_	AM-DIR	_	_	_
+14	higher	higher	higher	JJR	JJR	_	_	12	12	ADV	ADV	_	_	_	_	AM-MNR	_	_	_
+15	and	and	and	CC	CC	_	_	14	14	COORD	COORD	_	_	_	_	_	_	_	_
+16	higher	higher	higher	JJR	JJR	_	_	15	15	CONJ	CONJ	_	_	_	_	_	_	_	_
+17	toward	toward	toward	IN	IN	_	_	16	16	AMOD	AMOD	_	_	_	_	_	_	_	_
+18	the	the	the	DT	DT	_	_	19	19	NMOD	NMOD	_	_	_	_	_	_	_	_
+19	sun	sun	sun	NN	NN	_	_	17	17	PMOD	PMOD	_	_	_	_	_	_	_	_
+20	,	,	,	,	,	_	_	12	12	P	P	_	_	_	_	_	_	_	_
+21	and	and	and	CC	CC	_	_	12	12	COORD	COORD	_	_	_	_	_	_	_	_
+22	the	the	the	DT	DT	_	_	23	23	NMOD	NMOD	_	_	_	_	_	_	_	_
+23	wax	wax	wax	NN	NN	_	_	27	27	SBJ	SBJ	_	_	_	_	_	A1	_	_
+24	in	in	in	IN	IN	_	_	23	23	LOC	LOC	_	_	_	_	_	_	_	_
+25	the	the	the	DT	DT	_	_	26	26	NMOD	NMOD	_	_	_	_	_	_	_	_
+26	wings	wings	wings	NNS	NNS	_	_	24	24	PMOD	PMOD	_	_	_	_	_	_	_	_
+27	melted	melt	melt	VBN	VBN	_	_	21	21	CONJ	CONJ	Y	melt.01	_	_	_	_	_	_
+28	and	and	and	CC	CC	_	_	27	27	COORD	COORD	_	_	_	_	_	_	_	_
+29	he	he	he	PRP	PRP	_	_	30	30	SBJ	SBJ	_	_	_	_	_	_	A1	A0
+30	fell	fell	fell	VBD	VBD	_	_	28	28	CONJ	CONJ	Y	fall.01	_	_	_	_	_	_
+31	into	into	into	IN	IN	_	_	30	30	DIR	DIR	_	_	_	_	_	_	A4	_
+32	the	the	the	DT	DT	_	_	33	33	NMOD	NMOD	_	_	_	_	_	_	_	_
+33	sea	sea	sea	NN	NN	_	_	31	31	PMOD	PMOD	_	_	_	_	_	_	_	_
+34	and	and	and	CC	CC	_	_	30	30	COORD	COORD	_	_	_	_	_	_	_	_
+35	drowned	drown	drown	VBD	VBD	_	_	34	34	CONJ	CONJ	Y	drown.03	_	_	_	_	_	_
+36	.	.	.	.	.	_	_	2	2	P	P	_	_	_	_	_	_	_	_
+
+1	Daedalus	daedalus	daedalus	NNP	NNP	_	_	2	2	SBJ	SBJ	_	_	A0	A0	_	_	_
+2	looked	look	look	VBD	VBD	_	_	0	0	ROOT	ROOT	Y	look.01	_	_	_	_	_
+3	down	down	down	RP	RP	_	_	2	2	ADV	ADV	_	_	AM-DIR	_	_	_	_
+4	towards	towards	towards	IN	IN	_	_	2	2	ADV	ADV	_	_	A1	_	_	_	_
+5	the	the	the	DT	DT	_	_	6	6	NMOD	NMOD	_	_	_	_	_	_	_
+6	sea	sea	sea	NN	NN	_	_	4	4	PMOD	PMOD	_	_	_	_	_	_	_
+7	and	and	and	CC	CC	_	_	2	2	COORD	COORD	_	_	_	_	_	_	_
+8	saw	saw	saw	VBD	VBD	_	_	7	7	CONJ	CONJ	Y	see.01	_	_	_	_	_
+9	the	the	the	DT	DT	_	_	10	10	NMOD	NMOD	_	_	_	_	_	_	_
+10	feathers	feather	feather	NNS	NNS	_	_	8	8	OBJ	OBJ	_	_	_	A1	A1	_	_
+11	floating	floating	floating	VBG	VBG	_	_	8	8	OPRD	OPRD	Y	floating.01	_	C-A1	_	_	_
+12	on	on	on	IN	IN	_	_	11	11	LOC	LOC	_	_	_	_	AM-LOC	_	_
+13	the	the	the	DT	DT	_	_	14	14	NMOD	NMOD	_	_	_	_	_	_	_
+14	water	water	water	NN	NN	_	_	12	12	PMOD	PMOD	_	_	_	_	_	_	_
+15	and	and	and	CC	CC	_	_	8	8	COORD	COORD	_	_	_	_	_	_	_
+16	figured	figure	figure	VBD	VBD	_	_	15	15	CONJ	CONJ	Y	figure.05	_	_	_	_	_
+17	out	out	out	RP	RP	_	_	16	16	PRT	PRT	_	_	_	_	_	_	_
+18	what	what	what	WP	WP	_	_	19	19	SBJ	SBJ	_	_	_	_	_	_	R-A1
+19	happened	happen	happen	VBD	VBD	_	_	16	16	OBJ	OBJ	Y	happen.01	_	_	_	A1	_
+20	.	.	.	.	.	_	_	2	2	P	P	_	_	_	_	_	_	_
+
+1	Eventually	eventually	eventually	RB	RB	_	_	3	3	TMP	TMP	_	_	AM-TMP	AM-TMP	_	_
+2	Daedalus	daedalus	daedalus	NNP	NNP	_	_	3	3	SBJ	SBJ	_	_	A0	A0	_	_
+3	found	found	found	VBD	VBD	_	_	0	0	ROOT	ROOT	Y	find.01	_	_	_	_
+4	the	the	the	DT	DT	_	_	5	5	NMOD	NMOD	_	_	_	_	_	_
+5	body	body	body	NN	NN	_	_	3	3	OBJ	OBJ	_	_	A1	_	_	_
+6	and	and	and	CC	CC	_	_	3	3	COORD	COORD	_	_	_	_	_	_
+7	buried	bury	bury	VBD	VBD	_	_	6	6	CONJ	CONJ	Y	bury.01	_	_	_	_
+8	it	it	it	PRP	PRP	_	_	7	7	OBJ	OBJ	_	_	_	A1	_	_
+9	on	on	on	IN	IN	_	_	7	7	LOC	LOC	_	_	_	A2	_	_
+10	the	the	the	DT	DT	_	_	11	11	NMOD	NMOD	_	_	_	_	_	_
+11	island	island	island	NN	NN	_	_	9	9	PMOD	PMOD	_	_	_	_	_	_
+12	of	of	of	IN	IN	_	_	11	11	NMOD	NMOD	_	_	_	_	_	_
+13	Icaria	icaria	icaria	NNP	NNP	_	_	12	12	PMOD	PMOD	_	_	_	_	_	_
+14	,	,	,	,	,	_	_	7	7	P	P	_	_	_	_	_	_
+15	and	and	and	CC	CC	_	_	7	7	COORD	COORD	_	_	_	_	_	_
+16	the	the	the	DT	DT	_	_	17	17	NMOD	NMOD	_	_	_	_	_	_
+17	sea	sea	sea	NN	NN	_	_	22	22	SBJ	SBJ	_	_	_	_	A1	A1
+18	which	which	which	WDT	WDT	_	_	20	20	OBJ	OBJ	_	_	_	_	R-A1	_
+19	Icarus	icarus	icarus	NNP	NNP	_	_	20	20	SBJ	SBJ	_	_	_	_	A1	_
+20	fell	fell	fell	VBD	VBD	_	_	17	17	NMOD	NMOD	Y	fall.01	_	_	_	_
+21	into	into	into	IN	IN	_	_	20	20	DIR	DIR	_	_	_	_	A4	_
+22	is	be	be	VBZ	VBZ	_	_	15	15	CONJ	CONJ	_	_	_	_	_	_
+23	now	now	now	RB	RB	_	_	22	22	TMP	TMP	_	_	_	_	_	AM-TMP
+24	called	call	call	VBN	VBN	_	_	22	22	VC	VC	Y	call.01	_	_	_	_
+25	the	the	the	DT	DT	_	_	27	27	NMOD	NMOD	_	_	_	_	_	_
+26	Icarian	icarian	icarian	NNP	NNP	_	_	27	27	NAME	NAME	_	_	_	_	_	_
+27	Sea	sea	sea	NNP	NNP	_	_	24	24	OPRD	OPRD	_	_	_	_	_	A2
+28	.	.	.	.	.	_	_	3	3	P	P	_	_	_	_	_	_
