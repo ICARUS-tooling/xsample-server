@@ -1,0 +1,10 @@
+# Sensitive or location dependent information for the gradle build
+# Copy and remove the '.dummy' in filename. Add proper 
+# config data for the build script to pick it up.
+
+# Location of local Payara server
+payaraHome=/path/to/local/payara
+# Remote Payara server details
+payaraHostname=my-server.com
+payaraUsername=user
+payaraPassword=pwd
