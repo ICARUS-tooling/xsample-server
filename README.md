@@ -53,7 +53,8 @@ When done, use the Dataverse [admin API](https://guides.dataverse.org/en/latest/
 
 `curl -X POST -H 'Content-type: application/json' http://localhost:8080/api/admin/externalTools --upload-file xsample.json`
 
-Your Dataverse instance should now display `XSample` as an aditional explore option on JSON files.
+Your Dataverse instance should now display `XSample` as an aditional explore option on JSON files. In order for the XSample server to actually be able to access resources inside the Dataverse, one final manual step is required. First create a Dataverse user with download rights and obtain an API token for it.
+Then in the `dataverse` table of the `xsample` database an entry needs to be added with the Dataverse's server address and the API token of the "downloader" user. Once this is done all the technical components for the XSample workflow are set up.
 
 ### A Note on External Tools and File Types
 
