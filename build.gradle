@@ -22,16 +22,15 @@ wrapper {
 }
 
 // Configuration for the Payara deployment tasks
+def deploymentFile = new File('deployment.ini')
 def deploymentConfig = new Properties()
-rootProject.file("deployment.ini").withReader { deploymentConfig.load(it) }
+if(deploymentFile.exists()) {
+	deploymentFile.withReader('UTF-8') { deploymentConfig.load(it) }
+}
 
 repositories { 
     mavenLocal()
     mavenCentral()
-    
-//    maven {
-//		url "https://jitpack.io"
-//    }
 }
 
 dependencies {
@@ -162,7 +161,7 @@ cargo {
      
     // Only necessary for local commands
     local {
-        homeDir = file(deploymentConfig.payaraHome)
+        homeDir = file(deploymentConfig.payaraHome ?: '.')
     }
      
     // Only necessary for remote commands
