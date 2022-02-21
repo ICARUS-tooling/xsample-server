@@ -69,17 +69,29 @@ public class XsampleServices {
 	private EntityManager em;
 	
 	static final Properties defaultSettings;
+	static final Properties settings;
 	static {
-		URL config = XsampleServices.class.getResource("/config/config.ini");
-		Properties settings = new Properties();
+		// Load default config first
+		URL config = XsampleServices.class.getResource("/config/default-config.ini");
+		Properties prop = new Properties();
+		try {
+			prop.load(config.openStream());
+		} catch (IOException e) {
+			log.log(Level.SEVERE, "Failed to load default settings", e);
+		}
+		settings = prop;
+		
+		// Now check for custom configuration
+		config = XsampleServices.class.getResource("/config/config.ini");
+		prop = new Properties(settings);
 		if(config!=null) {
 			try {
-				settings.load(config.openStream());
+				prop.load(config.openStream());
 			} catch (IOException e) {
 				log.log(Level.SEVERE, "Failed to load default settings", e);
 			}
 		}
-		defaultSettings = settings;
+		defaultSettings = prop;
 	}
 	
 	public static enum Key {
@@ -262,7 +274,7 @@ public class XsampleServices {
 
 	public String getSetting(Key key) {
 		//TODO replace with actual DB query once the settings backend is implemented
-		String value = defaultSettings.getProperty(key.getLabel());
+		String value = settings.getProperty(key.getLabel());
 		return value;  
 	}
 	
