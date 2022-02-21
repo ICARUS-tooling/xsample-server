@@ -30,6 +30,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.sql.DataSourceDefinition;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -48,6 +49,17 @@ import de.unistuttgart.xsample.dv.XmpResource;
  * @author Markus Gärtner
  *
  */
+@DataSourceDefinition(
+	name = "java:app/jdbc/xsample",
+    className = "org.postgresql.ds.PGSimpleDataSource",
+    user = "${ENV=DB_USER}",
+    password = "${ENV=DB_PASSWORD}",
+    serverName = "${ENV=DB_SERVERNAME}",
+    portNumber = 5432,
+    databaseName = "${ENV=DB_DATABASENAME}",
+    minPoolSize = 10,
+    maxPoolSize = 50
+)
 @Stateless
 public class XsampleServices {
 	
