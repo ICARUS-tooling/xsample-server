@@ -2,27 +2,30 @@ version: '3.8'
 
 services:
   db:
-    image: postgresql:9.6.24
+    image: postgres:9.6.24
     volumes:
       - db_data:/var/lib/postgresql/data
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: xsample
+      POSTGRES_PASSWORD: xsample
+      POSTGRES_DB: xsample
     ports:
       - '5432:5432'
 
   xsample:
     depends_on:
       - db
-    image: wordpress:latest
+    image: mcgaerty/xsample:1.0
     ports:
-      - "8000:80"
+      - "8080:8080"
+      - "4848:4848"
     restart: always
     environment:
-      WORDPRESS_DB_HOST: db:3306
-      WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: wordpress
-      WORDPRESS_DB_NAME: wordpress
+      DB_SERVERNAME: db
+      DB_USER: xsample
+      DB_PASSWORD: xsample
+      DB_DATABASENAME: xsample
+
 volumes:
     db_data: {}
