@@ -19,12 +19,12 @@
  */
 package de.unistuttgart.xsample.pages.shared;
 
-import static de.unistuttgart.xsample.util.XSampleUtils.checkState;
 import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -39,6 +39,12 @@ import de.unistuttgart.xsample.dv.XmpResource;
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.mf.ManifestFile;
 import de.unistuttgart.xsample.mf.XsampleManifest;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 /**
  * Input information regarding the excerpt to be created.
@@ -62,20 +68,74 @@ public class XsampleExcerptData implements Serializable {
 	/** The root manifest for the current workflow. */
 	private XsampleManifest manifest;
 	/** Current excerpt, can be from multiple files */
-	private List<ExcerptEntry> excerpt = new ArrayList<>();	
+	private List<ExcerptEntry> excerpt = new ObjectArrayList<>();	
+	
+	/** Maps corpus ids to the determined segment counts that should be used for them */
+	private Object2LongMap<String> segmentsByCorpus = new Object2LongOpenHashMap<>();
 	
 	/** Accumulated segment count from parts or a monolithic corpus. */
 	private long segments = -1;
 	
+	/** Allowed maximum total number of segments to be given out */
+	private long limit = -1;
+	
+	/** 0-based begin index on segments to create static excerpt */
 	private long staticExcerptBegin = 0;
+	/** 0-based end index on segments to create static excerpt */
 	private long staticExcerptEnd = 10;
-	private boolean staticExcerptFixed = false;
 	private boolean onlySmallFiles = false;
 	
 	/** Switch to prevent redundant calls to verification chains */
 	private boolean verified = false;
 	
-	private String selectedCorpus;
+	// CACHES
+
+	
+	private transient Map<String, Corpus> id2Corpus = new Object2ObjectOpenHashMap<>();
+	private transient Map<String, ManifestFile> label2Manifest = new Object2ObjectOpenHashMap<>();
+	private transient Map<String, ManifestFile> corpusId2Manifest = new Object2ObjectOpenHashMap<>();
+	private transient Long2ObjectMap<Corpus> fileId2Corpus = new Long2ObjectOpenHashMap<>();
+	
+	public XsampleExcerptData() {
+		segmentsByCorpus.defaultReturnValue(-1);
+	}
+	
+	private void invalidateCaches() {
+		id2Corpus.clear();
+		label2Manifest.clear();
+		fileId2Corpus.clear();
+	}
+	
+	private void cacheCorpus(Corpus corpus) {
+		if(id2Corpus.putIfAbsent(corpus.getId(), corpus)!=null)
+			throw new IllegalStateException("Duplicate corpus id: "+corpus.getId());
+		
+		if(corpus.getPrimaryData()!=null) {
+			fileId2Corpus.put(corpus.getPrimaryData().getId().longValue(), corpus);
+		}
+		
+		corpus.getParts().forEach(this::cacheCorpus);
+	}
+	
+	private void cacheManifests() {
+		for(ManifestFile mf : manifest.getManifests()) {
+			if(label2Manifest.putIfAbsent(mf.getLabel(), mf)!=null)
+				throw new IllegalStateException("Duplicate manifest label: "+mf.getLabel());
+			if(corpusId2Manifest.putIfAbsent(mf.getCorpusId(), mf)!=null)
+				throw new IllegalStateException("Concurrent manifests for corpus: "+mf.getCorpusId());
+		}
+	}
+
+	private void validateCaches() {
+		cacheCorpus(manifest.getCorpus());
+		cacheManifests();
+	}
+	
+	private void maybeValidateCaches() {
+		if(manifest!=null && id2Corpus.isEmpty()) {
+			validateCaches();
+		}
+	}
 	
 	public XmpDataverse getServer() { return server; }
 	public void setServer(XmpDataverse server) { this.server = server; }
@@ -84,20 +144,25 @@ public class XsampleExcerptData implements Serializable {
 	public void setDataverseUser(XmpDataverseUser dataverseUser) { this.dataverseUser = dataverseUser; }
 	
 	public XsampleManifest getManifest() { return manifest; }
-	public void setManifest(XsampleManifest manifest) { this.manifest = manifest; }
-	
+	public void setManifest(XsampleManifest manifest) { 
+		this.manifest = manifest;
+		invalidateCaches();
+	}
+
+	/** 0-based begin index on segments to create static excerpt */
 	public long getStaticExcerptBegin() { return staticExcerptBegin; }
 	public void setStaticExcerptBegin(long staticExcerptBegin) { this.staticExcerptBegin = staticExcerptBegin; }
-	
+
+	/** 0-based end index on segments to create static excerpt */
 	public long getStaticExcerptEnd() { return staticExcerptEnd; }
 	public void setStaticExcerptEnd(long staticExcerptEnd) { this.staticExcerptEnd = staticExcerptEnd; }
-	
-	public boolean isStaticExcerptFixed() { return staticExcerptFixed; }
-	public void setStaticExcerptFixed(boolean staticExcerptFixed) { this.staticExcerptFixed = staticExcerptFixed; }
 	
 	public long getSegments() { return segments; }
 	public void setSegments(long segments) { this.segments = segments; }
 	
+	public long getLimit() { return limit; } 
+	public void setLimit(long limit) { this.limit = limit; }
+
 	public boolean isVerified() { return verified; }
 	public void setVerified(boolean verified) { this.verified = verified; }
 	
@@ -106,46 +171,43 @@ public class XsampleExcerptData implements Serializable {
 	
 	public boolean isOnlySmallFiles() { return onlySmallFiles; }
 	public void setOnlySmallFiles(boolean onlySmallFiles) { this.onlySmallFiles = onlySmallFiles; }
-
-	public String getSelectedCorpus() { return selectedCorpus; }
-	public void setSelectedCorpus(String selectedCorpus) { this.selectedCorpus = selectedCorpus; }
+	
+	public void registerSegments(String corpusId, long segments) {
+		segmentsByCorpus.put(requireNonNull(corpusId), segments);
+	}
+	
+	public long getSegments(Corpus part) {
+		long segments = segmentsByCorpus.getLong(requireNonNull(part).getId());
+		if(segments==-1)
+			throw new IllegalArgumentException("Unknown corpus id: "+part.getId());
+		return segments;
+	}
 	
 	// Utility
-	public Corpus getStaticExcerptCorpus() {
-		checkState("No manifest available", manifest!=null);
-		return Optional.of(manifest)
-				.map(XsampleManifest::getStaticExcerptCorpus)
-				.map(this::findCorpus)
-				.orElse(manifest.getCorpora().get(0));
+	
+	public boolean isMultiPartCorpus() {
+		return !Optional.ofNullable(manifest)
+				.map(XsampleManifest::getCorpus)
+				.map(Corpus::getParts)
+				.orElse(Collections.emptyList())
+				.isEmpty();
 	}
 	
 	/** Find top-level corpus in manifest (if present) with given id */
 	public Corpus findCorpus(String corpusId) {
 		requireNonNull(corpusId);
-		if(manifest!=null) {
-			for(Corpus corpus : manifest.getCorpora()) {
-				if(corpusId.equals(corpus.getId())) {
-					return corpus;
-				}
-			}
-		}
-		return null;
+		maybeValidateCaches();
+		return id2Corpus.get(corpusId);
 	}
 	/** Find top-level corpus in manifest (if present) pointing to given resource */
 	public Corpus findCorpus(XmpResource resource) {
 		requireNonNull(resource);
-		if(manifest!=null) {
-			final Long fileId = resource.getFile();
-			for(Corpus corpus : manifest.getCorpora()) {
-				if(fileId.equals(corpus.getPrimaryData().getId())) {
-					return corpus;
-				}
-			}
-		}
-		return null;
+		maybeValidateCaches();
+		return fileId2Corpus.get(resource.getFile().longValue());
 	}
 	/** Find our entry (if present) matching given id */
 	public ExcerptEntry findEntry(String corpusId) {
+		//TODO cache?!
 		requireNonNull(corpusId);
 		for(ExcerptEntry entry : excerpt) {
 			if(corpusId.equals(entry.getCorpusId())) {
@@ -157,18 +219,14 @@ public class XsampleExcerptData implements Serializable {
 	/** Find manifest file with given label */
 	public ManifestFile findManifest(String label) {
 		requireNonNull(label);
-		if(manifest!=null) {
-			for(ManifestFile manifestFile : manifest.getManifests()) {
-				if(label.equals(manifestFile.getLabel())) {
-					return manifestFile;
-				}
-			}
-		}
-		return null;
+		maybeValidateCaches();
+		return label2Manifest.get(label);
 	}
-	
-	public boolean hasCorpus(Predicate<? super Corpus> pred) {
-		return manifest!=null && manifest.getCorpora().stream().anyMatch(pred);
+	/** Find manifest file for given corpus */
+	public ManifestFile findManifest(Corpus corpus) {
+		requireNonNull(corpus);
+		maybeValidateCaches();
+		return corpusId2Manifest.get(corpus.getId());
 	}
 	
 	public boolean hasEntry(Predicate<? super ExcerptEntry> pred) {

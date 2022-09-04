@@ -30,7 +30,6 @@ import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.pages.shared.XsampleExcerptData;
 import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
 import de.unistuttgart.xsample.pages.shared.XsampleWorkflow;
@@ -51,11 +50,11 @@ public class XsamplePage {
 	@Inject
 	protected XsampleExcerptData excerptData;
 	
-	protected void initQuota(ExcerptUtilityData data) {
+	protected void initGlobalQuota(ExcerptUtilityData data) {
 		final double limit = services.getDoubleSetting(Key.ExcerptLimit);
-		final long range = excerptData.getSegments();
-		data.setRange(range);
-		data.setLimit((long) Math.floor(range * limit));
+		final long segments = excerptData.getSegments();
+		data.setGlobalSegments(segments);
+		data.setGlobalLimit((long) Math.floor(segments * limit));
 		
 		final List<XmpFragment> totalQuota = new ArrayList<>();
 		for(ExcerptEntry entry : excerptData.getExcerpt()) {
@@ -66,8 +65,12 @@ public class XsamplePage {
 		}
 		
 		if(!totalQuota.isEmpty()) {
-			data.setQuota(XmpFragment.encodeAll(totalQuota));
+			data.setGlobalQuota(XmpFragment.encodeAll(totalQuota));
 		}
+	}
+	
+	protected boolean isSmallFile(long size) {
+		return size<=services.getLongSetting(Key.SmallFileLimit);
 	}
 	
 	public final void back() {
@@ -89,13 +92,5 @@ public class XsamplePage {
 		if(workflow.forward(page)) {
 			updatePage();
 		}
-	}
-	
-	public boolean getIsMultiPartCorpus() { 
-		if(excerptData.getManifest()==null) {
-			return false;
-		}
-		List<Corpus> corpora = excerptData.getManifest().getCorpora();
-		return corpora.size()>1 || corpora.get(0).getParts().size()>1;
 	}
 }

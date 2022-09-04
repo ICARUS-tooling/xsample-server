@@ -27,7 +27,7 @@ import com.google.gson.annotations.SerializedName;
  */
 public enum MappingType {
 
-	/** Tab-separated tabular format with usually 3 columns */
+	/** Tab-separated tabular format with usually 3 columns, eg. sentence, begin_page, end_page */
 	@SerializedName(XsampleManifest.NS+"tabular")
 	TABULAR,
 	;

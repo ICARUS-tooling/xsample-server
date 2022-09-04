@@ -19,12 +19,18 @@
  */
 package de.unistuttgart.xsample.mf;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * @author Markus Gärtner
  *
  */
 public enum StandardMappingFormats {
-	SOURCE_TARGET_SPAN,
+	/** Specifies a 3-column format, where the source index in the first column
+	 * maps to a span in the target space, denoted by 2 columns containing begin 
+	 * and end indices, respectively. */
+	@SerializedName(XsampleManifest.NS+"source-to-target-span")
+	SOURCE_TO_TARGET_SPAN,
 	;
 	
 }

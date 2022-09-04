@@ -24,7 +24,7 @@ import static de.unistuttgart.xsample.util.XSampleUtils.checkState;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
 import java.util.List;
 import java.util.Properties;
 
@@ -59,22 +59,16 @@ public class Icarus1Wrapper {
 		options = new Options(settings);
 	}
 
-	public Result evaluate(InputStream in) throws QueryException {
-		requireNonNull(in);
+	public Result evaluate(Reader reader) throws QueryException {
+		requireNonNull(reader);
 		checkState("Query not initialized", query!=null);
 		
-		final Location location = new Location.Base() {
-			@Override
-			public InputStream openInputStream() throws IOException { return in; }
-		};
-		final CONLL09SentenceDataReader reader = new CONLL09SentenceDataReader(true);
+		final CONLL09SentenceDataReader conllReader = new CONLL09SentenceDataReader(true);
 		final List<SentenceData> corpus;
 		try {
-			corpus = reader.readAll(location, null);
+			corpus = conllReader.readAll(reader, null);
 		} catch (IOException e) {
 			throw new QueryException("Failed to load corpus file", ErrorCode.IO_ERROR, e);
-		} catch (UnsupportedLocationException e) {
-			throw new QueryException("Failed to load corpus file (location issue)", ErrorCode.IO_ERROR, e);
 		} catch (UnsupportedFormatException e) {
 			throw new QueryException("Failed to parse corpus data", ErrorCode.UNSUPPORTED_FORMAT, e);
 		}

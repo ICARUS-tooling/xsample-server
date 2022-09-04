@@ -48,6 +48,10 @@ public class LegalNote implements Serializable, SelfValidating {
 	@Expose
 	@SerializedName(XsampleManifest.NS+"publisher")
 	private String publisher;
+
+	@Expose
+	@SerializedName(XsampleManifest.NS+"source")
+	private String source;
 	
 	@Expose
 	@SerializedName(XsampleManifest.NS+"year")
@@ -56,6 +60,7 @@ public class LegalNote implements Serializable, SelfValidating {
 	public String getAuthor() { return author; }
 	public String getTitle() { return title; }
 	public String getPublisher() { return publisher; }
+	public String getSource() { return source; }
 	public int getYear() { return year; }
 	
 	@Override
@@ -93,6 +98,13 @@ public class LegalNote implements Serializable, SelfValidating {
 			requireNonNull(publisher);
 			checkState("Publisher already set", instance.publisher==null);
 			instance.publisher = publisher;
+			return this;
+		}
+		
+		public LegalNote.Builder source(String source) {
+			requireNonNull(source);
+			checkState("Source already set", instance.source==null);
+			instance.source = source;
 			return this;
 		}
 		

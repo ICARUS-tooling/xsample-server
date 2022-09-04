@@ -722,7 +722,7 @@ public class Matcher implements Cloneable, Comparable<Matcher> {
 		}
 
 		/**
-		 * @see de.ims.icarus.search_tools.tree.Matcher.IndexIterator#getRange()
+		 * @see de.ims.icarus.search_tools.tree.Matcher.IndexIterator#getSegments()
 		 */
 		@Override
 		public int getRange() {
@@ -766,7 +766,7 @@ public class Matcher implements Cloneable, Comparable<Matcher> {
 		}
 
 		/**
-		 * @see de.ims.icarus.search_tools.tree.Matcher.IndexIterator#getRange()
+		 * @see de.ims.icarus.search_tools.tree.Matcher.IndexIterator#getSegments()
 		 */
 		@Override
 		public int getRange() {

@@ -58,11 +58,12 @@ public abstract class DataverseFile implements Serializable, SelfValidating {
 
 	/** 
 	 * Optional label for identification within the XSample manifest. 
-	 * Required if the resource is referenced from another section inthe
+	 * Required if the resource is referenced from another section in the
 	 * manifest!
 	 */
 	@Expose
 	@Nullable
+	@SerializedName(XsampleManifest.NS+"label")
 	private String label;
 
 //	@Nullable

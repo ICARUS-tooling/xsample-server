@@ -20,9 +20,13 @@
 package de.unistuttgart.xsample.pages.slice;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
+
+import de.unistuttgart.xsample.mf.Corpus;
 
 /**
  * @author Markus Gärtner
@@ -34,15 +38,13 @@ public class SliceView implements Serializable {
 	
 	private static final long serialVersionUID = 5111464214456376898L;
 	
+	private List<Corpus> selectedParts = Collections.emptyList();
 	private String selectedCorpus;
 
-	public String getSelectedCorpus() {
-		return selectedCorpus;
-	}
-
-	public void setSelectedCorpus(String selectedCorpus) {
-		this.selectedCorpus = selectedCorpus;
-	}
-
+	public List<Corpus> getSelectedParts() { return selectedParts; }
+	public void setSelectedParts(List<Corpus> selectedParts) { this.selectedParts = selectedParts; }
+	
+	public String getSelectedCorpus() { return selectedCorpus; }
+	public void setSelectedCorpus(String selectedCorpus) { this.selectedCorpus = selectedCorpus; }
 	
 }

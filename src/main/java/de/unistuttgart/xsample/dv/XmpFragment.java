@@ -132,9 +132,11 @@ public class XmpFragment implements Comparable<XmpFragment> {
 	@Column
 	private long endIndex;
 	
+	/** Return 1-based begin index */
 	public long getBeginIndex() { return beginIndex; }
 	public void setBeginIndex(long from) { this.beginIndex = from; }
-	
+
+	/** Return 1-based end index */
 	public long getEndIndex() { return endIndex; }
 	public void setEndIndex(long to) { this.endIndex = to; }
 

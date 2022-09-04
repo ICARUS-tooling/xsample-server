@@ -70,12 +70,14 @@ public class XsampleApp implements Serializable {
 		
 		if(DebugUtils.isActive()) {
 			
-			logger.info("Performing debug initialization with default dataverse and resource");
+			logger.info("Performing debug initialization with default dataverse");
 
 			DebugUtils.makeDataverse(services);
 			
-			DebugUtils.makeQuota(services);
+//			DebugUtils.makeQuota(services);
 		}
+		
+		logger.info("XSample server initialized");
 	}
 	
 	public String getProperty(String key) {

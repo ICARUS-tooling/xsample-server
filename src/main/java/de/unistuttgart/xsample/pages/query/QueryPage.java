@@ -36,6 +36,7 @@ import org.omnifaces.util.Messages;
 
 import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.mf.ManifestFile;
+import de.unistuttgart.xsample.mf.ManifestType;
 import de.unistuttgart.xsample.mf.XsampleManifest;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.download.DownloadPage;
@@ -74,13 +75,14 @@ public class QueryPage extends XsamplePage {
 	QueryEngine queryEngine;
 
 	public void init() {
-		initQuota(queryData);
+		initGlobalQuota(queryData);
 		
 		final XsampleManifest manifest = excerptData.getManifest();
 		
 		queryData.setSelectedManifestId(Optional.of(manifest.getManifests())
 				.map(l -> l.isEmpty() ? null : l.get(0))
-				.map(ManifestFile::getLabel)
+				.map(ManifestFile::getManifestType)
+				.map(ManifestType::name)
 				.orElse(NONE));
 		
 		//TODO further initialize query data

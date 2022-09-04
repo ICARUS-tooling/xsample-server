@@ -21,17 +21,25 @@ package de.unistuttgart.xsample.pages.slice;
 
 import static de.unistuttgart.xsample.util.XSampleUtils._long;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.enterprise.context.RequestScoped;
+import javax.faces.event.AjaxBehaviorEvent;
+import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.omnifaces.util.Messages;
 
+import de.unistuttgart.xsample.XsampleServices.Key;
+import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.download.DownloadPage;
 import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
@@ -57,63 +65,110 @@ public class SlicePage extends XsamplePage {
 	
 	@Inject
 	SliceView view;
-	
-	private ExcerptEntry currentEntry() {
-		String corpusId = view.getSelectedCorpus();
-		return corpusId==null ? null : excerptData.findEntry(corpusId);
+		
+	private Stream<ExcerptEntry> currentEntries() {
+		return view.getSelectedParts()
+				.stream()
+				.map(Corpus::getId)
+				.map(excerptData::findEntry);
 	}
 	
 	public void init() {
-		initQuota(sliceData);
+		initGlobalQuota(sliceData);
 		sliceData.setBegin(1);
 		sliceData.setEnd(1);
-		assert excerptData.getSelectedCorpus()!=null : "no corpus selected";
-		view.setSelectedCorpus(excerptData.getSelectedCorpus());
+		
+		sliceData.setGlobalLimit(excerptData.getSegments());
+		sliceData.setGlobalLimit(getQuotaSize());
+		
+		view.setSelectedParts(excerptData.getManifest().getAllParts());
+		view.setSelectedCorpus(view.getSelectedParts().get(0).getId());
+		
+		refreshLocalQuota();
+	}
+
+	public void refreshLocalQuota() {
+		final String corpusId = view.getSelectedCorpus();
+		final Corpus corpus = excerptData.findCorpus(corpusId);
+		final double limit = services.getDoubleSetting(Key.ExcerptLimit);
+		final long segments = excerptData.getSegments(corpus);
+		sliceData.setSegments(segments);
+		sliceData.setLimit((long) Math.floor(segments * limit));
+		
+		final List<XmpFragment> quota = new ArrayList<>();
+		ExcerptEntry entry = excerptData.findEntry(corpusId);
+		if(!entry.getQuota().isEmpty()) {
+			quota.addAll(entry.getQuota().getFragments());
+		}
+		
+		if(!quota.isEmpty()) {
+			sliceData.setQuota(XmpFragment.encodeAll(quota));
+		}
 	}
 	
 	@Override
 	protected void rollBack() {
-		currentEntry().clear();
+		currentEntries().forEach(ExcerptEntry::clear);
 	}
 
 	/** Callback for button to continue workflow */
 	public void next() {
-		final ExcerptEntry entry = currentEntry();
-		final List<XmpFragment> fragments = Arrays.asList(XmpFragment.of(
-				sliceData.getBegin(), sliceData.getEnd()));
-		final List<XmpFragment> quota = entry.getQuota().getFragments();
-		
-		/* The following issue should never occur, since we do the same
-		 * validation on the client side to enable/disable the button.
-		 * We need this additional sanity check to defend against bugs 
-		 * or tampering with the JS code on the client side!
-		 */
-		long usedUpSlots = XSampleUtils.combinedSize(fragments, quota);
-		if(usedUpSlots>entry.getLimit()) {
-			logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
-					_long(entry.getLimit()), entry.getResource(), excerptData.getServer(), excerptData.getDataverseUser()));
-			Messages.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
-					_long(usedUpSlots), _long(entry.getLimit()));
-			return;
+		for(ExcerptEntry entry : currentEntries().collect(Collectors.toList())) {
+			final List<XmpFragment> fragments = Arrays.asList(XmpFragment.of(
+					sliceData.getBegin(), sliceData.getEnd()));
+			final List<XmpFragment> quota = entry.getQuota().getFragments();
+			
+			/* The following issue should never occur, since we do the same
+			 * validation on the client side to enable/disable the button.
+			 * We need this additional sanity check to defend against bugs 
+			 * or tampering with the JS code on the client side!
+			 */
+			long usedUpSlots = XSampleUtils.combinedSize(fragments, quota);
+			if(usedUpSlots>entry.getLimit()) {
+				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
+						_long(entry.getLimit()), entry.getResource(), excerptData.getServer(), excerptData.getDataverseUser()));
+				Messages.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
+						_long(usedUpSlots), _long(entry.getLimit()));
+				return;
+			}
+			
+			// Everything's fine, continue the workflow
+			entry.setFragments(fragments);
 		}
-		
-		// Everything's fine, continue the workflow
-		entry.setFragments(fragments);
 		
 		forward(DownloadPage.PAGE);
 	}
 	
+	public void corpusCompositionChanged(ValueChangeEvent vce) {
+		System.out.println(vce);
+	}
+	
+	public void corpusCompositionChanged(AjaxBehaviorEvent vce) {
+		System.out.println(vce);
+	}
+	
+	public void corpusSelectionChanged(ValueChangeEvent vce) {
+		System.out.println(vce);
+	}
+	
+	public void corpusSelectionChanged(AjaxBehaviorEvent vce) {
+		System.out.println(vce);
+	}
+	
 	public boolean isShowQuota() {
-		final ExcerptEntry entry = currentEntry();
-		return entry!=null && !entry.getQuota().isEmpty();
+		return !currentEntries()
+				.map(ExcerptEntry::getQuota)
+				.allMatch(XmpExcerpt::isEmpty);
 	}
 	
 	public long getQuotaSize() {
-		final ExcerptEntry entry = currentEntry();
-		return entry==null ? 0L : entry.getQuota().size();
+		return currentEntries()
+				.map(ExcerptEntry::getQuota)
+				.mapToLong(XmpExcerpt::size)
+				.sum();
 	}
 	
 	public double getQuotaPercent() {
-		return (double)getQuotaSize() / sliceData.getRange() * 100.0;
+		return (double)getQuotaSize() / sliceData.getSize() * 100.0;
 	}
 }

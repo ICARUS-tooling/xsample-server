@@ -22,7 +22,7 @@
 					</f:facet>
 					<div class="p-grid">
 						<div class="p-col">
-							<p:dataTable var="property" value="#{welcomeView.manifestProperties}">
+							<p:dataTable var="property" value="#{welcomePage.manifestPropertiesForOutline}">
 								<f:facet name="header">
 									<h:outputText value="#{bundle['welcome.manifestInfoHeader']}" />
 								</f:facet>
@@ -35,18 +35,17 @@
 							</p:dataTable>
 						</div>
 						<div class="p-col">
-							<div jsf:rendered="#{welcomePage.isMultiPartCorpus}">
+							<div jsf:rendered="#{xsampleExcerptData.multiPartCorpus}">
 								<h:outputText value="#{bundle['selectFile']}" />
-								<p:selectOneMenu value="#{welcomeView.selectedCorpus}" style="width:300px"
-										valueChangeListener="#{welcomePage.refreshFileProperties}"
+								<p:selectOneMenu value="#{welcomeView.selectedCorpus}" style="width:500px"
 										hideNoSelectionOption="true">
 									<f:selectItem itemLabel="#{bundle['selectFile']}" itemValue="" noSelectionOption="true"/>
-		                   	 		<f:selectItems value="#{xsampleExcerptData.fileInfos}" var="info" 
-		                   	 			itemLabel="#{info.title}" itemValue="#{info.corpusId}" />
+		                   	 		<f:selectItems value="#{xsampleExcerptData.manifest.allParts}" var="part" 
+		                   	 			itemLabel="#{XSampleUtils.trim2Size(part.title)}" itemValue="#{part.id}" />
 		                   	 		<p:ajax update="fileInfo" />
 								</p:selectOneMenu>
 							</div>
-							<p:dataTable id="fileInfo" var="property" value="#{welcomeView.fileProperties}">
+							<p:dataTable id="fileInfo" var="property" value="#{welcomePage.filePropertiesForOutline}">
 								<f:facet name="header">
 									<h:outputText value="#{bundle['welcome.fileInfoHeader']}" />
 								</f:facet>
@@ -81,6 +80,8 @@
 		        		<p:messages id="navMsg" for="navMsgs" showSummary="true" closable="true" showDetail="false" redisplay="false" />
 						<p:commandButton value="#{bundle['continue']}" 
 							action="#{welcomePage.next}" update="navMsg" />
+						<p:commandButton rendered="#{xsampleSession.debug}" value="#{bundle['welcome.resetQuota']}" 
+							action="#{welcomePage.resetQuota}" render="@all" />
 					</f:facet>
 				</p:panel>
 			</p:outputPanel>

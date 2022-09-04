@@ -16,6 +16,8 @@
  */
 package de.unistuttgart.xsample.qe.icarus1.match;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._int;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -289,7 +291,7 @@ public class QueryParser {
 		String edgeNamePattern = options.get(EDGE_NAME_PATTERN_OPTION, DEFAULT_EDGE_NAME_PATTERN);
 		int edgeIndex = 0;
 		for(SearchEdge edge : edges) {
-			String id = String.format(edgeNamePattern, edgeIndex);
+			String id = String.format(edgeNamePattern, _int(edgeIndex));
 			if(idMap.containsKey(id))
 				throw new ParseException("Duplicate edge id: "+id, index); //$NON-NLS-1$
 
@@ -308,7 +310,7 @@ public class QueryParser {
 
 			// Generate and set id
 			String id;
-			while(idMap.containsKey((id=String.format(namePattern, nodeIndex)))) {
+			while(idMap.containsKey((id=String.format(namePattern, _int(nodeIndex))))) {
 				nodeIndex++;
 			}
 			idMap.put(id, node);
@@ -417,7 +419,7 @@ public class QueryParser {
 			for(int i=0; i<s.length(); i++) {
 				if(Character.isDigit(s.charAt(i))) {
 					SearchOperator operator = SearchOperator.getOperator(s.substring(0, i));
-					Integer value = Integer.parseInt(s.substring(i));
+					Integer value = Integer.getInteger(s.substring(i));
 
 					return new SearchConstraint(LanguageConstants.DISTANCE_KEY, value, operator);
 				}
@@ -513,9 +515,8 @@ public class QueryParser {
 	protected String parseText() throws ParseException {
 		if(current()==QUOTATIONMARK || current()==SINGLE_QUOTATIONMARK) {
 			return parseQuotedText();
-		} else {
-			return parseUnquotedText();
 		}
+		return parseUnquotedText();
 	}
 
 	protected String parseId() throws ParseException {
@@ -639,7 +640,7 @@ public class QueryParser {
 		// Process token
 		String fragment = identifier.getToken().toLowerCase();
 		String token = fragment;
-		if(options.get(EXPAND_TOKENS_OPTION, true) && context!=null) {
+		if(options.get(EXPAND_TOKENS_OPTION, Boolean.TRUE).booleanValue() && context!=null) {
 			token = context.completeToken(fragment);
 		}
 		if(token==null || (context!=null && !context.isRegistered(token)))
@@ -660,7 +661,8 @@ public class QueryParser {
 		skipWS();
 
 		// Parse value
-		Object value = parseText();
+		Object value = parseValue(operator.isSupportNumerical());
+//		Object value = parseText();
 
 		if(context!=null) {
 			ConstraintFactory factory = context.getFactory(token);
@@ -668,6 +670,57 @@ public class QueryParser {
 		}
 
 		nodeStack.pushConstraint(new SearchConstraint(token, value, operator, specifier));
+	}
+	
+	private static boolean isNumberBegin(char c) {
+		return c=='+' || c=='-' || Character.isDigit(c);
+	}
+	
+	private static boolean isNumberFragment(char c) {
+		return c=='.' || Character.isDigit(c);
+	}
+	
+	protected Object parseValue(boolean isNumberAllowed) throws ParseException {
+		if(isNumberAllowed && isNumberBegin(current())) {
+			buffer.setLength(0);
+
+			while(!isEOS()) {
+				char c = current();
+
+				if(isNumberFragment(c)) {
+					buffer.append(c);
+				} else {
+					break;
+				}
+
+				if(!hasNext()) {
+					break;
+				}
+
+				next();
+			}
+
+			if(buffer.length()==0)
+				throw new ParseException(errorMessage(
+						"Unexpected character at index "+index+" - expected alpha-numeric character [a-zA-Z0-9] or part of a floating point number"), index); //$NON-NLS-1$ //$NON-NLS-2$
+
+			String value = buffer.toString();
+			try {
+				return Double.valueOf(value);
+			} catch(NumberFormatException e) {
+				// ignore
+			}
+			try {
+				return Integer.valueOf(value);
+			} catch(NumberFormatException e) {
+				// ignore
+			}
+			
+			// Not a valid number, treat it as a regular string
+			return value;
+		}
+		
+		return parseText();
 	}
 
 	protected void parseProperties() throws ParseException {

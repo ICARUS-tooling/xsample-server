@@ -54,10 +54,6 @@ public class XmpFileInfo {
 	/** Number of segments that can be extracted. */
 	@Column
 	private long segments = -1;
-	
-	/** Flag to indicate that the file is too small for excerpt generation */
-	@Column
-	private boolean smallFile = false;
 
 	@Column
 	private SourceType sourceType;
@@ -76,10 +72,7 @@ public class XmpFileInfo {
 	}
 	public long getSegments() { return segments; }
 	public void setSegments(long segments) { this.segments = segments; }
-	
-	public boolean isSmallFile() { return smallFile; }
-	public void setSmallFile(boolean smallFile) { this.smallFile = smallFile; }
-	
+		
 	public SourceType getSourceType() {
 		return sourceType;
 	}

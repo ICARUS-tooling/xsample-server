@@ -114,7 +114,7 @@ public class ManifestGenerator {
 						.manifestType(ManifestType.ICARUS_LEGACY)
 						.id(-1)
 						.mappingFile(MappingFile.builder()
-								.format(StandardMappingFormats.SOURCE_TARGET_SPAN.toString())
+								.format(StandardMappingFormats.SOURCE_TO_TARGET_SPAN.toString())
 								.mappingType(MappingType.TABULAR)
 								.id(-1)
 								.build())

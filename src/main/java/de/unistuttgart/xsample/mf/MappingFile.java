@@ -72,6 +72,7 @@ public class MappingFile extends DataverseFile {
 	@Override
 	public void validate() {
 		super.validate();
+		checkState("Missing 'label' field", getLabel()!=null);
 		checkState("Missing 'format' field", format!=null);
 		checkState("Missing 'mappingType' field", mappingType!=null);
 	}

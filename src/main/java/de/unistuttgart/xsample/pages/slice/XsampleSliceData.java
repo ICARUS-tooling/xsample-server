@@ -38,6 +38,13 @@ public class XsampleSliceData extends ExcerptUtilityData {
 	private long begin = 1;
 	/** End of slice. 1-based. */
 	private long end = 1;
+
+	/** Total number of segments available */
+	private long segments = 1;
+	/** Upper limit of allowed segments to be published */
+	private long limit = 1;
+	/** Encoded used up quota */
+	private String quota = "";
 	
 	public long getBegin() { return begin; }
 	public void setBegin(long begin) { this.begin = begin; }
@@ -45,10 +52,19 @@ public class XsampleSliceData extends ExcerptUtilityData {
 	public long getEnd() { return end; }
 	public void setEnd(long end) { this.end = end; }
 	
+	public long getSegments() { return segments; }
+	public void setSegments(long range) { this.segments = range; }
+	
+	public long getLimit() { return limit; }
+	public void setLimit(long limit) { this.limit = limit; }
+	
+	public String getQuota() { return quota; }
+	public void setQuota(String quota) { this.quota = quota; }
+	
 	public long getSize() { return end-begin+1; }
 	
 	/** Size of current slice in percent. Including quota */
 	public double getPercent() {
-		return (double)getSize() / getRange() * 100.0;
+		return (double)getSize() / segments * 100.0;
 	}
 }

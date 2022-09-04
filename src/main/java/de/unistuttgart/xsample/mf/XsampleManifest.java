@@ -29,7 +29,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,7 +59,7 @@ public class XsampleManifest implements Serializable, SelfValidating {
 		}
 	}
 	
-	/** Napespace prefix for XSample manifest elements. */
+	/** Namespace prefix for XSample manifest elements. */
 	static final String NS = "xmp:";
 	/** Type identifier (from JSON-LD). */
 	static final String TYPE = "@type";
@@ -85,8 +84,8 @@ public class XsampleManifest implements Serializable, SelfValidating {
 	private Map<String, String> metadata;
 	
 	@Expose
-	@SerializedName(NS+"corpora")
-	private List<Corpus> corpora = new ArrayList<>();
+	@SerializedName(NS+"corpus")
+	private Corpus corpus;
 	
 	@Expose
 	@Nullable
@@ -109,9 +108,9 @@ public class XsampleManifest implements Serializable, SelfValidating {
 	public Map<String, String> getMetadata() {
 		return metadata==null ? Collections.emptyMap() : new HashMap<>(metadata);
 	}
-	public List<Corpus> getCorpora() { return corpora; }
+	public Corpus getCorpus() { return corpus; }
 	public String getStaticExcerptCorpus() { return staticExcerptCorpus; }
-	/** Optional (external) manifests sued by query engines and other utility modules. */
+	/** Optional (external) manifests used by query engines and other utility modules. */
 	public List<ManifestFile> getManifests() {
 		return manifests==null ? Collections.emptyList() : new ArrayList<>(manifests);
 	}
@@ -121,32 +120,21 @@ public class XsampleManifest implements Serializable, SelfValidating {
 	public boolean hasMetadata() { return metadata!=null && !metadata.isEmpty(); }
 	public boolean hasStaticExcerpt() { return staticExcerpt!=null; }
 	
-	/**
-	 * Returns a flat view on the parts that make up the corpus associated with
-	 * this manifest. The map will use either the parent corpus as key for an
-	 * entry or this manifest as indicator for the root corpus.
-	 * @return
-	 */
-	public Map<Object, Corpus> getAllParts() {
-		checkState("No corpus assigned", corpora!=null);
-		Map<Object, Corpus> map = new LinkedHashMap<>();
-		for(Corpus corpus : corpora) {
-			collectParts(map, this, corpus);
-		}
-		return map;
-	}
-	
-	private void collectParts(Map<Object, Corpus> map, Object parent, Corpus corpus) {
-		map.put(parent, corpus);
-		corpus.forEachPart(c -> collectParts(map, corpus, c));
-	}
-	
 	public String toJSON() { return gson.toJson(this); }
+	
+	/** Returns a flat collection of corpus parts. Does not recursively collect deeply nested parts! */
+	public List<Corpus> getAllParts() {
+		List<Corpus> parts = corpus.getParts();
+		if(parts.isEmpty()) {
+			parts = Collections.singletonList(corpus);
+		}
+		return parts;
+	}
 
 	@Override
 	public void validate() {
 		checkState("Missing 'description' field", description!=null);
-		SelfValidating.validateNested(corpora, "corpora");
+		SelfValidating.validateNested(corpus, "corpus");
 		SelfValidating.validateOptionalNested(staticExcerpt);
 		SelfValidating.validateOptionalNested(manifests);
 	}
@@ -195,16 +183,10 @@ public class XsampleManifest implements Serializable, SelfValidating {
 			return this;
 		}
 		
-		public Builder corpora(List<Corpus> corpora) {
-			requireNonNull(corpora);
-			instance.corpora.clear();
-			instance.corpora.addAll(corpora);
-			return this;
-		}
-		
 		public Builder corpus(Corpus corpus) {
 			requireNonNull(corpus);
-			checkState("Corpus already added", instance.corpora.add(corpus));
+			checkState("Corpus already added", instance.corpus==null);
+			instance.corpus = corpus;
 			return this;
 		}
 		

@@ -17,6 +17,7 @@
 package de.unistuttgart.xsample.qe.icarus1;
 
 import java.io.IOException;
+import java.io.Reader;
 
 
 /**
@@ -40,8 +41,7 @@ public class CONLL09SentenceDataReader implements SentenceDataReader {
 	 *      de.ims.icarus.util.Options)
 	 */
 	@Override 
-	public void init(Location location, Options options) throws IOException,
-			UnsupportedLocationException {
+	public void init(Reader reader, Options options) throws IOException {
 
 		if (options == null) {
 			options = Options.emptyOptions;
@@ -51,7 +51,7 @@ public class CONLL09SentenceDataReader implements SentenceDataReader {
 
 		buffer = new CharTableBuffer();
 
-		buffer.startReading(IOUtil.getReader(location.openInputStream(), IOUtil.getCharset(options)));
+		buffer.startReading(reader);
 	}
 
 	/**

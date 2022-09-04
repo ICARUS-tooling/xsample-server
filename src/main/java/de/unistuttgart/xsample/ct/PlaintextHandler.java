@@ -63,7 +63,7 @@ public class PlaintextHandler implements ExcerptHandler {
 	 * @see de.unistuttgart.xsample.ct.ExcerptHandler#excerpt(de.unistuttgart.xsample.dv.XmpFragment[])
 	 */
 	@Override
-	public void excerpt(XmpFileInfo file, Charset encoding, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
+	public void excerpt(Charset encoding, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
 		// TODO Auto-generated method stub
 	}
 

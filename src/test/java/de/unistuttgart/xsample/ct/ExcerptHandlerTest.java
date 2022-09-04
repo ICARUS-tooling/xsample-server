@@ -43,7 +43,6 @@ import org.junit.jupiter.api.TestFactory;
 import de.unistuttgart.xsample.XSampleTestUtils;
 import de.unistuttgart.xsample.dv.XmpFileInfo;
 import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.mf.SourceType;
 import it.unimi.dsi.fastutil.io.FastByteArrayInputStream;
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream;
 
@@ -185,17 +184,13 @@ interface ExcerptHandlerTest<H extends ExcerptHandler> {
 							final int to = params[2];
 							final Charset encoding = defaultEncoding();
 							
-							XmpFileInfo fileInfo = new XmpFileInfo();
-							fileInfo.setSegments(size);
-							fileInfo.setSourceType(SourceType.forMimeType(contentType));
-							
 							H handler = create();
 							byte[] data = input(size, contentType, encoding);
 							InputStream in = new FastByteArrayInputStream(data);
 							
 							List<XmpFragment> fragments = Arrays.asList(XmpFragment.of(from, to));
 							FastByteArrayOutputStream out = new FastByteArrayOutputStream();
-							handler.excerpt(fileInfo, encoding, in, fragments, out);
+							handler.excerpt(encoding, in, fragments, out);
 							
 							in = new FastByteArrayInputStream(out.array, 0, out.length);
 							assertExcerpt(data, in, XSampleTestUtils.asIndices(fragments));

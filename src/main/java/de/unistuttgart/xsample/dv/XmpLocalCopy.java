@@ -172,4 +172,13 @@ public class XmpLocalCopy {
 		this.encoding = encoding;
 	}
 	
+	// UTILITY
+	
+	/** Increases the expiry timer by 2 hours if the cached file were to expire within the next hour. */
+	public void prolongExpiry() {
+		LocalDateTime expiry = getExpiresAt();
+		if(expiry.isBefore(LocalDateTime.now().plusHours(1))) {
+			setExpiresAt(expiry.plusHours(2));
+		}
+	}
 }

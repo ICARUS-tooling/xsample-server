@@ -36,8 +36,9 @@ public abstract class SearchOperator implements Serializable {
 
 	private static final long serialVersionUID = 4318248797354043349L;
 	
-	private String symbol;
-	private String key;
+	private final  String symbol;
+	private final String key;
+	private final boolean supportNumerical;
 	
 	/**
 	 * @return the symbol
@@ -45,12 +46,20 @@ public abstract class SearchOperator implements Serializable {
 	public String getSymbol() {
 		return symbol;
 	}
+	
+	/**
+	 * @return the supportNumerical
+	 */
+	public boolean isSupportNumerical() {
+		return supportNumerical;
+	}
 
 	public abstract boolean apply(Object value, Object constraint);
 
-	private SearchOperator(String symbol, String key) {
+	private SearchOperator(String symbol, String key, boolean supportNumerical) {
 		this.symbol = symbol;
 		this.key = key;
+		this.supportNumerical = supportNumerical;
 	}
 
 	private static boolean equals0(Object value, Object constraint) {
@@ -120,20 +129,7 @@ public abstract class SearchOperator implements Serializable {
 		matcherCache.put(matcher.pattern().pattern(), matcher);
 	}
 
-	public static final SearchOperator RANGE = new SearchOperator("<>", "range") { //$NON-NLS-1$ //$NON-NLS-2$
-
-		private static final long serialVersionUID = 2640098895375772516L;
-
-		/**
-		 * @see de.ims.icarus.search_tools.SearchOperator#apply(java.lang.Object, java.lang.Object)
-		 */
-		@Override
-		public boolean apply(Object value, Object constraint) {
-			return true;
-		}
-	};
-
-	public static final SearchOperator EQUALS = new SearchOperator("=", "equals") {  //$NON-NLS-1$//$NON-NLS-2$
+	public static final SearchOperator EQUALS = new SearchOperator("=", "equals", true) {  //$NON-NLS-1$//$NON-NLS-2$
 
 		private static final long serialVersionUID = -3692306391485959449L;
 
@@ -146,7 +142,7 @@ public abstract class SearchOperator implements Serializable {
 		}
 	};
 
-	public static final SearchOperator EQUALS_NOT = new SearchOperator("!=", "equalsNot") { //$NON-NLS-1$ //$NON-NLS-2$
+	public static final SearchOperator EQUALS_NOT = new SearchOperator("!=", "equalsNot", true) { //$NON-NLS-1$ //$NON-NLS-2$
 
 		private static final long serialVersionUID = -4730832928170697565L;
 
@@ -159,7 +155,7 @@ public abstract class SearchOperator implements Serializable {
 		}
 	};
 
-	public static final SearchOperator MATCHES = new SearchOperator("~", "matches") { //$NON-NLS-1$ //$NON-NLS-2$
+	public static final SearchOperator MATCHES = new SearchOperator("~", "matches", false) { //$NON-NLS-1$ //$NON-NLS-2$
 
 		private static final long serialVersionUID = -548739311862178925L;
 
@@ -172,7 +168,7 @@ public abstract class SearchOperator implements Serializable {
 		}
 	};
 
-	public static final SearchOperator MATCHES_NOT = new SearchOperator("!~", "matchesNot") { //$NON-NLS-1$ //$NON-NLS-2$
+	public static final SearchOperator MATCHES_NOT = new SearchOperator("!~", "matchesNot", false) { //$NON-NLS-1$ //$NON-NLS-2$
 
 		private static final long serialVersionUID = -370237882408639045L;
 
@@ -185,7 +181,7 @@ public abstract class SearchOperator implements Serializable {
 		}
 	};
 
-	public static final SearchOperator CONTAINS = new SearchOperator("#", "contains") { //$NON-NLS-1$ //$NON-NLS-2$
+	public static final SearchOperator CONTAINS = new SearchOperator("#", "contains", false) { //$NON-NLS-1$ //$NON-NLS-2$
 
 		private static final long serialVersionUID = -8935758538857689576L;
 
@@ -198,7 +194,7 @@ public abstract class SearchOperator implements Serializable {
 		}
 	};
 
-	public static final SearchOperator CONTAINS_NOT = new SearchOperator("!#", "containsNot") { //$NON-NLS-1$ //$NON-NLS-2$
+	public static final SearchOperator CONTAINS_NOT = new SearchOperator("!#", "containsNot", false) { //$NON-NLS-1$ //$NON-NLS-2$
 
 		private static final long serialVersionUID = 2110261744483750112L;
 
@@ -211,7 +207,7 @@ public abstract class SearchOperator implements Serializable {
 		}
 	};
 
-	public static final SearchOperator LESS_THAN = new SearchOperator("<", "lessThan") { //$NON-NLS-1$ //$NON-NLS-2$
+	public static final SearchOperator LESS_THAN = new SearchOperator("<", "lessThan", true) { //$NON-NLS-1$ //$NON-NLS-2$
 
 		private static final long serialVersionUID = -8353909321259706543L;
 
@@ -224,7 +220,7 @@ public abstract class SearchOperator implements Serializable {
 		}
 	};
 
-	public static final SearchOperator LESS_OR_EQUAL = new SearchOperator("<=", "lessOrEqual") { //$NON-NLS-1$ //$NON-NLS-2$
+	public static final SearchOperator LESS_OR_EQUAL = new SearchOperator("<=", "lessOrEqual", true) { //$NON-NLS-1$ //$NON-NLS-2$
 
 		private static final long serialVersionUID = 6982415206383632031L;
 
@@ -237,7 +233,7 @@ public abstract class SearchOperator implements Serializable {
 		}
 	};
 
-	public static final SearchOperator GREATER_THAN = new SearchOperator(">", "greaterThan") { //$NON-NLS-1$ //$NON-NLS-2$
+	public static final SearchOperator GREATER_THAN = new SearchOperator(">", "greaterThan", true) { //$NON-NLS-1$ //$NON-NLS-2$
 
 		private static final long serialVersionUID = -3748593349088379755L;
 
@@ -250,7 +246,7 @@ public abstract class SearchOperator implements Serializable {
 		}
 	};
 
-	public static final SearchOperator GREATER_OR_EQUAL = new SearchOperator(">=", "greaterOrEqual") { //$NON-NLS-1$ //$NON-NLS-2$
+	public static final SearchOperator GREATER_OR_EQUAL = new SearchOperator(">=", "greaterOrEqual", true) { //$NON-NLS-1$ //$NON-NLS-2$
 
 		private static final long serialVersionUID = 5164052048370243973L;
 
@@ -297,15 +293,6 @@ public abstract class SearchOperator implements Serializable {
 		GREATER_OR_EQUAL,
 	};
 
-	private static final SearchOperator[] numericalOperatorsNoGrouping = {
-		EQUALS,
-		EQUALS_NOT,
-		LESS_THAN,
-		LESS_OR_EQUAL,
-		GREATER_THAN,
-		GREATER_OR_EQUAL,
-	};
-
 	public static SearchOperator[] values() {
 		return operators.clone();
 	}
@@ -321,15 +308,7 @@ public abstract class SearchOperator implements Serializable {
 	public static SearchOperator[] comparing() {
 		return comparingOperators.clone();
 	}
-
-	public static SearchOperator[] numericalNoGrouping() {
-		return numericalOperatorsNoGrouping.clone();
-	}
-
-	public static SearchOperator[] range() {
-		return new SearchOperator[]{RANGE};
-	}
-
+	
 	private static Map<String, SearchOperator> available = new LinkedHashMap<>();
 	static {
 		for (SearchOperator operator : operators) {

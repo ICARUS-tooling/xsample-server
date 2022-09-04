@@ -52,11 +52,11 @@ import de.unistuttgart.xsample.dv.XmpResource;
 @DataSourceDefinition(
 	name = "java:app/jdbc/xsample",
     className = "org.postgresql.ds.PGSimpleDataSource",
-    user = "${ENV=DB_USER}",
-    password = "${ENV=DB_PASSWORD}",
-    serverName = "${ENV=DB_SERVERNAME}",
+    user = "${ENV=DB_USER:xsample}",
+    password = "${ENV=DB_PASSWORD:xsample}",
+    serverName = "${ENV=DB_SERVERNAME:localhost}",
     portNumber = 5432,
-    databaseName = "${ENV=DB_DATABASENAME}",
+    databaseName = "${ENV=DB_DATABASENAME:xsample}",
     minPoolSize = 10,
     maxPoolSize = 50
 )

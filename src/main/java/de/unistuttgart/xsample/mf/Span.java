@@ -65,6 +65,10 @@ public class Span implements Serializable, SelfValidating {
 		checkState("Need at least 1 of 'begin' or 'end' fields", 
 				begin!=null || end!=null);
 	}
+	
+	public long length() {
+		return (begin==null || end==null || spanType!=SpanType.FIXED) ? -1 : (end.longValue()-begin.longValue()+1);
+	}
 
 	public static Span.Builder builder() { return new Builder(); }
 

@@ -108,7 +108,7 @@ public class LocalCache implements Serializable {
 	@Inject
 	XsampleApp app;
 	
-	private transient final Object lock = new Object();
+	private final Object lock = new Object();
 	
 	private String tempFolder;
 	

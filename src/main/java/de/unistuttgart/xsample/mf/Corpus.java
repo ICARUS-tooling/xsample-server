@@ -55,6 +55,11 @@ public class Corpus implements Serializable, SelfValidating {
 	@SerializedName(XsampleManifest.NS+"legalNote")
 	private LegalNote legalNote;
 
+	/** Human readable label for the corpus. Only mandatory on the top level corpus object! */
+	@Expose
+	@SerializedName(XsampleManifest.NS+"title")
+	private String title;
+
 	/** General information for corpus or subcorpus */
 	@Expose
 	@SerializedName(XsampleManifest.NS+"description")
@@ -90,9 +95,21 @@ public class Corpus implements Serializable, SelfValidating {
 	public List<Corpus> getParts() { return parts==null ? Collections.emptyList() : new ArrayList<>(parts); }
 	/** Unique identifier of this corpus within a surrounding manifest */
 	public String getId() { return id; }
+	public String getTitle() { return title; }
 	
 	// Helpers
 	public boolean hasParts() { return parts!=null && !parts.isEmpty(); }	
+	public boolean hasData() { return primaryData!=null; }	
+	
+	/** Returns {@code true} iff this corpus has subcorpora AND an assigned primary data file */
+	public boolean hasComplexHierarchy() {
+		return hasParts() && primaryData!=null;
+	}
+	
+	/** Returns {@code true} iff this corpus only contains subcorpora and no own primary data file */
+	public boolean isProxy() {
+		return hasParts() && primaryData==null;
+	}
 	
 	public void forEachPart(Consumer<? super Corpus> action) {
 		if(parts!=null) parts.forEach(action);
@@ -102,8 +119,11 @@ public class Corpus implements Serializable, SelfValidating {
 	public void validate() {
 		checkState("Missing 'description' field", description!=null);
 		checkState("Missing 'id' field", id!=null);
+		if(primaryData==null) {
+			checkState("Missing 'title' field", id!=null);
+		}
 		SelfValidating.validateNested(legalNote, "legalNote");
-		SelfValidating.validateNested(primaryData, "primaryData");
+		SelfValidating.validateNested(primaryData, "primaryData", parts!=null && !parts.isEmpty());
 		SelfValidating.validateOptionalNested(span);
 		SelfValidating.validateOptionalNested(parts);
 	}
@@ -136,6 +156,13 @@ public class Corpus implements Serializable, SelfValidating {
 			checkNotEmpty(id);
 			checkState("Id already set", instance.id==null);
 			instance.id = id;
+			return this;
+		}
+		
+		public Builder title(String title) {
+			checkNotEmpty(title);
+			checkState("Title already set", instance.title==null);
+			instance.title = title;
 			return this;
 		}
 

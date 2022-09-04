@@ -21,11 +21,10 @@ package de.unistuttgart.xsample.ct;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.Optional;
-import java.util.ServiceLoader;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.function.Supplier;
 
-import de.unistuttgart.xsample.ct.spi.DefaultExcerptHandlerFactory;
-import de.unistuttgart.xsample.ct.spi.ExcerptHandlerFactory;
 import de.unistuttgart.xsample.mf.SourceType;
 
 /**
@@ -33,22 +32,19 @@ import de.unistuttgart.xsample.mf.SourceType;
  *
  */
 public class ExcerptHandlers {
+	
+	private static final Map<SourceType, Supplier<ExcerptHandler>> handlers = new EnumMap<>(SourceType.class);
+	static {
+		handlers.put(SourceType.PDF, PdfHandler::new);
+		handlers.put(SourceType.TXT, PlaintextHandler::new);
+	}
 
-	private static final ServiceLoader<ExcerptHandlerFactory> loader = 
-			ServiceLoader.load(ExcerptHandlerFactory.class);
-	
-	private static final ExcerptHandlerFactory defaultFactory = new DefaultExcerptHandlerFactory();
-	
 	public static ExcerptHandler forSourceType(SourceType type) throws UnsupportedContentTypeException {
 		requireNonNull(type);
-		for(ExcerptHandlerFactory factory : loader) {
-			Optional<ExcerptHandler> handler = factory.create(type);
-			if(handler.isPresent()) {
-				return handler.get();
-			}
-		}
-		//TODO currently we use the default factory as fallback since the SPI approach doesn't work
-		return defaultFactory.create(type).orElseThrow(
-				() -> new UnsupportedContentTypeException("Unsupported content type: "+type));
+		Supplier<ExcerptHandler> sup = handlers.get(type);
+		if(sup==null)
+			throw new UnsupportedContentTypeException("Unsupported source type: "+type);
+		return sup.get();
 	}
+
 }

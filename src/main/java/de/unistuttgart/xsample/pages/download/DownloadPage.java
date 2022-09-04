@@ -25,8 +25,11 @@ import static de.unistuttgart.xsample.util.XSampleUtils.strictToInt;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -54,16 +57,26 @@ import org.omnifaces.util.Messages;
 
 import com.google.common.io.CountingOutputStream;
 
+import de.unistuttgart.xsample.ct.AnnotationHandler;
+import de.unistuttgart.xsample.ct.AnnotationHandlers;
 import de.unistuttgart.xsample.ct.ExcerptHandler;
 import de.unistuttgart.xsample.ct.ExcerptHandlers;
 import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
+import de.unistuttgart.xsample.ct.UnsupportedManifestTypeException;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFileInfo;
 import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.dv.XmpLocalCopy;
+import de.unistuttgart.xsample.dv.XmpResource;
 import de.unistuttgart.xsample.io.LocalCache;
 import de.unistuttgart.xsample.io.NonClosingOutputStreamDelegate;
+import de.unistuttgart.xsample.mf.Corpus;
+import de.unistuttgart.xsample.mf.LegalNote;
+import de.unistuttgart.xsample.mf.ManifestFile;
+import de.unistuttgart.xsample.mf.MappingFile;
 import de.unistuttgart.xsample.mf.XsampleManifest;
+import de.unistuttgart.xsample.mp.Mapping;
+import de.unistuttgart.xsample.mp.Mappings;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
 import de.unistuttgart.xsample.util.BundleUtil;
@@ -79,12 +92,29 @@ public class DownloadPage extends XsamplePage {
 	
 	public static final String PAGE = "download";
 	
+	private static final char NL = '\n';
+
+	private static final String PREFIX_EXCERPT = "excerpt_";
+	private static final String PREFIX_ANNOTATION = "annotations/";
+
 	private static final Logger logger = Logger.getLogger(DownloadPage.class.getCanonicalName());
 
 	@Inject
 	LocalCache cache;
 	
+	@Inject
+	DownloadView view;
+	
+	
+
 	//TODO check http://www.primefaces.org:8080/showcase/ui/file/download.xhtml?jfwid=0b585 for example of monitoring during download initialization
+
+	private static String excerptName(XmpLocalCopy copy) {
+		return PREFIX_EXCERPT+copy.getTitle();
+	}
+	private static String annotationName(XmpLocalCopy copy) {
+		return PREFIX_ANNOTATION+copy.getTitle();
+	}
 
 	@Override
 	protected void rollBack() {
@@ -114,7 +144,7 @@ public class DownloadPage extends XsamplePage {
 
 		final FacesContext fc = FacesContext.getCurrentInstance();
 		
-		// Acquire locks on all required resoruces
+		// Acquire locks on all required resources
 		for(int i=0; i<copies.size(); i++) {
 			XmpLocalCopy copy = copies.get(i);
 			boolean locked = false;
@@ -158,8 +188,15 @@ public class DownloadPage extends XsamplePage {
 					addExcerptEntry(zipOut, entries.get(i), copies.get(i));
 				}
 				
+				if(view.isIncludeAnnotations()) {
+					// Add all the excerpts
+					for(int i=0; i<entries.size(); i++) {
+						addAnnotationEntry(zipOut, entries.get(i));
+					}
+				}
+				
 				// Add the legal note
-				addLegalNote(zipOut);
+				addLegalNotes(zipOut, entries, copies);
 				
 				// Force flush of pending data
 				zipOut.finish();
@@ -205,21 +242,21 @@ public class DownloadPage extends XsamplePage {
 		
 		try(OutputStream out = new NonClosingOutputStreamDelegate(zipOut);
 				OutputStreamWriter osw = new OutputStreamWriter(out, StandardCharsets.UTF_8);
-				BufferedWriter writer = new BufferedWriter(osw)) {
+				Writer writer = new BufferedWriter(osw)) {
+			
+			writer.append("Corpus parts included in excerpt:").append(NL);
+			
 			for(XmpLocalCopy copy : copies) {
-				writer.write(copy.getTitle());
-				writer.newLine();
+				writer.append(copy.getTitle()).append(NL);
 				
 				out.flush();
 			}
-			writer.newLine();
+			writer.append(NL);
 		}
 	}
 	
 	private void addExcerptEntry(ZipOutputStream zipOut, ExcerptEntry entry, XmpLocalCopy copy) 
 			throws IOException, GeneralSecurityException {
-		final ZipEntry zipEntry = new ZipEntry("excerpt_"+copy.getTitle());
-		final List<XmpFragment> fragments = entry.getFragments();
 		final Path file = cache.getDataFile(copy);
 		final Cipher cipher = decrypt(XSampleUtils.deserializeKey(copy.getKey()));
 		final XmpFileInfo fileInfo = services.findFileInfo(copy.getResource());
@@ -228,30 +265,136 @@ public class DownloadPage extends XsamplePage {
 		try {
 			handler = ExcerptHandlers.forSourceType(fileInfo.getSourceType());
 		} catch (UnsupportedContentTypeException e) {
-			throw new InternalError("No handler available for rpeviously validated file: "+copy.getTitle(), e);
+			throw new InternalError("No excerpt handler available for previously validated file: "+copy.getTitle(), e);
 		}
 		
-		zipOut.putNextEntry(zipEntry);
+		zipOut.putNextEntry(new ZipEntry(excerptName(copy)));
 		// Now produce excerpt and add file to zip
 		try(InputStream raw = Files.newInputStream(file, StandardOpenOption.READ);
 				InputStream in = new CipherInputStream(raw, cipher);
 				OutputStream out = new NonClosingOutputStreamDelegate(zipOut);) {
-			handler.excerpt(fileInfo, encoding, in, fragments, out);
+			handler.excerpt(encoding, in, entry.getFragments(), out);
 			
 			out.flush();
 		}
-		
-		//TODO in the future also split and add annotations here
 	}
 	
-	private void addLegalNote(ZipOutputStream zipOut) throws IOException {
+	private void addAnnotationEntry(ZipOutputStream zipOut, ExcerptEntry entry) 
+			throws IOException, GeneralSecurityException {
+		final Corpus corpus = excerptData.findCorpus(entry.getCorpusId());
+		final ManifestFile manifest = excerptData.findManifest(corpus);
+		final XmpResource resource = services.findResource(excerptData.getServer(), manifest.getId());
+		final XmpLocalCopy copy = cache.getCopy(resource);
+		final Path file = cache.getDataFile(copy);
+		final Cipher cipher = decrypt(XSampleUtils.deserializeKey(copy.getKey()));
+		final Charset encoding = Charset.forName(copy.getEncoding());
+		final AnnotationHandler handler;
+		try {
+			handler = AnnotationHandlers.forManifestType(manifest.getManifestType());
+		} catch (UnsupportedManifestTypeException e) {
+			throw new InternalError("No annotation handler available for previously validated file: "+copy.getTitle(), e);
+		}
+
+		zipOut.putNextEntry(new ZipEntry(annotationName(copy)));
+		try(InputStream raw = Files.newInputStream(file, StandardOpenOption.READ);
+				InputStream in = new CipherInputStream(raw, cipher);
+				Reader reader = new InputStreamReader(in, encoding);
+				OutputStream out = new NonClosingOutputStreamDelegate(zipOut);) {
+			
+			if(manifest.getMappingFile()!=null) {
+				final MappingFile mappingFile = manifest.getMappingFile();
+				final XmpResource mp_Resource = services.findResource(excerptData.getServer(), mappingFile.getId());
+				final XmpLocalCopy mp_Copy = cache.getCopy(mp_Resource);
+				final Path mp_File = cache.getDataFile(mp_Copy);
+				final Cipher mp_Cipher = decrypt(XSampleUtils.deserializeKey(mp_Copy.getKey()));
+				final Charset mp_Encoding = Charset.forName(mp_Copy.getEncoding());
+				final Mapping mapping;
+				try {
+					mapping = Mappings.forMappingType(mappingFile.getMappingType());
+				} catch (UnsupportedContentTypeException e) {
+					throw new InternalError("No mapping available for previously validated file: "+mp_Copy.getTitle(), e);
+				}
+
+				try(InputStream mp_raw = Files.newInputStream(mp_File, StandardOpenOption.READ);
+						InputStream mp_in = new CipherInputStream(mp_raw, mp_Cipher);
+						Reader mp_reader = new InputStreamReader(mp_in, mp_Encoding);) {
+					mapping.load(mp_reader);
+					handler.excerpt(reader, mapping, entry.getFragments(), out);
+				}
+				
+			} else {
+				handler.excerpt(reader, null, entry.getFragments(), out);
+			}
+			
+			out.flush();
+		}
+	}
+	
+	private void writeLegal(Writer writer, LegalNote legal) throws IOException {
+		writer.append("Title: ").append(legal.getTitle()).append(NL);
+		writer.append("Publisher: ").append(legal.getPublisher()).append(NL);
+		writer.append("Author(s): ").append(legal.getAuthor()).append(NL);
+		writer.append("Year: ").append(String.valueOf(legal.getYear())).append(NL);
+		if(legal.getSource()!=null) {
+			writer.append("Source: ").append(legal.getSource()).append(NL);
+		}
+	}
+	
+	private void maybeWriteLegalHeader(Writer writer) throws IOException {
+		Corpus corpus = excerptData.getManifest().getCorpus();
+		if(corpus.isProxy() && corpus.getLegalNote()!=null) {
+			LegalNote legal = corpus.getLegalNote();
+			writer.append("Corpus info:").append(NL);
+			writeLegal(writer, legal);
+			writer.append(NL);
+		}
+	}
+	
+	private void writeFragments(Writer writer, ExcerptEntry entry) throws IOException {
+		writer.append("Fragments: ");
+		List<XmpFragment> fragments = entry.getFragments();
+		for (int i = 0; i < fragments.size(); i++) {
+			if(i>0) {
+				writer.append(',');
+			}
+			XmpFragment fragment = fragments.get(i);
+			long begin = fragment.getBeginIndex();
+			long end = fragment.getEndIndex();
+			if(begin==end) {
+				writer.append(String.valueOf(begin));
+			} else {
+				writer.append(String.valueOf(begin)).append('-').append(String.valueOf(end));
+			}
+		}
+		writer.append(NL);
+	}
+	
+	private void addLegalNote(Writer writer, ExcerptEntry entry, XmpLocalCopy copy) throws IOException {
+		Corpus corpus = excerptData.findCorpus(entry.getCorpusId());
+		LegalNote legal = corpus.getLegalNote();
+		writer.append("===== ").append(excerptName(copy)).append(" =====").append(NL);
+		if(legal==null) {
+			writer.append("No legal information provided in manifest").append(NL);
+		} else {
+			writeLegal(writer, legal);
+		}
+		writeFragments(writer, entry);
+		writer.append(NL);
+	}
+	
+	private void addLegalNotes(ZipOutputStream zipOut, List<ExcerptEntry> entries, List<XmpLocalCopy> copies) throws IOException {
 		zipOut.putNextEntry(new ZipEntry("LEGAL.txt"));
 		
 		try(OutputStream out = new NonClosingOutputStreamDelegate(zipOut);
 				OutputStreamWriter osw = new OutputStreamWriter(out, StandardCharsets.UTF_8);
-				BufferedWriter writer = new BufferedWriter(osw)) {
-			writer.write("<here be legal notes>");
-			writer.newLine();
+				Writer writer = new BufferedWriter(osw)) {
+			
+			maybeWriteLegalHeader(writer);
+			
+			for (int i = 0; i < entries.size(); i++) {
+				addLegalNote(writer, entries.get(i), copies.get(i));
+			}
+			
 			
 			out.flush();
 		}

@@ -49,6 +49,16 @@ public interface SelfValidating {
 		item.validate();
 	}
 	
+	public static void validateNested(SelfValidating item, String name, boolean optional) {
+		if(optional && item==null) {
+			return;
+		}
+		if(item==null)
+			throw new IllegalStateException("Missing '"+name+"' field");
+		
+		item.validate();
+	}
+	
 	public static void validateOptionalNested(List<? extends SelfValidating> items) {
 		if(items!=null) {
 			items.forEach(SelfValidating::validate);	

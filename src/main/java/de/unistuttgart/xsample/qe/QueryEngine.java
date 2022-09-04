@@ -73,7 +73,7 @@ public class QueryEngine implements Serializable {
 		final List<Result> list = new ArrayList<>();
 		long totalQuerySegments = 0;
 		
-		for(Corpus corpus : excerptData.getManifest().getCorpora()) {
+		for(Corpus corpus : excerptData.getManifest().getAllParts()) {
 			final Result result = new Result();
 			result.setCorpusId(corpus.getId());
 			

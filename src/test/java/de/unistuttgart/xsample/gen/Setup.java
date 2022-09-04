@@ -30,7 +30,7 @@ import de.unistuttgart.xsample.mf.SourceType;
 import de.unistuttgart.xsample.mf.XsampleManifest;
 
 /**
- * Encapsulates all the information to populate a dataverse with data and maniests 
+ * Encapsulates all the information to populate a dataverse with data and manifests 
  * for XSample. 
  * <p>
  * Note that the setup is performed in a single path effectively top-to-bottom 
@@ -87,7 +87,7 @@ public class Setup {
 	public static class FolderSetup extends RefSetup {
 		/** File glob to match file names to be incldued */
 		public @Nullable String include;
-		/** FIle glob to match file names to be excluded. This is applied after the include glob. */
+		/** File glob to match file names to be excluded. This is applied after the include glob. */
 		public @Nullable String exclude;
 		/** Maximum number of files to include (0 if no limit) */
 		public int limit = 0;

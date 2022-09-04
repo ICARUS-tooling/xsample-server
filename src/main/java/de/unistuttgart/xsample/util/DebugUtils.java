@@ -63,6 +63,10 @@ public class DebugUtils {
 		return requireNonNull(settings.getProperty(key));
 	}
 	
+	public static String getProperty(String key, String defaultValue) {
+		return Optional.ofNullable(settings.getProperty(key)).orElse(defaultValue);
+	}
+	
 	public static void makeDataverse(XsampleServices services) {
 		if(!isActive()) {
 			return;
@@ -70,7 +74,7 @@ public class DebugUtils {
 		
 		String url = getProperty("dataverse.url");
 		String token = getProperty("dataverse.masterKey");
-		String overrideUrl = getProperty("dataverse.overrideUrl");
+		String overrideUrl = getProperty("dataverse.overrideUrl", null);
 		Optional<XmpDataverse> current = services.findDataverseByUrl(url);
 		if(!current.isPresent()) {
 			XmpDataverse dv = new XmpDataverse(url, token);

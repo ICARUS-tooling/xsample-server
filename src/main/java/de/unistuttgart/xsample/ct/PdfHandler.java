@@ -67,8 +67,7 @@ public class PdfHandler implements ExcerptHandler {
 	}
 
 	@Override
-	public void excerpt(XmpFileInfo file, Charset encoding, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
-		requireNonNull(file);
+	public void excerpt(Charset encoding, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
 		requireNonNull(encoding);
 		requireNonNull(in);
 		requireNonNull(fragments);

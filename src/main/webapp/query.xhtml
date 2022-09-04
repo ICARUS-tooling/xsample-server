@@ -16,6 +16,23 @@
 		<h:inputHidden id="resultHits" value="#{xsampleQueryData.resultHits}" readonly="#{true}" />
 		<h:inputHidden id="resultSegments" value="#{xsampleQueryData.resultSegments}" readonly="#{true}" />
 		
+		<div jsf:rendered="#{xsampleExcerptData.multiPartCorpus}">
+			<h:outputText value="#{bundle['query.multiPartInfo']}" />
+			<br/>
+			<p:selectManyMenu value="#{queryView.selectedParts}"
+                          converter="corpusConverter"  var="part" filter="true"
+                          filterMatchMode="contains" showCheckbox="true" 
+                          styleClass="manymenu-advanced" scrollHeight="200">
+         				<f:selectItems value="#{xsampleExcerptData.manifest.allParts}" 
+         					var="part" itemLabel="#{part.title}" itemValue="#{part}"/>
+				<p:column>
+	                <h:outputText value="#{part.id}"/>
+	            </p:column>
+				<p:column>
+	                <h:outputText value="#{part.title}"/>
+	            </p:column>
+			</p:selectManyMenu>
+		</div>
 		<div>
 			<p:textEditor widgetVar="editor" height="150" placeholder="#{bundle['query.editor.placeholder']}"
 					value="#{queryView.query}" secure="true" required="true">
