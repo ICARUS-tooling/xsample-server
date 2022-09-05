@@ -41,18 +41,17 @@ public class CoNLL09Handler implements AnnotationHandler {
 			PageFilter filter = new PageFilter(fragments);
 			SentenceBuffer buffer = new SentenceBuffer(br);
 			int sentenceIndex = 0;
-			// Usually 2 should be sufficient here, but a bigger buffer also doesn't hurt
-			long[] mappedPages = new long[10];
-			int pages;
+			long targetBegin, targetEnd;
 			
 			while(buffer.next()) {
-				if((pages = mapping.map(sentenceIndex, mappedPages)) > 0) {
-					for(int i = 0; i<pages; i++) {
+				targetBegin = mapping.getTargetBegin(sentenceIndex);
+				targetEnd = mapping.getTargetEnd(sentenceIndex);
+				if(targetBegin!=-1 && targetEnd!=-1 && targetEnd>=targetBegin) {
+					for(long page = targetBegin; page<=targetEnd; page++) {
 						// Mapping produces 0-based page indices
-						long page = mappedPages[i]+1;
 						if(filter.test(page)) {
 							writer.append("# sentenceIndex=").append(String.valueOf(sentenceIndex+1)).append('\n');
-							writer.append("# pageIndex=").append(String.valueOf(page)).append('\n');
+							writer.append("# pageIndex=").append(String.valueOf(page+1)).append('\n');
 							buffer.print(writer);
 							writer.append('\n');
 						}

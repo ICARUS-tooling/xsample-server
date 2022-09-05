@@ -22,6 +22,8 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
  */
 public class TabularMapping implements Mapping {
 	
+	private static final long serialVersionUID = 3065198727904169930L;
+	
 	private int[] begin, end;
 
 	@Override
@@ -57,22 +59,40 @@ public class TabularMapping implements Mapping {
 		}
 	}
 
+//	@Override
+//	public int map(long sourceIndex, long[] buffer) {
+//		int s = strictToInt(sourceIndex);
+//		if(s>=begin.length) {
+//			return 0;
+//		}
+//		int b = begin[s];
+//		int e = end[s];
+//		int length = e-b+1;
+//		if(length>buffer.length) {
+//			return -1;
+//		}
+//		for (int i = 0; i < length; i++) {
+//			buffer[i] = b+i;
+//		}
+//		return length;
+//	}
+
 	@Override
-	public int map(long sourceIndex, long[] buffer) {
+	public long getTargetBegin(long sourceIndex) {
 		int s = strictToInt(sourceIndex);
 		if(s>=begin.length) {
-			return 0;
-		}
-		int b = begin[s];
-		int e = end[s];
-		int length = e-b+1;
-		if(length>buffer.length) {
 			return -1;
 		}
-		for (int i = 0; i < length; i++) {
-			buffer[i] = b+i;
+		return begin[s];
+	}
+
+	@Override
+	public long getTargetEnd(long sourceIndex) {
+		int s = strictToInt(sourceIndex);
+		if(s>=end.length) {
+			return -1;
 		}
-		return length;
+		return end[s];
 	}
 
 }
