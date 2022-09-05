@@ -45,7 +45,11 @@ public class CorpusConverter implements Converter<Corpus>, Serializable {
 			populateLookup(excerptData.getManifest().getCorpus());
 		}
 		
-		return lookup.get(value);
+		Corpus result = lookup.get(value);
+//		if(result==null) {
+//			System.out.println("Unknown corpus id: "+value);
+//		}
+		return result;
 	}
 	
 	private void populateLookup(Corpus corpus) {
@@ -55,6 +59,6 @@ public class CorpusConverter implements Converter<Corpus>, Serializable {
 
 	@Override
 	public String getAsString(FacesContext context, UIComponent component, Corpus value) {
-		return value.getId();
+		return value==null ? null : value.getId();
 	}
 }

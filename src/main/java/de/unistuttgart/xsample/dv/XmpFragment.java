@@ -106,9 +106,9 @@ public class XmpFragment implements Comparable<XmpFragment> {
 	}
 	
 	public static XmpFragment of(long from, long to) {
-		checkArgument(from>0);
-		checkArgument(to>0);
-		checkArgument(to>=from);
+		checkArgument("'from' must be greater than 0", from>0);
+		checkArgument("'tro' must be greater than 0", to>0);
+		checkArgument("'to' must be greater or equal to 'from'", to>=from);
 		XmpFragment f = new XmpFragment();
 		f.setBeginIndex(from);
 		f.setEndIndex(to);

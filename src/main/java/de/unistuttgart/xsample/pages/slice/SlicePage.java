@@ -24,12 +24,12 @@ import static de.unistuttgart.xsample.util.XSampleUtils._long;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.enterprise.context.RequestScoped;
-import javax.faces.event.AjaxBehaviorEvent;
 import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -66,11 +66,17 @@ public class SlicePage extends XsamplePage {
 	@Inject
 	SliceView view;
 		
-	private Stream<ExcerptEntry> currentEntries() {
-		return view.getSelectedParts()
+	private Stream<ExcerptEntry> allEntries() {
+		return excerptData.getManifest().getAllParts()
 				.stream()
 				.map(Corpus::getId)
-				.map(excerptData::findEntry);
+				.map(excerptData::findEntry)
+				.filter(Objects::nonNull);
+	}
+	
+	private ExcerptEntry currentEntry() {
+		String corpusId = view.getSelectedCorpus();
+		return corpusId==null ? null : excerptData.findEntry(corpusId);
 	}
 	
 	public void init() {
@@ -78,25 +84,27 @@ public class SlicePage extends XsamplePage {
 		sliceData.setBegin(1);
 		sliceData.setEnd(1);
 		
+//		view.setSelectedParts(excerptData.getManifest().getAllParts());
+//		view.setSelectedCorpus(view.getSelectedParts().get(0).getId());
+		
+		Corpus part = excerptData.getManifest().getAllParts().get(0);
+		
+		view.setSelectedCorpus(part.getId());
+		
 		sliceData.setGlobalLimit(excerptData.getSegments());
 		sliceData.setGlobalLimit(getQuotaSize());
 		
-		view.setSelectedParts(excerptData.getManifest().getAllParts());
-		view.setSelectedCorpus(view.getSelectedParts().get(0).getId());
-		
-		refreshLocalQuota();
+		refreshLocalQuota(part);
 	}
 
-	public void refreshLocalQuota() {
-		final String corpusId = view.getSelectedCorpus();
-		final Corpus corpus = excerptData.findCorpus(corpusId);
+	public void refreshLocalQuota(Corpus corpus) {
 		final double limit = services.getDoubleSetting(Key.ExcerptLimit);
 		final long segments = excerptData.getSegments(corpus);
 		sliceData.setSegments(segments);
 		sliceData.setLimit((long) Math.floor(segments * limit));
 		
 		final List<XmpFragment> quota = new ArrayList<>();
-		ExcerptEntry entry = excerptData.findEntry(corpusId);
+		ExcerptEntry entry = excerptData.findEntry(corpus.getId());
 		if(!entry.getQuota().isEmpty()) {
 			quota.addAll(entry.getQuota().getFragments());
 		}
@@ -108,15 +116,21 @@ public class SlicePage extends XsamplePage {
 	
 	@Override
 	protected void rollBack() {
-		currentEntries().forEach(ExcerptEntry::clear);
+		allEntries().forEach(ExcerptEntry::clear);
 	}
 
 	/** Callback for button to continue workflow */
 	public void next() {
-		for(ExcerptEntry entry : currentEntries().collect(Collectors.toList())) {
-			final List<XmpFragment> fragments = Arrays.asList(XmpFragment.of(
-					sliceData.getBegin(), sliceData.getEnd()));
+		//TODO commit currently selected part as well
+		
+		for(ExcerptEntry entry : allEntries().collect(Collectors.toList())) {
+			final List<XmpFragment> fragments = entry.getFragments();
 			final List<XmpFragment> quota = entry.getQuota().getFragments();
+			
+			if(fragments==null || fragments.isEmpty()) {
+				entry.clear();
+				continue;
+			}
 			
 			/* The following issue should never occur, since we do the same
 			 * validation on the client side to enable/disable the button.
@@ -139,36 +153,81 @@ public class SlicePage extends XsamplePage {
 		forward(DownloadPage.PAGE);
 	}
 	
-	public void corpusCompositionChanged(ValueChangeEvent vce) {
-		System.out.println(vce);
+//	public void corpusCompositionChanged(ValueChangeEvent vce) {
+//		System.out.println(vce);
+//	}
+	
+//	public void corpusCompositionChanged(AjaxBehaviorEvent vce) {
+//		System.out.println(vce);
+//	}
+	
+//	public void corpusCompositionChanged() {
+//		System.out.println("generic composition change");
+//	}
+	
+	public void corpusInclusionChanged() {
+		System.out.println("Corpus included: "+view.isIncludeCorpus());
 	}
 	
-	public void corpusCompositionChanged(AjaxBehaviorEvent vce) {
-		System.out.println(vce);
+	//FIXME the entire "include corpus" mechanic needs a rework
+	
+	private void commitExcerpt() {
+		final String corpusId = view.getSelectedCorpus();
+		if(corpusId!=null) {
+			final ExcerptEntry entry = excerptData.findEntry(corpusId);
+			if(view.isIncludeCorpus()) {
+				view.getSelectedParts().add(corpusId);
+			} else {
+				view.getSelectedParts().remove(corpusId);
+			}
+			if(sliceData.getBegin()>0 && sliceData.getEnd()>0) {
+				entry.setFragments(Arrays.asList(XmpFragment.of(sliceData.getBegin(), sliceData.getEnd())));
+			} else {
+				entry.clear();
+			}
+		}
 	}
 	
 	public void corpusSelectionChanged(ValueChangeEvent vce) {
-		System.out.println(vce);
+		// If we had a selected part, commit current slice as fragments
+		commitExcerpt();
+		
+		if(vce.getNewValue()!=null) {
+			final String corpusId = (String)vce.getNewValue();
+			final ExcerptEntry entry = excerptData.findEntry(corpusId);
+			final List<XmpFragment> fragments = entry.getFragments();
+			final XmpFragment slice = fragments==null || fragments.isEmpty() ? null : fragments.get(0);
+			sliceData.setBegin(slice==null ? 0 : slice.getBeginIndex());
+			sliceData.setEnd(slice==null ? 0 : slice.getEndIndex());
+			view.setIncludeCorpus(view.getSelectedParts().contains(corpusId));
+			refreshLocalQuota(excerptData.findCorpus(corpusId));
+
+			System.out.printf("old=%s new=%s included_old=%b included_new=%b%n",vce.getOldValue(), vce.getNewValue(), 
+					view.isIncludeCorpus(),
+					view.getSelectedParts().contains(corpusId));
+		}
 	}
 	
-	public void corpusSelectionChanged(AjaxBehaviorEvent vce) {
-		System.out.println(vce);
-	}
+//	public void corpusSelectionChanged(AjaxBehaviorEvent vce) {
+//		System.out.println(vce);
+//	}
 	
 	public boolean isShowQuota() {
-		return !currentEntries()
+		ExcerptEntry entry = currentEntry();
+		return entry!=null && entry.getQuota()!=null && !entry.getQuota().isEmpty();
+	}
+	
+	public boolean isShowGlobalQuota() {
+		return !allEntries()
 				.map(ExcerptEntry::getQuota)
+				.filter(Objects::nonNull)
 				.allMatch(XmpExcerpt::isEmpty);
 	}
 	
 	public long getQuotaSize() {
-		return currentEntries()
+		return allEntries()
 				.map(ExcerptEntry::getQuota)
 				.mapToLong(XmpExcerpt::size)
 				.sum();
-	}
-	
-	public double getQuotaPercent() {
-		return (double)getQuotaSize() / sliceData.getSize() * 100.0;
 	}
 }
