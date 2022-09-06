@@ -18,13 +18,22 @@
   				<p:ajax update="continue" />
   				<f:selectItems value="#{sharedData.manifest.allParts}" 
   					var="part" itemLabel="#{part.title}" itemValue="#{part}"/>
-				<p:column headerText="#{bundle['parts.corpusId']}">
+				<p:column>
+					<f:facet name="header">
+                        <h:outputText value="#{bundle['parts.corpusId']}"/>
+                    </f:facet>
 	                <h:outputText value="#{part.id}"/>
 	            </p:column>
-				<p:column headerText="#{bundle['parts.corpusSegments']}">
+				<p:column>
+					<f:facet name="header">
+                        <h:outputText value="#{bundle['parts.corpusSegments']}"/>
+                    </f:facet>
 	                <h:outputText value="#{corpusData.getSegments(part)}"/>
 	            </p:column>
-				<p:column headerText="#{bundle['parts.corpusTitle']}">
+				<p:column>
+					<f:facet name="header">
+                        <h:outputText value="#{bundle['parts.corpusTitle']}"/>
+                    </f:facet>
 	                <h:outputText value="#{part.title}"/>
 	            </p:column>
 			</p:selectManyMenu>

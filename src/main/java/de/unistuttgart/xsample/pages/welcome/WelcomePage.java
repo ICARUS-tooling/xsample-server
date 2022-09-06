@@ -192,14 +192,15 @@ public class WelcomePage extends XsamplePage {
 			return Collections.emptyList();
 		}
 				
-		final String corpusId = selectionData.getSelectedCorpus();
-		if(corpusId==null) {
+		final Corpus corpus = selectionData.getSelectedCorpus();
+		if(corpus==null) {
 			return Collections.emptyList();
-		}
+		}		
+		final String corpusId = corpus.getId();
+
 		
 		final List<Property> properties = new ArrayList<>();
 		
-		final Corpus corpus = sharedData.findCorpus(corpusId);
 		if(corpus.getPrimaryData()!=null) {
 			final XmpResource resource = services.findResource(sharedData.getServer(), 
 					corpus.getPrimaryData().getId());
@@ -1013,7 +1014,7 @@ public class WelcomePage extends XsamplePage {
 	
 	boolean prepareUI(Context context) {
 		if(selectionData.getSelectedCorpus()==null) {
-			selectionData.setSelectedCorpus(sharedData.getManifest().getAllParts().get(0).getId());
+			selectionData.setSelectedCorpus(sharedData.getManifest().getAllParts().get(0));
 		}
 		
 		return true;

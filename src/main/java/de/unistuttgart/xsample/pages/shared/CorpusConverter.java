@@ -5,7 +5,6 @@ package de.unistuttgart.xsample.pages.shared;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -31,7 +30,7 @@ public class CorpusConverter implements Converter<Corpus>, Serializable {
 	private static final long serialVersionUID = -8257660999622066122L;
 
 	@Inject
-	SharedData excerptData;
+	SharedData sharedData;
 	
 	private transient Map<String, Corpus> lookup = new Object2ObjectOpenHashMap<>();
 
@@ -41,8 +40,11 @@ public class CorpusConverter implements Converter<Corpus>, Serializable {
 			return null;
 		}
 
-		if(lookup.isEmpty() && !Optional.ofNullable(excerptData.getManifest()).map(XsampleManifest::getCorpus).isPresent()) {
-			populateLookup(excerptData.getManifest().getCorpus());
+		if(lookup.isEmpty()) {
+			XsampleManifest manifest = sharedData.getManifest();
+			if(manifest.getCorpus()!=null) {
+				populateLookup(sharedData.getManifest().getCorpus());
+			}
 		}
 		
 		Corpus result = lookup.get(value);
