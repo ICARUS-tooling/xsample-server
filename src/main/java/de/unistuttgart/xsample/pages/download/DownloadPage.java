@@ -101,7 +101,7 @@ public class DownloadPage extends XsamplePage {
 	LocalCache cache;
 	
 	@Inject
-	DownloadView view;
+	DownloadData downloadData;
 	
 	//TODO check http://www.primefaces.org:8080/showcase/ui/file/download.xhtml?jfwid=0b585 for example of monitoring during download initialization
 
@@ -125,7 +125,7 @@ public class DownloadPage extends XsamplePage {
 	@Transactional
 	public void download() {
 		
-		final List<ExcerptEntry> entries = sharedData.getEntries();
+		final List<ExcerptEntry> entries = downloadData.getEntries();
 		final List<XmpLocalCopy> copies = new ArrayList<>(entries.size());
 		
 		// Early check if we already obsoleted the source data
@@ -184,7 +184,7 @@ public class DownloadPage extends XsamplePage {
 					addExcerptEntry(zipOut, entries.get(i), copies.get(i));
 				}
 				
-				if(view.isIncludeAnnotations()) {
+				if(downloadData.isIncludeAnnotations()) {
 					// Add all the excerpts
 					for(int i=0; i<entries.size(); i++) {
 						addAnnotationEntry(zipOut, entries.get(i));

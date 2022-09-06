@@ -45,6 +45,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.application.FacesMessage.Severity;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.transaction.Transactional;
@@ -158,6 +159,10 @@ public class WelcomePage extends XsamplePage {
 	/** Indicate that the choice for excerpt selection should be shown */
 	public boolean isShowExcerptSelection() {
 		return isShowOutline() && !sharedData.isOnlySmallFiles();
+	}
+	
+	public void selectionChanged(ValueChangeEvent evt) {
+		// no-op
 	}
 	
 //	/** Produce table data for current manifest file */
@@ -382,7 +387,7 @@ public class WelcomePage extends XsamplePage {
 				return;
 			}
 			
-			if(sharedData.isMultiPartCorpus() && partsData.isEmpty()) {
+			if(partsData.isEmpty()) {
 				partsData.setSelectedParts(sharedData.getManifest().getAllParts());
 			}
 		}
@@ -848,8 +853,9 @@ public class WelcomePage extends XsamplePage {
 				copy.getLock().unlock();
 			}
 		}
-		
+
 		corpusData.setSegments(totalSegmemnts);
+		corpusData.setExcerptLimit((long) Math.floor(totalSegmemnts * services.getDoubleSetting(Key.ExcerptLimit)));
 		
 		assert context.fileInfos.size()==corpora.size() : "Missed files in loading process";
 		

@@ -39,7 +39,10 @@
 								<f:facet name="header">
 									<h:outputText value="#{bundle['welcome.fileInfoHeader']}" style="margin-right: 5em"/>
 									<ui:include src="/select_corpus.xhtml">
+										<ui:param name="limited" value="false" />
 										<ui:param name="ajaxUpdate" value="fileInfo" />
+										<ui:param name="changeHandler" value="#{welcomePage}" />
+										<ui:param name="handlerMethod" value="selectionChanged" />
 									</ui:include>
 								</f:facet>
 								<p:column headerText="#{bundle['property']}">

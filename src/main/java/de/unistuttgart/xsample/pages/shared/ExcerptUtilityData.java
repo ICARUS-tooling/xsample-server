@@ -27,33 +27,21 @@ import de.unistuttgart.xsample.util.DataBean;
  */
 public abstract class ExcerptUtilityData implements DataBean {
 
-	private static final long serialVersionUID = -6599365533185080045L;
+	private static final long serialVersionUID = 8667731210507380998L;
 
-	/** Encoded global excerpt */
-	private String globalExcerpt = "";
-	
-	/** Total number of segments available in entire corpus */
-	private long globalSegments = 1;
+	/** Total number of segments available */
+	private long segments = 1;
 	/** Upper limit of allowed segments to be published */
-	private long globalLimit = 1;
-	/** Total number of segments accumulated in all excerpts defined here */
-	private long globalUsed = 0;
-
+	private long excerptLimit = 1;
+	/** Encoded used up quota */
+	private String quota = "";
 	
-	public String getGlobalExcerpt() { return globalExcerpt; }
-	public void setGlobalExcerpt(String globalExcerpt) { this.globalExcerpt = globalExcerpt; }
+	public long getSegments() { return segments; }
+	public void setSegments(long range) { this.segments = range; }
 	
-	public long getGlobalSegments() { return globalSegments; }
-	public void setGlobalSegments(long globalSize) { this.globalSegments = globalSize; }
+	public long getExcerptLimit() { return excerptLimit; }
+	public void setExcerptLimit(long limit) { this.excerptLimit = limit; }
 	
-	public long getGlobalLimit() { return globalLimit; }
-	public void setGlobalLimit(long globalLimit) { this.globalLimit = globalLimit; }
-	
-	public long getGlobalUsed() { return globalUsed; }
-	public void setGlobalUsed(long globalUsed) { this.globalUsed = globalUsed; }
-	
-	/** Size of current slice in percent. Including quota */
-	public double getGlobalPercent() {
-		return (double)globalUsed / globalSegments * 100.0;
-	}
+	public String getQuota() { return quota; }
+	public void setQuota(String quota) { this.quota = quota; }
 }

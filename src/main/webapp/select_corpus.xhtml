@@ -8,8 +8,9 @@
 	<h:panelGroup layout="inline" rendered="#{sharedData.multiPartCorpus}">
 		<p:selectOneMenu value="#{selectionData.selectedCorpus}"
 			style="width:500px" filter="true" filterMatchMode="contains"
+			valueChangeListener="#{changeHandler[handlerMethod]}"
 			var="part" converter="corpusConverter">
-			<f:selectItems value="#{sharedData.manifest.allParts}" var="part"
+			<f:selectItems value="#{limited ? partsData.selectedParts : sharedData.manifest.allParts}" var="part"
 				itemLabel="#{XSampleUtils.trim2Size(part.title)}"
 				itemValue="#{part}" />
 			<p:ajax update="#{ajaxUpdate}" />
@@ -19,6 +20,12 @@
 				</f:facet>
 				<h:outputText value="#{part.id}" />
 			</p:column>
+			<p:column>
+				<f:facet name="header">
+                    <h:outputText value="#{bundle['parts.corpusSegments']}"/>
+                </f:facet>
+                <h:outputText value="#{corpusData.getSegments(part)}"/>
+            </p:column>
 			<p:column>
 				<f:facet name="header">
 					<h:outputText value="#{bundle['parts.corpusTitle']}" />

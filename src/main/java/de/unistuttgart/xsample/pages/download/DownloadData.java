@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
+import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
 import de.unistuttgart.xsample.util.DataBean;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -41,6 +42,10 @@ public class DownloadData implements DataBean {
 
 	public boolean isIncludeAnnotations() { return includeAnnotations; }
 	public void setIncludeAnnotations(boolean includeAnnotations) { this.includeAnnotations = includeAnnotations; }
+
+	public ExcerptEntry findEntry(Corpus corpus) {
+		return findEntry(corpus.getId());
+	}
 
 	/** Find our entry (if present) matching given corpus id */
 	public ExcerptEntry findEntry(String corpusId) {

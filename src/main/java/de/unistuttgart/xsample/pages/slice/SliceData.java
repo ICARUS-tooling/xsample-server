@@ -22,7 +22,7 @@ package de.unistuttgart.xsample.pages.slice;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
-import de.unistuttgart.xsample.pages.shared.ExcerptUtilityData;
+import de.unistuttgart.xsample.util.DataBean;
 
 /**
  * @author Markus Gärtner
@@ -30,21 +30,14 @@ import de.unistuttgart.xsample.pages.shared.ExcerptUtilityData;
  */
 @Named
 @ViewScoped
-public class SliceData extends ExcerptUtilityData {
+public class SliceData implements DataBean {
 
 	private static final long serialVersionUID = -5558438814838979800L;
 
 	/** Begin of slice. 1-based. */
-	private long begin = 1;
+	private long begin = -1;
 	/** End of slice. 1-based. */
-	private long end = 1;
-
-	/** Total number of segments available */
-	private long segments = 1;
-	/** Upper limit of allowed segments to be published */
-	private long limit = 1;
-	/** Encoded used up quota */
-	private String quota = "";
+	private long end = -1;
 	
 	public long getBegin() { return begin; }
 	public void setBegin(long begin) { this.begin = begin; }
@@ -52,19 +45,13 @@ public class SliceData extends ExcerptUtilityData {
 	public long getEnd() { return end; }
 	public void setEnd(long end) { this.end = end; }
 	
-	public long getSegments() { return segments; }
-	public void setSegments(long range) { this.segments = range; }
+	public long getLength() { return end-begin+1; }
 	
-	public long getLimit() { return limit; }
-	public void setLimit(long limit) { this.limit = limit; }
+	public void reset() {
+		begin = end = -1;
+	}
 	
-	public String getQuota() { return quota; }
-	public void setQuota(String quota) { this.quota = quota; }
-	
-	public long getSize() { return end-begin+1; }
-	
-	/** Size of current slice in percent. Including quota */
-	public double getPercent() {
-		return (double)getSize() / segments * 100.0;
+	public boolean isValid() {
+		return begin>=1 && end>=1;
 	}
 }
