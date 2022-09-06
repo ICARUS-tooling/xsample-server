@@ -38,27 +38,9 @@
 							<p:dataTable id="fileInfo" var="property" value="#{welcomePage.filePropertiesForOutline}">
 								<f:facet name="header">
 									<h:outputText value="#{bundle['welcome.fileInfoHeader']}" style="margin-right: 5em"/>
-									<h:panelGroup layout="inline" rendered="#{sharedData.multiPartCorpus}">
-										<p:selectOneMenu value="#{selectionData.selectedCorpus}" style="width:500px"
-												filter="true" filterMatchMode="contains" var="part"
-												converter="corpusConverter">
-											<f:selectItems value="#{sharedData.manifest.allParts}" var="part" 
-				                   	 			itemLabel="#{XSampleUtils.trim2Size(part.title)}" itemValue="#{part}"/>
-				                   	 		<p:ajax update="fileInfo"/>
-											<p:column>
-												<f:facet name="header">
-							                        <h:outputText value="#{bundle['parts.corpusId']}"/>
-							                    </f:facet>
-								                <h:outputText value="#{part.id}"/>
-								            </p:column>
-											<p:column>
-												<f:facet name="header">
-							                        <h:outputText value="#{bundle['parts.corpusTitle']}"/>
-							                    </f:facet>
-								                <h:outputText value="#{XSampleUtils.trim2Size(part.title)}"/>
-								            </p:column>
-										</p:selectOneMenu>
-									</h:panelGroup>
+									<ui:include src="/select_corpus.xhtml">
+										<ui:param name="ajaxUpdate" value="fileInfo" />
+									</ui:include>
 								</f:facet>
 								<p:column headerText="#{bundle['property']}">
 									<h:outputText value="#{property.key}" />
