@@ -22,7 +22,7 @@ package de.unistuttgart.xsample.pages.slice;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
-import de.unistuttgart.xsample.util.ExcerptUtilityData;
+import de.unistuttgart.xsample.pages.shared.ExcerptUtilityData;
 
 /**
  * @author Markus Gärtner
@@ -30,7 +30,7 @@ import de.unistuttgart.xsample.util.ExcerptUtilityData;
  */
 @Named
 @ViewScoped
-public class XsampleSliceData extends ExcerptUtilityData {
+public class SliceData extends ExcerptUtilityData {
 
 	private static final long serialVersionUID = -5558438814838979800L;
 

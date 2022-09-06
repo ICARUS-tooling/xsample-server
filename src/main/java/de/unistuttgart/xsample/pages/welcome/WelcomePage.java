@@ -83,13 +83,19 @@ import de.unistuttgart.xsample.mf.Span;
 import de.unistuttgart.xsample.mf.SpanType;
 import de.unistuttgart.xsample.mf.XsampleManifest;
 import de.unistuttgart.xsample.pages.XsamplePage;
+import de.unistuttgart.xsample.pages.download.DownloadData;
 import de.unistuttgart.xsample.pages.download.DownloadPage;
+import de.unistuttgart.xsample.pages.parts.PartsData;
+import de.unistuttgart.xsample.pages.parts.PartsPage;
 import de.unistuttgart.xsample.pages.query.QueryPage;
+import de.unistuttgart.xsample.pages.shared.CorpusData;
+import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
 import de.unistuttgart.xsample.pages.shared.ExcerptType;
-import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
-import de.unistuttgart.xsample.pages.shared.XsampleInputData;
-import de.unistuttgart.xsample.pages.shared.XsampleWorkflow.Flag;
-import de.unistuttgart.xsample.pages.shared.XsampleWorkflow.Status;
+import de.unistuttgart.xsample.pages.shared.InputData;
+import de.unistuttgart.xsample.pages.shared.LabelData;
+import de.unistuttgart.xsample.pages.shared.SelectionData;
+import de.unistuttgart.xsample.pages.shared.WorkflowData.Flag;
+import de.unistuttgart.xsample.pages.shared.WorkflowData.Status;
 import de.unistuttgart.xsample.pages.slice.SlicePage;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.Property;
@@ -121,13 +127,19 @@ public class WelcomePage extends XsamplePage {
 	XsampleSession session;
 	
 	@Inject
-	XsampleInputData inputData;
-	
+	InputData inputData;	
 	@Inject
-	LocalCache cache;
-	
+	LocalCache cache;	
 	@Inject
-	WelcomeView view;
+	CorpusData corpusData;	
+	@Inject
+	LabelData labelData;
+	@Inject
+	SelectionData selectionData;
+	@Inject
+	DownloadData downloadData;
+	@Inject
+	PartsData partsData;
 	
 	/** Returns text for current status or empty string */
 	public String getStatusInfo() {
@@ -145,7 +157,7 @@ public class WelcomePage extends XsamplePage {
 	
 	/** Indicate that the choice for excerpt selection should be shown */
 	public boolean isShowExcerptSelection() {
-		return isShowOutline() && !excerptData.isOnlySmallFiles();
+		return isShowOutline() && !sharedData.isOnlySmallFiles();
 	}
 	
 //	/** Produce table data for current manifest file */
@@ -160,11 +172,11 @@ public class WelcomePage extends XsamplePage {
 		
 		List<Property> properties = new ArrayList<>();
 		
-		final XsampleManifest manifest = excerptData.getManifest();
+		final XsampleManifest manifest = sharedData.getManifest();
 		final List<Corpus> corpora = manifest.getAllParts();
 		
 		properties.add(new Property("corpus-files", String.valueOf(corpora.size())));
-		properties.add(new Property("total-segments", String.valueOf(excerptData.getSegments())));
+		properties.add(new Property("total-segments", String.valueOf(corpusData.getSegments())));
 		//TODO
 		
 		return properties;
@@ -180,16 +192,16 @@ public class WelcomePage extends XsamplePage {
 			return Collections.emptyList();
 		}
 				
-		final String corpusId = view.getSelectedCorpus();
+		final String corpusId = selectionData.getSelectedCorpus();
 		if(corpusId==null) {
 			return Collections.emptyList();
 		}
 		
 		final List<Property> properties = new ArrayList<>();
 		
-		final Corpus corpus = excerptData.findCorpus(corpusId);
+		final Corpus corpus = sharedData.findCorpus(corpusId);
 		if(corpus.getPrimaryData()!=null) {
-			final XmpResource resource = services.findResource(excerptData.getServer(), 
+			final XmpResource resource = services.findResource(sharedData.getServer(), 
 					corpus.getPrimaryData().getId());
 			final XmpLocalCopy copy = cache.getCopy(resource);
 			final XmpFileInfo fileInfo = services.findFileInfo(resource);
@@ -205,7 +217,7 @@ public class WelcomePage extends XsamplePage {
 			properties.add(new Property("parts", String.valueOf(parts.size())));	
 		}
 
-		properties.add(new Property("usable-segments", String.valueOf(excerptData.getSegments(corpus))));
+		properties.add(new Property("usable-segments", String.valueOf(corpusData.getSegments(corpus))));
 		
 		LegalNote legal = corpus.getLegalNote();
 		if(legal!=null) {
@@ -219,13 +231,13 @@ public class WelcomePage extends XsamplePage {
 		}
 		//TODO add legal info from manifest
 
-		final ExcerptEntry entry = excerptData.findEntry(corpusId);
+		final ExcerptEntry entry = downloadData.findEntry(corpusId);
 		
-		if(isSmallFile(excerptData.getSegments(corpus))) {
+		if(isSmallFile(corpusData.getSegments(corpus))) {
 			properties.add(new Property("small-file", "true"));
 		} else if(entry!=null && entry.getQuota()!=null && !entry.getQuota().isEmpty()) {
 			long used = entry.getQuota().size();
-			final long segments = excerptData.getSegments(corpus);
+			final long segments = corpusData.getSegments(corpus);
 			double percent = (double) used / segments * 100.0;
 			properties.add(new Property("quota-used", String.valueOf(used)));
 			properties.add(new Property("quota-ratio", String.format("%.2f%%", _double(percent))));
@@ -234,7 +246,7 @@ public class WelcomePage extends XsamplePage {
 			
 			if(used>=limit) {
 				logger.log(Level.SEVERE, String.format("Quota of %d used up on resource %s by user %s", 
-						_long(limit), entry.getResource(), excerptData.getDataverseUser()));
+						_long(limit), entry.getResource(), sharedData.getDataverseUser()));
 				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.quotaExceeded", 
 						_long(used), corpus.getTitle());
 			}
@@ -243,7 +255,7 @@ public class WelcomePage extends XsamplePage {
 	}
 	
 	private Corpus firstUsablePart() {
-		Corpus corpus = excerptData.getManifest().getCorpus();
+		Corpus corpus = sharedData.getManifest().getCorpus();
 		while(corpus.isProxy()) {
 			corpus = corpus.getParts().get(0);
 		}
@@ -252,21 +264,21 @@ public class WelcomePage extends XsamplePage {
 	
 	//TODO rework to handle multipart corpus
 	boolean prepareStaticExcerpt() {
-		final long begin = excerptData.getStaticExcerptBegin();
-		final long end = excerptData.getStaticExcerptEnd();
-		final XsampleManifest manifest = excerptData.getManifest();
+		final long begin = sharedData.getStaticExcerptBegin();
+		final long end = sharedData.getStaticExcerptEnd();
+		final XsampleManifest manifest = sharedData.getManifest();
 		
 		final Corpus corpus;
 		// We have a designated (sub)corpus, apply excerpt range to it
 		if(manifest.getStaticExcerptCorpus()!=null) {
-			corpus = excerptData.findCorpus(manifest.getStaticExcerptCorpus());
+			corpus = sharedData.findCorpus(manifest.getStaticExcerptCorpus());
 		} else {
 			// ALternatively grab the first (sub)corpus we can use
 			corpus = firstUsablePart();
 		}
 
 		// Make sure our designated excerpt span actually starts inside the corpus
-		long segments = excerptData.getSegments(corpus);
+		long segments = corpusData.getSegments(corpus);
 		if(begin>=segments) {
 			String text = BundleUtil.format("welcome.msg.staticExcerptOutsideCorpus", 
 					_long(begin), _long(end), corpus.getId(), _long(segments));
@@ -275,7 +287,7 @@ public class WelcomePage extends XsamplePage {
 		}
 		
 		// Now calculate part of the corpus to be returned
-		final ExcerptEntry entry = excerptData.findEntry(corpus.getId());
+		final ExcerptEntry entry = downloadData.findEntry(corpus.getId());
 		final boolean isSmallFile = isSmallFile(segments);		
 		final long first;
 		final long last;
@@ -301,7 +313,7 @@ public class WelcomePage extends XsamplePage {
 		}
 
 		entry.setFragments(fragments);
-		excerptData.setExcerpt(Arrays.asList(entry));
+		downloadData.setEntries(Arrays.asList(entry));
 		
 		return true;
 	}
@@ -314,7 +326,7 @@ public class WelcomePage extends XsamplePage {
 			}
 		}
 
-		final XmpDataverse server = excerptData.getServer();
+		final XmpDataverse server = sharedData.getServer();
 		final XmpResource resource = services.findResource(server, corpus.getPrimaryData().getId());
 		final XmpFileInfo fileInfo = services.findFileInfo(resource);
 		return fileInfo.getSegments();
@@ -333,44 +345,44 @@ public class WelcomePage extends XsamplePage {
 			entries.add(entry);
 		}
 		
-		excerptData.setExcerpt(entries);
+		downloadData.setEntries(entries);
 	}
-	
-//	public List<CorpusInfo> getPartsForOutline() {
-//		return excerptData.getManifest().getAllParts().stream()
-//				.map(c -> new CorpusInfo(Optional.ofNullable(c.getTitle())
-//						.map(XSampleUtils::trim2Size)
-//						.orElse(c.getId()), c.getId()))
-//				.collect(Collectors.toList());
-//	}
 	
 	/** Callback for button to continue workflow */
 	public void next() {
 		String page = null;
 		
-		if(excerptData.isOnlySmallFiles()) {
+		if(sharedData.isOnlySmallFiles()) {
 			// Only small files -> full download
-			prepareFullDownload(excerptData.getManifest().getAllParts());
+			prepareFullDownload(sharedData.getManifest().getAllParts());
 			page = DownloadPage.PAGE;
 		} else {
 			// At least some big files -> Delegate to correct page
-			ExcerptType excerptType = view.getExcerptType();
+			ExcerptType excerptType = sharedData.getExcerptType();
 			switch (excerptType) {
 			case STATIC: {
 				page = prepareStaticExcerpt() ? DownloadPage.PAGE : PAGE;
 			} break;
-			case SLICE: page = SlicePage.PAGE; break;
-			case QUERY: page = QueryPage.PAGE; break;
+			case SLICE: {
+				page = sharedData.isMultiPartCorpus() ? PartsPage.PAGE : SlicePage.PAGE;
+			} break;
+			case QUERY: {
+				page = sharedData.isMultiPartCorpus() ? PartsPage.PAGE : QueryPage.PAGE;
+			} break;
 			default:
 				break;
 			}
 			
 			if(page==null) {
 				logger.severe("Unknown page result from routing in welcome page for type: "+excerptType);
-				String text = BundleUtil.format("welcome.msg.unknownPage", excerptType);
+				String text = BundleUtil.format("unknownPage", excerptType);
 				FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
 				FacesContext.getCurrentInstance().addMessage(NAV_MSG, msg);
 				return;
+			}
+			
+			if(sharedData.isMultiPartCorpus() && partsData.isEmpty()) {
+				partsData.setSelectedParts(sharedData.getManifest().getAllParts());
 			}
 		}
 
@@ -381,8 +393,8 @@ public class WelcomePage extends XsamplePage {
 	
 	@Transactional
 	public void resetQuota() {
-		final XmpDataverseUser user = excerptData.getDataverseUser();
-		for(ExcerptEntry entry : excerptData.getExcerpt()) {
+		final XmpDataverseUser user = sharedData.getDataverseUser();
+		for(ExcerptEntry entry : downloadData.getEntries()) {
 			final XmpExcerpt excerpt = services.findQuota(user, entry.getResource());
 			excerpt.clear();
 		}
@@ -397,7 +409,7 @@ public class WelcomePage extends XsamplePage {
 	
 	@Transactional
 	public void verifyInput() {
-		if(excerptData.isVerified()) {
+		if(sharedData.isVerified()) {
 			return;
 		}
 		
@@ -422,7 +434,7 @@ public class WelcomePage extends XsamplePage {
 		}
 		
 		workflow.setStatus(status);
-		excerptData.setVerified(true);
+		sharedData.setVerified(true);
 	}
 
 	private static void message(Severity severity, String key, Object...args) {
@@ -537,7 +549,7 @@ public class WelcomePage extends XsamplePage {
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.unknownDataverse", address);
 			return false;
 		}				
-		excerptData.setServer(dataverse.get());
+		sharedData.setServer(dataverse.get());
 		
 		// Now check that it is a valid URL and initialize our client wrapper
 		try {
@@ -578,9 +590,9 @@ public class WelcomePage extends XsamplePage {
 					key, info.getStatus()));
 			return false;
 		}
-		final XmpDataverse server = excerptData.getServer();
+		final XmpDataverse server = sharedData.getServer();
 		final XmpDataverseUser user = services.findDataverseUser(server, info.getData().getPersistentUserId());
-		excerptData.setDataverseUser(user);
+		sharedData.setDataverseUser(user);
 		
 		return true;
 	}
@@ -625,7 +637,7 @@ public class WelcomePage extends XsamplePage {
 			manifest.validate();
 			
 			// Update manifest in current setup
-			excerptData.setManifest(manifest);
+			sharedData.setManifest(manifest);
 		} catch (IOException | JsonIOException e) {
 			logger.log(Level.SEVERE, "Failed to load manifest content", e);
 			message(FacesMessage.SEVERITY_ERROR, "welcome.msg.loadFailed");
@@ -641,7 +653,7 @@ public class WelcomePage extends XsamplePage {
 	
 	/** Validate the root manifest. */
 	boolean validateManifest(Context context) {
-		final XsampleManifest manifest = excerptData.getManifest();
+		final XsampleManifest manifest = sharedData.getManifest();
 		
 		// Let the self-vlaidating manifest do an internal check first!
 		try {
@@ -758,7 +770,7 @@ public class WelcomePage extends XsamplePage {
 	private boolean loadFile(DataverseFile file) {
 		String label = file.getLabel();
 		// Ensure local copy
-		final XmpResource resource = services.findResource(excerptData.getServer(), file.getId());	
+		final XmpResource resource = services.findResource(sharedData.getServer(), file.getId());	
 		final XmpLocalCopy copy = cache.getCopy(resource);	
 		if(!tryLockCopy(copy, label)) {
 			return false;
@@ -779,11 +791,11 @@ public class WelcomePage extends XsamplePage {
 
 	/** Load the entire source files, including manifests and mapping files */
 	boolean loadFiles(Context context) {
-		final XmpDataverse server = excerptData.getServer();
+		final XmpDataverse server = sharedData.getServer();
 		
 		long totalSegmemnts = 0;
 		
-		final List<Corpus> corpora = excerptData.getManifest().getAllParts();
+		final List<Corpus> corpora = sharedData.getManifest().getAllParts();
 		
 		// Load all corpus files
 		for(Corpus corpus : corpora) {
@@ -828,7 +840,7 @@ public class WelcomePage extends XsamplePage {
 				
 				totalSegmemnts += segmentsToUse;
 				
-				excerptData.registerSegments(corpusId, segmentsToUse);
+				corpusData.registerSegments(corpusId, segmentsToUse);
 				
 				context.fileInfos.add(fileInfo);
 			} finally {
@@ -836,12 +848,12 @@ public class WelcomePage extends XsamplePage {
 			}
 		}
 		
-		excerptData.setSegments(totalSegmemnts);
+		corpusData.setSegments(totalSegmemnts);
 		
 		assert context.fileInfos.size()==corpora.size() : "Missed files in loading process";
 		
 		// Now also load annotation files/manifests/mappings
-		List<ManifestFile> manifests = excerptData.getManifest().getManifests();
+		List<ManifestFile> manifests = sharedData.getManifest().getManifests();
 		for(ManifestFile manifest : manifests) {
 			if(!loadFile(manifest)) {
 				return false;
@@ -858,10 +870,10 @@ public class WelcomePage extends XsamplePage {
 	
 	/** Verify manifest excerpt data - needs file info for loaded target resource!! */
 	boolean validateExcerpt(Context context) {
-		final XsampleManifest manifest = excerptData.getManifest();
+		final XsampleManifest manifest = sharedData.getManifest();
 		Corpus corpus = manifest.getCorpus();
 		if(manifest.getStaticExcerptCorpus()!=null) {
-			corpus = excerptData.findCorpus(manifest.getStaticExcerptCorpus());
+			corpus = sharedData.findCorpus(manifest.getStaticExcerptCorpus());
 		}
 		
 		long begin = 0, end = 0;
@@ -880,7 +892,7 @@ public class WelcomePage extends XsamplePage {
 			fixed = staticExcerpt.getSpanType()==SpanType.FIXED;
 			
 			if(fixed) {
-				long segments = excerptData.getSegments(corpus);
+				long segments = corpusData.getSegments(corpus);
 				limit = (long) (services.getDoubleSetting(Key.ExcerptLimit) * segments);
 			} else {
 				limit = (long) (services.getDoubleSetting(Key.ExcerptLimit) * 100);
@@ -888,7 +900,7 @@ public class WelcomePage extends XsamplePage {
 			
 			if(size > limit) {
 				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.manifestExceedsQuota", 
-						_long(size), _double(limit), corpus.getTitle(), _long(excerptData.getSegments()));
+						_long(size), _double(limit), corpus.getTitle(), _long(corpusData.getSegments()));
 				return false;
 			}
 		} else {
@@ -918,8 +930,8 @@ public class WelcomePage extends XsamplePage {
 			return false;
 		}
 		
-		excerptData.setStaticExcerptBegin(begin);
-		excerptData.setStaticExcerptEnd(end);
+		sharedData.setStaticExcerptBegin(begin);
+		sharedData.setStaticExcerptEnd(end);
 		
 		// Compute label once and store in view
 		final String label;
@@ -936,7 +948,9 @@ public class WelcomePage extends XsamplePage {
 			label = BundleUtil.format("welcome.excerptLabel.relative", 
 					_long(begin), _long(end), corpus.getId(), corpus.getTitle());
 		}
-		view.setStaticExcerptLabel(label);
+		labelData.setSingularSegmentLabel(excerptHandler.getSegmentLabel(false));
+		labelData.setPluralSegmentLabel(excerptHandler.getSegmentLabel(true));
+		labelData.setStaticExcerptLabel(label);
 		
 		return true;
 	}
@@ -944,32 +958,33 @@ public class WelcomePage extends XsamplePage {
 	boolean checkFileSize(Context context) {
 		final long threshold = services.getLongSetting(Key.SmallFileLimit);
 		boolean onlySmallFiles = true;
-		for(Corpus part : excerptData.getManifest().getAllParts()) {
-			final long segments = excerptData.getSegments(part);
+		for(Corpus part : sharedData.getManifest().getAllParts()) {
+			final long segments = corpusData.getSegments(part);
 			onlySmallFiles &= segments<=threshold;
 			if(!onlySmallFiles) {
 				break;
 			}
 		}
-		excerptData.setOnlySmallFiles(onlySmallFiles);
+		sharedData.setOnlySmallFiles(onlySmallFiles);
 		return true;
 	}
 		
 	/** Verify that user still has quota left on the designated resource */
 	//TODO we need a better way to compute global quota across all the involved resources
 	boolean checkQuota(Context context) {
-		final XmpDataverseUser user = excerptData.getDataverseUser();
+		final XmpDataverseUser user = sharedData.getDataverseUser();
 		final double limitFactor = services.getDoubleSetting(Key.ExcerptLimit);
 		
+		//TODO tricky to calculate with small files..?
 		long globalQuota = 0;
 		
 		for(XmpFileInfo info : context.fileInfos) {
 			final XmpResource resource = info.getResource();
 			final XmpLocalCopy copy = cache.getCopy(resource);
 			final XmpExcerpt excerpt = services.findQuota(user, resource);
-			final Corpus corpus = excerptData.findCorpus(resource);
+			final Corpus corpus = sharedData.findCorpus(resource);
 
-			final long segments = excerptData.getSegments(corpus);
+			final long segments = corpusData.getSegments(corpus);
 			final long limit = (long) Math.floor(segments * limitFactor);
 			
 			final ExcerptEntry entry = new ExcerptEntry();
@@ -977,7 +992,7 @@ public class WelcomePage extends XsamplePage {
 			entry.setResource(resource);
 			entry.setQuota(excerpt);
 			entry.setLimit(limit);
-			excerptData.addExcerptEntry(entry);
+			downloadData.addEntry(entry);
 			
 			if(!isSmallFile(segments) && !excerpt.isEmpty()) {
 				final long quota = excerpt.size();
@@ -997,14 +1012,8 @@ public class WelcomePage extends XsamplePage {
 	}
 	
 	boolean prepareUI(Context context) {
-		if(view.getSelectedCorpus()==null) {
-			List<XmpFileInfo> fileInfos = context.fileInfos;
-			if(!fileInfos.isEmpty()) {
-				final XmpFileInfo info = fileInfos.get(0);
-				final XmpResource resource = info.getResource();
-				final Corpus corpus = excerptData.findCorpus(resource);
-				view.setSelectedCorpus(corpus.getId());
-			}
+		if(selectionData.getSelectedCorpus()==null) {
+			selectionData.setSelectedCorpus(sharedData.getManifest().getAllParts().get(0).getId());
 		}
 		
 		return true;

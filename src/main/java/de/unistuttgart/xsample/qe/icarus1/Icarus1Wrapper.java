@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Properties;
 
 import de.unistuttgart.xsample.qe.QueryException;
-import de.unistuttgart.xsample.qe.QueryException.ErrorCode;
+import de.unistuttgart.xsample.qe.QueryException.QueryErrorCode;
 import de.unistuttgart.xsample.qe.Result;
 import de.unistuttgart.xsample.qe.icarus1.match.ConstraintContext;
 import de.unistuttgart.xsample.qe.icarus1.match.Search;
@@ -53,13 +53,13 @@ public class Icarus1Wrapper {
 		try {
 			query.parseQueryString(queryString);
 		} catch (UnsupportedFormatException e) {
-			throw new QueryException("Unsupported format in query: "+queryString, ErrorCode.SYNTAX_ERROR, e);
+			throw new QueryException("Unsupported format in query: "+queryString, QueryErrorCode.SYNTAX_ERROR, e);
 		}
 		
 		options = new Options(settings);
 	}
 
-	public Result evaluate(Reader reader) throws QueryException {
+	public ResultPart evaluate(Reader reader) throws QueryException {
 		requireNonNull(reader);
 		checkState("Query not initialized", query!=null);
 		
@@ -68,9 +68,9 @@ public class Icarus1Wrapper {
 		try {
 			corpus = conllReader.readAll(reader, null);
 		} catch (IOException e) {
-			throw new QueryException("Failed to load corpus file", ErrorCode.IO_ERROR, e);
+			throw new QueryException("Failed to load corpus file", QueryErrorCode.IO_ERROR, e);
 		} catch (UnsupportedFormatException e) {
-			throw new QueryException("Failed to parse corpus data", ErrorCode.UNSUPPORTED_FORMAT, e);
+			throw new QueryException("Failed to parse corpus data", QueryErrorCode.UNSUPPORTED_FORMAT, e);
 		}
 		
 		final Search search = new Search(query, options, corpus);
@@ -79,9 +79,24 @@ public class Icarus1Wrapper {
 			search.init();
 			search.execute();
 		} catch(RuntimeException e) {
-			throw new QueryException("Internal search error", ErrorCode.INTERNAL_ERROR, e);
+			throw new QueryException("Internal search error", QueryErrorCode.INTERNAL_ERROR, e);
 		}
 	
-		return search.getResult();
+		return new ResultPart(search.getResult(), corpus.size());
+	}
+	
+	public static class ResultPart {
+		private final Result result;
+		private final int segments;
+		
+		public ResultPart(Result result, int segments) {
+			this.result = result;
+			this.segments = segments;
+		}
+		
+		public Result getResult() { return result; }
+		public int getSegments() { return segments; }
+		
+		public boolean isEmpty() { return result.isEmpty(); }
 	}
 }

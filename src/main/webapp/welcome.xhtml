@@ -16,7 +16,7 @@
 	
 		<div>
 			<p:outputPanel id="outline">
-				<p:panel rendered="#{welcomePage.showOutline}">
+				<p:panel rendered="#{welcomePage.showOutline}"> 
 					<f:facet name="header">
 						<h:outputText value="#{bundle['welcome.infoHeader']}" />
 					</f:facet>
@@ -35,19 +35,18 @@
 							</p:dataTable>
 						</div>
 						<div class="p-col">
-							<div jsf:rendered="#{xsampleExcerptData.multiPartCorpus}">
-								<h:outputText value="#{bundle['selectFile']}" />
-								<p:selectOneMenu value="#{welcomeView.selectedCorpus}" style="width:500px"
-										hideNoSelectionOption="true">
-									<f:selectItem itemLabel="#{bundle['selectFile']}" itemValue="" noSelectionOption="true"/>
-		                   	 		<f:selectItems value="#{xsampleExcerptData.manifest.allParts}" var="part" 
-		                   	 			itemLabel="#{XSampleUtils.trim2Size(part.title)}" itemValue="#{part.id}" />
-		                   	 		<p:ajax update="fileInfo" />
-								</p:selectOneMenu>
-							</div>
 							<p:dataTable id="fileInfo" var="property" value="#{welcomePage.filePropertiesForOutline}">
 								<f:facet name="header">
-									<h:outputText value="#{bundle['welcome.fileInfoHeader']}" />
+									<h:outputText value="#{bundle['welcome.fileInfoHeader']}" style="margin-right: 5em" />
+									<h:panelGroup layout="inline" rendered="#{sharedData.multiPartCorpus}">
+										<p:selectOneMenu value="#{selectionData.selectedCorpus}" style="width:500px"
+												hideNoSelectionOption="true">
+											<f:selectItem itemLabel="#{bundle['selectFile']}" itemValue="" noSelectionOption="true"/>
+				                   	 		<f:selectItems value="#{sharedData.manifest.allParts}" var="part" 
+				                   	 			itemLabel="#{XSampleUtils.trim2Size(part.title)}" itemValue="#{part.id}" />
+				                   	 		<p:ajax update="fileInfo" />
+										</p:selectOneMenu>
+									</h:panelGroup>
 								</f:facet>
 								<p:column headerText="#{bundle['property']}">
 									<h:outputText value="#{property.key}" />
@@ -66,8 +65,8 @@
 					<div jsf:rendered="#{welcomePage.showExcerptSelection}">
 						<h:outputText value="#{bundle['welcome.excerptType']}:" />
 						<p:selectOneRadio layout="pageDirection"
-							value="#{welcomeView.excerptType}">
-							<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']} (#{welcomeView.staticExcerptLabel})"
+							value="#{sharedData.excerptType}">
+							<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']} (#{labelData.staticExcerptLabel})"
 								itemValue="STATIC" />
 							<f:selectItem itemLabel="#{bundle['welcome.excerptType.slice']}"
 								itemValue="SLICE" />

@@ -17,22 +17,20 @@
 /**
  * 
  */
-package de.unistuttgart.xsample.util;
+package de.unistuttgart.xsample.pages.shared;
 
-import java.io.Serializable;
+import de.unistuttgart.xsample.util.DataBean;
 
 /**
  * @author Markus Gärtner
  *
  */
-public abstract class ExcerptUtilityData implements Serializable {
+public abstract class ExcerptUtilityData implements DataBean {
 
 	private static final long serialVersionUID = -6599365533185080045L;
 
 	/** Encoded global excerpt */
 	private String globalExcerpt = "";
-	/** Encoded global quota */
-	private String globalQuota = "";
 	
 	/** Total number of segments available in entire corpus */
 	private long globalSegments = 1;
@@ -44,9 +42,6 @@ public abstract class ExcerptUtilityData implements Serializable {
 	
 	public String getGlobalExcerpt() { return globalExcerpt; }
 	public void setGlobalExcerpt(String globalExcerpt) { this.globalExcerpt = globalExcerpt; }
-	
-	public String getGlobalQuota() { return globalQuota; }
-	public void setGlobalQuota(String globalQuota) { this.globalQuota = globalQuota; }
 	
 	public long getGlobalSegments() { return globalSegments; }
 	public void setGlobalSegments(long globalSize) { this.globalSegments = globalSize; }

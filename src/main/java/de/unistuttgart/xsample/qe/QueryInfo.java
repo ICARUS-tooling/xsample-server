@@ -24,6 +24,8 @@ import static java.util.Objects.requireNonNull;
 import java.util.List;
 
 /**
+ * Models raw results from a corpus query evaluation.
+ * 
  * @author Markus Gärtner
  *
  */
@@ -40,6 +42,7 @@ public class QueryInfo {
 	public List<Result> getResults() {
 		return results;
 	}
+	/** Total number of searchable segments in the corpus or part that was searched */
 	public long getSegments() {
 		return segments;
 	}

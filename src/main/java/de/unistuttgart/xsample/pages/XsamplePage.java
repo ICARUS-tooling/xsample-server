@@ -30,10 +30,10 @@ import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.pages.shared.XsampleExcerptData;
-import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
-import de.unistuttgart.xsample.pages.shared.XsampleWorkflow;
-import de.unistuttgart.xsample.util.ExcerptUtilityData;
+import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
+import de.unistuttgart.xsample.pages.shared.ExcerptUtilityData;
+import de.unistuttgart.xsample.pages.shared.SharedData;
+import de.unistuttgart.xsample.pages.shared.WorkflowData;
 
 /**
  * @author Markus Gärtner
@@ -42,22 +42,22 @@ import de.unistuttgart.xsample.util.ExcerptUtilityData;
 public class XsamplePage {
 	
 	@Inject
-	protected XsampleWorkflow workflow;
+	protected WorkflowData workflow;
 	
 	@Inject
 	protected XsampleServices services;
 	
 	@Inject
-	protected XsampleExcerptData excerptData;
+	protected SharedData sharedData;
 	
 	protected void initGlobalQuota(ExcerptUtilityData data) {
 		final double limit = services.getDoubleSetting(Key.ExcerptLimit);
-		final long segments = excerptData.getSegments();
+		final long segments = sharedData.getSegments();
 		data.setGlobalSegments(segments);
 		data.setGlobalLimit((long) Math.floor(segments * limit));
 		
 		final List<XmpFragment> totalQuota = new ArrayList<>();
-		for(ExcerptEntry entry : excerptData.getExcerpt()) {
+		for(ExcerptEntry entry : sharedData.getEntries()) {
 			XmpExcerpt quota = entry.getQuota();
 			if(!quota.isEmpty()) {
 				totalQuota.addAll(quota.getFragments());

@@ -42,7 +42,7 @@ import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.download.DownloadPage;
-import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
+import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.XSampleUtils;
 
@@ -61,22 +61,22 @@ public class SlicePage extends XsamplePage {
 	static final String NAV_MSG = "navMsgs";
 
 	@Inject
-	XsampleSliceData sliceData;
+	SliceData sliceData;
 	
 	@Inject
 	SliceView view;
 		
 	private Stream<ExcerptEntry> allEntries() {
-		return excerptData.getManifest().getAllParts()
+		return sharedData.getManifest().getAllParts()
 				.stream()
 				.map(Corpus::getId)
-				.map(excerptData::findEntry)
+				.map(sharedData::findEntry)
 				.filter(Objects::nonNull);
 	}
 	
 	private ExcerptEntry currentEntry() {
 		String corpusId = view.getSelectedCorpus();
-		return corpusId==null ? null : excerptData.findEntry(corpusId);
+		return corpusId==null ? null : sharedData.findEntry(corpusId);
 	}
 	
 	public void init() {
@@ -87,11 +87,11 @@ public class SlicePage extends XsamplePage {
 //		view.setSelectedParts(excerptData.getManifest().getAllParts());
 //		view.setSelectedCorpus(view.getSelectedParts().get(0).getId());
 		
-		Corpus part = excerptData.getManifest().getAllParts().get(0);
+		Corpus part = sharedData.getManifest().getAllParts().get(0);
 		
 		view.setSelectedCorpus(part.getId());
 		
-		sliceData.setGlobalLimit(excerptData.getSegments());
+		sliceData.setGlobalLimit(corpusData.getSegments());
 		sliceData.setGlobalLimit(getQuotaSize());
 		
 		refreshLocalQuota(part);
@@ -99,12 +99,12 @@ public class SlicePage extends XsamplePage {
 
 	public void refreshLocalQuota(Corpus corpus) {
 		final double limit = services.getDoubleSetting(Key.ExcerptLimit);
-		final long segments = excerptData.getSegments(corpus);
+		final long segments = sharedData.getSegments(corpus);
 		sliceData.setSegments(segments);
 		sliceData.setLimit((long) Math.floor(segments * limit));
 		
 		final List<XmpFragment> quota = new ArrayList<>();
-		ExcerptEntry entry = excerptData.findEntry(corpus.getId());
+		ExcerptEntry entry = sharedData.findEntry(corpus.getId());
 		if(!entry.getQuota().isEmpty()) {
 			quota.addAll(entry.getQuota().getFragments());
 		}
@@ -140,7 +140,7 @@ public class SlicePage extends XsamplePage {
 			long usedUpSlots = XSampleUtils.combinedSize(fragments, quota);
 			if(usedUpSlots>entry.getLimit()) {
 				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
-						_long(entry.getLimit()), entry.getResource(), excerptData.getServer(), excerptData.getDataverseUser()));
+						_long(entry.getLimit()), entry.getResource(), sharedData.getServer(), sharedData.getDataverseUser()));
 				Messages.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
 						_long(usedUpSlots), _long(entry.getLimit()));
 				return;
@@ -174,7 +174,7 @@ public class SlicePage extends XsamplePage {
 	private void commitExcerpt() {
 		final String corpusId = view.getSelectedCorpus();
 		if(corpusId!=null) {
-			final ExcerptEntry entry = excerptData.findEntry(corpusId);
+			final ExcerptEntry entry = sharedData.findEntry(corpusId);
 			if(view.isIncludeCorpus()) {
 				view.getSelectedParts().add(corpusId);
 			} else {
@@ -194,13 +194,13 @@ public class SlicePage extends XsamplePage {
 		
 		if(vce.getNewValue()!=null) {
 			final String corpusId = (String)vce.getNewValue();
-			final ExcerptEntry entry = excerptData.findEntry(corpusId);
+			final ExcerptEntry entry = sharedData.findEntry(corpusId);
 			final List<XmpFragment> fragments = entry.getFragments();
 			final XmpFragment slice = fragments==null || fragments.isEmpty() ? null : fragments.get(0);
 			sliceData.setBegin(slice==null ? 0 : slice.getBeginIndex());
 			sliceData.setEnd(slice==null ? 0 : slice.getEndIndex());
 			view.setIncludeCorpus(view.getSelectedParts().contains(corpusId));
-			refreshLocalQuota(excerptData.findCorpus(corpusId));
+			refreshLocalQuota(sharedData.findCorpus(corpusId));
 
 			System.out.printf("old=%s new=%s included_old=%b included_new=%b%n",vce.getOldValue(), vce.getNewValue(), 
 					view.isIncludeCorpus(),

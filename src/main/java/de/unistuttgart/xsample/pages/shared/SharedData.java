@@ -19,42 +19,57 @@
  */
 package de.unistuttgart.xsample.pages.shared;
 
+import static de.unistuttgart.xsample.util.XSampleUtils.decrypt;
 import static java.util.Objects.requireNonNull;
 
-import java.io.Serializable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.security.GeneralSecurityException;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
+import java.util.concurrent.TimeUnit;
 
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
+import de.unistuttgart.xsample.XsampleServices;
+import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
 import de.unistuttgart.xsample.dv.XmpDataverse;
 import de.unistuttgart.xsample.dv.XmpDataverseUser;
-import de.unistuttgart.xsample.dv.XmpExcerpt;
-import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.dv.XmpLocalCopy;
 import de.unistuttgart.xsample.dv.XmpResource;
+import de.unistuttgart.xsample.io.LocalCache;
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.mf.ManifestFile;
+import de.unistuttgart.xsample.mf.MappingFile;
 import de.unistuttgart.xsample.mf.XsampleManifest;
+import de.unistuttgart.xsample.mp.Mapping;
+import de.unistuttgart.xsample.mp.Mappings;
+import de.unistuttgart.xsample.util.DataBean;
+import de.unistuttgart.xsample.util.XSampleUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2LongMap;
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 /**
  * Input information regarding the excerpt to be created.
+ * Contains raw input data and some universally shared global info.
  * 
  * @author Markus Gärtner
  *
  */
 @Named
 @ViewScoped
-public class XsampleExcerptData implements Serializable {
+public class SharedData implements DataBean {
 
 	private static final long serialVersionUID = 142653554299182977L;
 	
@@ -67,17 +82,6 @@ public class XsampleExcerptData implements Serializable {
 	
 	/** The root manifest for the current workflow. */
 	private XsampleManifest manifest;
-	/** Current excerpt, can be from multiple files */
-	private List<ExcerptEntry> excerpt = new ObjectArrayList<>();	
-	
-	/** Maps corpus ids to the determined segment counts that should be used for them */
-	private Object2LongMap<String> segmentsByCorpus = new Object2LongOpenHashMap<>();
-	
-	/** Accumulated segment count from parts or a monolithic corpus. */
-	private long segments = -1;
-	
-	/** Allowed maximum total number of segments to be given out */
-	private long limit = -1;
 	
 	/** 0-based begin index on segments to create static excerpt */
 	private long staticExcerptBegin = 0;
@@ -90,15 +94,14 @@ public class XsampleExcerptData implements Serializable {
 	
 	// CACHES
 
-	
 	private transient Map<String, Corpus> id2Corpus = new Object2ObjectOpenHashMap<>();
 	private transient Map<String, ManifestFile> label2Manifest = new Object2ObjectOpenHashMap<>();
 	private transient Map<String, ManifestFile> corpusId2Manifest = new Object2ObjectOpenHashMap<>();
 	private transient Long2ObjectMap<Corpus> fileId2Corpus = new Long2ObjectOpenHashMap<>();
-	
-	public XsampleExcerptData() {
-		segmentsByCorpus.defaultReturnValue(-1);
-	}
+	private transient Map<String, Mapping> mappings = new Object2ObjectOpenHashMap<>();
+
+	/** Type of excerpt generation, legal values are 'static', 'window' and 'query'. */
+	private ExcerptType excerptType = ExcerptType.STATIC;
 	
 	private void invalidateCaches() {
 		id2Corpus.clear();
@@ -156,33 +159,13 @@ public class XsampleExcerptData implements Serializable {
 	/** 0-based end index on segments to create static excerpt */
 	public long getStaticExcerptEnd() { return staticExcerptEnd; }
 	public void setStaticExcerptEnd(long staticExcerptEnd) { this.staticExcerptEnd = staticExcerptEnd; }
-	
-	public long getSegments() { return segments; }
-	public void setSegments(long segments) { this.segments = segments; }
-	
-	public long getLimit() { return limit; } 
-	public void setLimit(long limit) { this.limit = limit; }
 
 	public boolean isVerified() { return verified; }
 	public void setVerified(boolean verified) { this.verified = verified; }
 	
-	public List<ExcerptEntry> getExcerpt() { return excerpt; }
-	public void setExcerpt(List<ExcerptEntry> excerpt) { this.excerpt = requireNonNull(excerpt); }
-	
 	public boolean isOnlySmallFiles() { return onlySmallFiles; }
 	public void setOnlySmallFiles(boolean onlySmallFiles) { this.onlySmallFiles = onlySmallFiles; }
-	
-	public void registerSegments(String corpusId, long segments) {
-		segmentsByCorpus.put(requireNonNull(corpusId), segments);
-	}
-	
-	public long getSegments(Corpus part) {
-		long segments = segmentsByCorpus.getLong(requireNonNull(part).getId());
-		if(segments==-1)
-			throw new IllegalArgumentException("Unknown corpus id: "+part.getId());
-		return segments;
-	}
-	
+		
 	// Utility
 	
 	public boolean isMultiPartCorpus() {
@@ -205,17 +188,6 @@ public class XsampleExcerptData implements Serializable {
 		maybeValidateCaches();
 		return fileId2Corpus.get(resource.getFile().longValue());
 	}
-	/** Find our entry (if present) matching given id */
-	public ExcerptEntry findEntry(String corpusId) {
-		//TODO cache?!
-		requireNonNull(corpusId);
-		for(ExcerptEntry entry : excerpt) {
-			if(corpusId.equals(entry.getCorpusId())) {
-				return entry;
-			}
-		}
-		return null;
-	}
 	/** Find manifest file with given label */
 	public ManifestFile findManifest(String label) {
 		requireNonNull(label);
@@ -229,58 +201,38 @@ public class XsampleExcerptData implements Serializable {
 		return corpusId2Manifest.get(corpus.getId());
 	}
 	
-	public boolean hasEntry(Predicate<? super ExcerptEntry> pred) {
-		return excerpt.stream().anyMatch(pred);
-	}
-	
-	public void addExcerptEntry(ExcerptEntry entry) { excerpt.add(requireNonNull(entry)); }
-	
-	/**
-	 * 
-	 * @author Markus Gärtner
-	 *
-	 */
-	public static class ExcerptEntry implements Serializable {
+	public Mapping getMapping(MappingFile mappingFile, XsampleServices services, LocalCache cache) 
+			throws GeneralSecurityException, IOException, UnsupportedContentTypeException, InterruptedException {
 
-		private static final long serialVersionUID = 3111407155877405794L;
+		Mapping mapping = mappings.get(mappingFile.getLabel());
 		
-		/** Corpus or subcorpus to extract from */
-		private String corpusId;
-		/** Designated output */
-		private List<XmpFragment> fragments;
-		/** DB wrapper for the source */
-		private XmpResource resource;
-		/** Used up quota */
-		private XmpExcerpt quota;
-		/** Limit within the associated corpus */
-		private long limit;
+		if(mapping==null) {
+			final XmpResource resource = services.findResource(getServer(), mappingFile.getId());
+			final XmpLocalCopy copy = cache.getCopy(resource);
+
+			copy.getLock().tryLock(50, TimeUnit.MILLISECONDS);
+			try {
+				final Path file = cache.getDataFile(copy);
+				final Cipher cipher = decrypt(XSampleUtils.deserializeKey(copy.getKey()));
+				final Charset encoding = Charset.forName(copy.getEncoding());
+				
+				mapping = Mappings.forMappingType(mappingFile.getMappingType());
 		
-		public String getCorpusId() {
-			return corpusId;
-		}
-		public void setCorpusId(String corpusId) {
-			this.corpusId = corpusId;
-		}
-		public List<XmpFragment> getFragments() {
-			return fragments;
-		}
-		public void setFragments(List<XmpFragment> fragments) {
-			this.fragments = fragments;
-		}
-		
-		/** Reset the fragment data on this excerpt */
-		public void clear() {
-			fragments = null;
+				try(InputStream raw = Files.newInputStream(file, StandardOpenOption.READ);
+						InputStream in = new CipherInputStream(raw, cipher);
+						Reader reader = new InputStreamReader(in, encoding);) {
+					mapping.load(reader);
+				}
+				mappings.put(mappingFile.getLabel(), mapping);
+			} finally {
+				copy.getLock().unlock();
+			}
 		}
 		
-		public XmpResource getResource() { return resource; }
-		public void setResource(XmpResource xmpResource) { this.resource = xmpResource; }
-		
-		public XmpExcerpt getQuota() { return quota; }
-		public void setQuota(XmpExcerpt quota) { this.quota = quota; }
-		
-		public long getLimit() { return limit; }
-		public void setLimit(long limit) { this.limit = limit; }
-		
+		return mapping;
 	}
+
+	public ExcerptType getExcerptType() { return excerptType; }
+
+	public void setExcerptType(ExcerptType type) { this.excerptType = requireNonNull(type); }
 }

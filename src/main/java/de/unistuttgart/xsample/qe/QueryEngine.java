@@ -20,29 +20,49 @@
 package de.unistuttgart.xsample.qe;
 
 import static de.unistuttgart.xsample.util.XSampleUtils.checkArgument;
-import static de.unistuttgart.xsample.util.XSampleUtils.checkState;
-import static de.unistuttgart.xsample.util.XSampleUtils.strictToInt;
+import static de.unistuttgart.xsample.util.XSampleUtils.decrypt;
 import static java.util.Objects.requireNonNull;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.Serializable;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.LongStream;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import de.unistuttgart.xsample.XsampleServices;
-import de.unistuttgart.xsample.dv.XmpDataverse;
-import de.unistuttgart.xsample.dv.XmpFileInfo;
+import de.unistuttgart.xsample.ct.UnsupportedContentTypeException;
+import de.unistuttgart.xsample.dv.XmpLocalCopy;
 import de.unistuttgart.xsample.dv.XmpResource;
 import de.unistuttgart.xsample.io.LocalCache;
 import de.unistuttgart.xsample.mf.Corpus;
-import de.unistuttgart.xsample.pages.shared.XsampleExcerptData;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import de.unistuttgart.xsample.mf.ManifestFile;
+import de.unistuttgart.xsample.mf.MappingFile;
+import de.unistuttgart.xsample.mp.Mapping;
+import de.unistuttgart.xsample.pages.shared.CorpusData;
+import de.unistuttgart.xsample.pages.shared.SharedData;
+import de.unistuttgart.xsample.qe.MappingException.MappingErrorCode;
+import de.unistuttgart.xsample.qe.QueryException.QueryErrorCode;
+import de.unistuttgart.xsample.qe.icarus1.Icarus1Wrapper;
+import de.unistuttgart.xsample.qe.icarus1.Icarus1Wrapper.ResultPart;
+import de.unistuttgart.xsample.util.XSampleUtils;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 /**
  * @author Markus Gärtner
@@ -58,77 +78,158 @@ public class QueryEngine implements Serializable {
 	LocalCache cache;
 	
 	@Inject
-	XsampleExcerptData excerptData;
-	
-	@Inject
 	XsampleServices services;
 	
-	public QueryInfo query(String manifestId, String query) {
-		//TODO implement actual forwarding to ICARUS2 engine
-		
-		return createDummyResults(manifestId);
-	}
+	@Inject
+	SharedData excerptData;
+	@Inject
+	CorpusData corpusData;
 	
-	private QueryInfo createDummyResults(String manifestId) {
-		final List<Result> list = new ArrayList<>();
-		long totalQuerySegments = 0;
+	public QueryInfo query(String query) throws QueryException {
+		Icarus1Wrapper wrapper = new Icarus1Wrapper();
+		wrapper.init(query, new Properties()); //TODO forward search settings
+		
+		List<Result> results = new ObjectArrayList<>();
+		long segments = 0;
 		
 		for(Corpus corpus : excerptData.getManifest().getAllParts()) {
-			final Result result = new Result();
-			result.setCorpusId(corpus.getId());
+			final ManifestFile manifest = excerptData.findManifest(corpus);
+			final XmpResource resource = services.findResource(excerptData.getServer(), manifest.getId());
+			final XmpLocalCopy copy = cache.getCopy(resource);
 			
-			final XmpDataverse dataverse = excerptData.getServer();
-			final Long fileId = corpus.getPrimaryData().getId();
-			final XmpResource resource = services.findResource(dataverse, fileId);
-			final XmpFileInfo fileInfo = services.findFileInfo(resource);
-			
-			checkState("File info not populated", fileInfo.isSet());
-			
-			int segments = strictToInt(fileInfo.getSegments());
-			int querySegments = segments * 10;
-			Random r = new Random();
-			int count = Math.min(40, querySegments/2);
-			
-			LongSet hits = new LongOpenHashSet();
-			while(hits.size()<count) {
-				hits.add(r.nextInt(querySegments)+1);
+			try {
+				copy.getLock().tryLock(50, TimeUnit.MILLISECONDS);
+			} catch (InterruptedException e) {
+				throw new QueryException("Failed to acquire lock for annotations file", QueryErrorCode.RESOURCE_LOCKED, manifest.getLabel(), e);
 			}
-			
-			result.setHits(hits.longStream().sorted().toArray());
-			
-			list.add(result);
-			totalQuerySegments += querySegments;
+			try {		
+				final Path file = cache.getDataFile(copy);
+				Cipher cipher = decrypt(XSampleUtils.deserializeKey(copy.getKey()));
+				final Charset encoding = Charset.forName(copy.getEncoding());
+
+				try(InputStream raw = Files.newInputStream(file, StandardOpenOption.READ);
+						InputStream in = new CipherInputStream(raw, cipher);
+						Reader reader = new InputStreamReader(in, encoding);) {
+					
+					ResultPart resultPart = wrapper.evaluate(reader);
+					if(!resultPart.isEmpty()) {
+						results.add(resultPart.getResult());
+					}
+					// Acucmulate searchable segments in any case
+					segments += resultPart.getSegments();
+				}
+			} catch(QueryException e) {
+				// Decorate exception with contextual info and rethrow
+				e.setCorpusId(corpus.getId());
+				throw e;
+			} catch (IOException e) {
+				throw new QueryException("Unable to read annotations file", QueryErrorCode.IO_ERROR, manifest.getLabel(), e);
+			} catch (GeneralSecurityException e) {
+				throw new QueryException("Unable to decrypt annotations file", QueryErrorCode.SECURITY_ERROR, manifest.getLabel(), e);
+			} finally {
+				copy.getLock().unlock();
+			}
 		}
 		
-		return new QueryInfo(list, totalQuerySegments);
+		return new QueryInfo(results, segments);
 	}
 	
-	/** Maps 1-based hits in the annotation space into 1-based segments of the primary data */
-	public List<Result> mapSegments(List<Result> results) {
+	/** Maps 0-based hits in the annotation space into 1-based segments of the primary data.
+	 * @throws MappingException */
+	public List<Result> mapSegments(List<Result> results) throws MappingException {
 		requireNonNull(results);
 		checkArgument("Only supports a single result set currently", results.size()==1);
-		
-		final long max = excerptData.getSegments(); 
 		
 		List<Result> result = new ArrayList<>();
 		
 		for(Result original : results) {
-			Result mapped = new Result();
-			mapped.setCorpusId(original.getCorpusId());
-			mapped.setHits(LongStream.of(original.getHits())
-				.map(i -> {
-					long seg = i/10;
-					if(i%10!=0) {
-						seg++;
-					}
-					return Math.min(max, seg);
-				})
-				.distinct()
-				.toArray());
+			if(original.isEmpty()) {
+				continue;
+			}
+			final String corpusId = original.getCorpusId();
+			final Result mapped = new Result();
+			mapped.setCorpusId(corpusId);
+			final Corpus corpus = excerptData.findCorpus(corpusId);
+			final ManifestFile manifestFile = excerptData.findManifest(corpus);
+			if(manifestFile==null)
+				throw new MappingException("No manifest for "+corpusId, MappingErrorCode.MISSING_MANIFEST, corpusId);
+			final MappingFile mappingFile = manifestFile.getMappingFile();
+			if(mappingFile==null)
+				throw new MappingException("No mapping for "+corpusId, MappingErrorCode.MISSING_MAPPING, corpusId);
 			
-			result.add(mapped);
+			Mapping mapping;
+			try {
+				mapping = excerptData.getMapping(null, services, cache);
+			} catch (UnsupportedContentTypeException e) {
+				throw new MappingException("Can't read mapping format", MappingErrorCode.UNSUPPORTED_FORMAT, mappingFile.getLabel(), e);
+			} catch (GeneralSecurityException e) {
+				throw new MappingException("Failed to access mapping file", MappingErrorCode.SECURITY_ERROR, mappingFile.getLabel(), e);
+			} catch (IOException e) {
+				throw new MappingException("Reading of mapping file failed", MappingErrorCode.IO_ERROR, mappingFile.getLabel(), e);
+			} catch (InterruptedException e) {
+				throw new MappingException("Mapping file locked", MappingErrorCode.RESOURCE_LOCKED, mappingFile.getLabel(), e);
+			}
+			
+			try {
+				map(original, mapping, mapped, corpusData.getSegments(corpus));
+			} catch(RuntimeException e) {
+				throw new MappingException("Unexpected internal error", MappingErrorCode.INTERNAL_ERROR, mappingFile.getLabel(), e);
+			}
+			
+			if(!mapped.isEmpty()) {
+				result.add(mapped);
+			}
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * 
+	 * @param source 0-based input indices
+	 * @param mapping converter, works 0-based on both ends
+	 * @param target 1-based output indices
+	 * @param targetLimit 1-based maximum for output indices
+	 */
+	private void map(Result source, Mapping mapping, Result target, long targetLimit) {
+		LongList buffer = new LongArrayList();
+		
+		/* We only need to onsider mapped segments that are "new" to the
+		 * result, since we're bound to have a lot of overlap.
+		 */
+		long max = -1;
+		for(long sourceIndex : source.getHits()) {
+			long targetBegin = mapping.getTargetBegin(sourceIndex)+1;
+			long targetEnd = mapping.getTargetEnd(sourceIndex)+1;
+			
+			// Initial span or completely outside stored area
+			if(max==-1 || targetBegin>max) {
+				if(!feed(buffer, targetBegin, targetEnd, targetLimit)) {
+					break;
+				}
+				max = targetEnd;
+			} else if(targetEnd > max) {
+				// Span is overlapping with last one
+				if(!feed(buffer, max+1, targetEnd, targetLimit)) {
+					break;
+				}
+				
+				max = targetEnd;
+			}
+		}
+		
+		if(!buffer.isEmpty()) {
+			target.setHits(buffer.toLongArray());
+		}
+	}
+	
+	private boolean feed(LongList buffer, long from, long to, long limit) {
+		for (long index = from; index <= to; index++) {
+			if(index>limit) {
+				return false;
+			}
+			buffer.add(index);
+		}
+		return true;
 	}
 }

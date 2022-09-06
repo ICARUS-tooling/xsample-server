@@ -73,12 +73,10 @@ import de.unistuttgart.xsample.io.NonClosingOutputStreamDelegate;
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.mf.LegalNote;
 import de.unistuttgart.xsample.mf.ManifestFile;
-import de.unistuttgart.xsample.mf.MappingFile;
 import de.unistuttgart.xsample.mf.XsampleManifest;
 import de.unistuttgart.xsample.mp.Mapping;
-import de.unistuttgart.xsample.mp.Mappings;
 import de.unistuttgart.xsample.pages.XsamplePage;
-import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
+import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.XSampleUtils;
 
@@ -105,8 +103,6 @@ public class DownloadPage extends XsamplePage {
 	@Inject
 	DownloadView view;
 	
-	
-
 	//TODO check http://www.primefaces.org:8080/showcase/ui/file/download.xhtml?jfwid=0b585 for example of monitoring during download initialization
 
 	private static String excerptName(XmpLocalCopy copy) {
@@ -122,14 +118,14 @@ public class DownloadPage extends XsamplePage {
 	}
 	
 	public boolean isHasAnnotations() {
-		XsampleManifest manifest = excerptData.getManifest();
+		XsampleManifest manifest = sharedData.getManifest();
 		return manifest!=null && manifest.hasManifests();
 	}
 	
 	@Transactional
 	public void download() {
 		
-		final List<ExcerptEntry> entries = excerptData.getExcerpt();
+		final List<ExcerptEntry> entries = sharedData.getEntries();
 		final List<XmpLocalCopy> copies = new ArrayList<>(entries.size());
 		
 		// Early check if we already obsoleted the source data
@@ -213,6 +209,16 @@ public class DownloadPage extends XsamplePage {
 				Messages.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
 				response.reset();
 				return;
+			} catch (UnsupportedContentTypeException e) {
+				logger.log(Level.SEVERE, "Unsupported content type", e);
+				Messages.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
+				response.reset();
+				return;
+			} catch (InterruptedException e) {
+				logger.log(Level.SEVERE, "Failed to acquire lock for resource", e);
+				Messages.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
+				response.reset();
+				return;
 			}
 			
 			response.setContentLength(strictToInt(zipSize));
@@ -280,53 +286,41 @@ public class DownloadPage extends XsamplePage {
 	}
 	
 	private void addAnnotationEntry(ZipOutputStream zipOut, ExcerptEntry entry) 
-			throws IOException, GeneralSecurityException {
-		final Corpus corpus = excerptData.findCorpus(entry.getCorpusId());
-		final ManifestFile manifest = excerptData.findManifest(corpus);
-		final XmpResource resource = services.findResource(excerptData.getServer(), manifest.getId());
+			throws IOException, GeneralSecurityException, InterruptedException, UnsupportedContentTypeException {
+		final Corpus corpus = sharedData.findCorpus(entry.getCorpusId());
+		final ManifestFile manifest = sharedData.findManifest(corpus);
+		final XmpResource resource = services.findResource(sharedData.getServer(), manifest.getId());
 		final XmpLocalCopy copy = cache.getCopy(resource);
-		final Path file = cache.getDataFile(copy);
-		final Cipher cipher = decrypt(XSampleUtils.deserializeKey(copy.getKey()));
-		final Charset encoding = Charset.forName(copy.getEncoding());
-		final AnnotationHandler handler;
-		try {
-			handler = AnnotationHandlers.forManifestType(manifest.getManifestType());
-		} catch (UnsupportedManifestTypeException e) {
-			throw new InternalError("No annotation handler available for previously validated file: "+copy.getTitle(), e);
-		}
-
-		zipOut.putNextEntry(new ZipEntry(annotationName(copy)));
-		try(InputStream raw = Files.newInputStream(file, StandardOpenOption.READ);
-				InputStream in = new CipherInputStream(raw, cipher);
-				Reader reader = new InputStreamReader(in, encoding);
-				OutputStream out = new NonClosingOutputStreamDelegate(zipOut);) {
-			
-			if(manifest.getMappingFile()!=null) {
-				final MappingFile mappingFile = manifest.getMappingFile();
-				final XmpResource mp_Resource = services.findResource(excerptData.getServer(), mappingFile.getId());
-				final XmpLocalCopy mp_Copy = cache.getCopy(mp_Resource);
-				final Path mp_File = cache.getDataFile(mp_Copy);
-				final Cipher mp_Cipher = decrypt(XSampleUtils.deserializeKey(mp_Copy.getKey()));
-				final Charset mp_Encoding = Charset.forName(mp_Copy.getEncoding());
-				final Mapping mapping;
-				try {
-					mapping = Mappings.forMappingType(mappingFile.getMappingType());
-				} catch (UnsupportedContentTypeException e) {
-					throw new InternalError("No mapping available for previously validated file: "+mp_Copy.getTitle(), e);
-				}
-
-				try(InputStream mp_raw = Files.newInputStream(mp_File, StandardOpenOption.READ);
-						InputStream mp_in = new CipherInputStream(mp_raw, mp_Cipher);
-						Reader mp_reader = new InputStreamReader(mp_in, mp_Encoding);) {
-					mapping.load(mp_reader);
-					handler.excerpt(reader, mapping, entry.getFragments(), out);
+		
+		copy.getLock().tryLock(50, TimeUnit.MILLISECONDS);
+		try {		
+			final Path file = cache.getDataFile(copy);
+			final Cipher cipher = decrypt(XSampleUtils.deserializeKey(copy.getKey()));
+			final Charset encoding = Charset.forName(copy.getEncoding());
+			final AnnotationHandler handler;
+			try {
+				handler = AnnotationHandlers.forManifestType(manifest.getManifestType());
+			} catch (UnsupportedManifestTypeException e) {
+				throw new InternalError("No annotation handler available for previously validated file: "+copy.getTitle(), e);
+			}
+	
+			zipOut.putNextEntry(new ZipEntry(annotationName(copy)));
+			try(InputStream raw = Files.newInputStream(file, StandardOpenOption.READ);
+					InputStream in = new CipherInputStream(raw, cipher);
+					Reader reader = new InputStreamReader(in, encoding);
+					OutputStream out = new NonClosingOutputStreamDelegate(zipOut);) {
+				
+				if(manifest.getMappingFile()!=null) {
+					final Mapping mapping = sharedData.getMapping(manifest.getMappingFile(), services, cache);
+					handler.excerpt(reader, mapping, entry.getFragments(), out);					
+				} else {
+					handler.excerpt(reader, null, entry.getFragments(), out);
 				}
 				
-			} else {
-				handler.excerpt(reader, null, entry.getFragments(), out);
+				out.flush();
 			}
-			
-			out.flush();
+		} finally {
+			copy.getLock().unlock();
 		}
 	}
 	
@@ -341,7 +335,7 @@ public class DownloadPage extends XsamplePage {
 	}
 	
 	private void maybeWriteLegalHeader(Writer writer) throws IOException {
-		Corpus corpus = excerptData.getManifest().getCorpus();
+		Corpus corpus = sharedData.getManifest().getCorpus();
 		if(corpus.isProxy() && corpus.getLegalNote()!=null) {
 			LegalNote legal = corpus.getLegalNote();
 			writer.append("Corpus info:").append(NL);
@@ -370,7 +364,7 @@ public class DownloadPage extends XsamplePage {
 	}
 	
 	private void addLegalNote(Writer writer, ExcerptEntry entry, XmpLocalCopy copy) throws IOException {
-		Corpus corpus = excerptData.findCorpus(entry.getCorpusId());
+		Corpus corpus = sharedData.findCorpus(entry.getCorpusId());
 		LegalNote legal = corpus.getLegalNote();
 		writer.append("===== ").append(excerptName(copy)).append(" =====").append(NL);
 		if(legal==null) {

@@ -31,7 +31,7 @@ public class CorpusConverter implements Converter<Corpus>, Serializable {
 	private static final long serialVersionUID = -8257660999622066122L;
 
 	@Inject
-	XsampleExcerptData excerptData;
+	SharedData excerptData;
 	
 	private transient Map<String, Corpus> lookup = new Object2ObjectOpenHashMap<>();
 

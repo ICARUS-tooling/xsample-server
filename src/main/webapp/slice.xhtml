@@ -21,7 +21,7 @@
 						hideNoSelectionOption="true">
 					<f:selectItem itemLabel="#{bundle['selectFile']}" itemValue="" noSelectionOption="true"/>
            	 		<f:selectItems value="#{xsampleExcerptData.manifest.allParts}" var="part" 
-           	 			itemLabel="#{part.id} (#{xsampleExcerptData.getSegments(part)}) - #{part.title}" itemValue="#{part.id}" />
+           	 			itemLabel="#{part.id} (#{corpusData.getSegments(part)}) - #{part.title}" itemValue="#{part.id}" />
            	 		<p:ajax update="@form" />
 				</p:selectOneMenu>
 				
@@ -39,7 +39,7 @@
 			                <h:outputText value="#{part.id}"/>
 			            </p:column>
 						<p:column headerText="#{bundle['slice.corpusSegments']}">
-			                <h:outputText value="#{xsampleExcerptData.getSegments(part)}"/>
+			                <h:outputText value="#{corppusData.getSegments(part)}"/>
 			            </p:column>
 						<p:column headerText="#{bundle['slice.corpusTitle']}">
 			                <h:outputText value="#{part.title}"/>

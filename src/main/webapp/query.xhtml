@@ -9,12 +9,20 @@
 		<p:remoteCommand name="initQuery" action="#{queryPage.init}"
 			process="@this" update="@form" oncomplete="initOutline();" />
 			
-		<h:inputHidden id="excerptThreshold" value="#{xsampleQueryData.limit}" readonly="#{true}" />
-		<h:inputHidden id="excerptRange" value="#{xsampleQueryData.range}" readonly="#{true}" />
-		<h:inputHidden id="excerptQuota" value="#{xsampleQueryData.quota}" readonly="#{true}" />
-		<h:inputHidden id="resultRange" value="#{xsampleQueryData.resultRange}" readonly="#{true}" />
-		<h:inputHidden id="resultHits" value="#{xsampleQueryData.resultHits}" readonly="#{true}" />
-		<h:inputHidden id="resultSegments" value="#{xsampleQueryData.resultSegments}" readonly="#{true}" />
+		<h:inputHidden id="excerptStart" value="#{queryData.begin}" />
+		<h:inputHidden id="excerptEnd" value="#{queryData.end}" />
+		<h:inputHidden id="excerptThreshold" value="#{queryData.limit}" readonly="#{true}" />
+		<h:inputHidden id="excerptSegments" value="#{queryData.segments}" readonly="#{true}" />
+		<h:inputHidden id="excerptQuota" value="#{queryData.quota}" readonly="#{true}" />
+		 
+		<h:inputHidden id="globalSegments" value="#{queryData.globalSegments}" readonly="#{true}" />
+		<h:inputHidden id="globalThreshold" value="#{queryData.globalLimit}" readonly="#{true}" />
+		<h:inputHidden id="globalUsed" value="#{queryData.globalUsed}" readonly="#{true}" />
+		<h:inputHidden id="globalExcerpt" value="#{queryData.globalExcerpt}" readonly="#{true}" />
+		<h:inputHidden id="globalQuota" value="#{queryData.globalQuota}" readonly="#{true}" />
+			
+		<h:inputHidden id="resultHits" value="#{queryData.resultHits}" readonly="#{true}" />
+		<h:inputHidden id="resultSegments" value="#{queryData.resultSegments}" readonly="#{true}" />
 		
 		<div jsf:rendered="#{xsampleExcerptData.multiPartCorpus}">
 			<h:outputText value="#{bundle['query.multiPartInfo']}" />
@@ -51,7 +59,7 @@
 					oncomplete="updateAllOutlines()" />
 		</div>
 		<div jsf:id="slice">
-			<div jsf:rendered="#{xsampleQueryData.hasResults}" class="outline-box">
+			<div jsf:rendered="#{queryData.hasResults}" class="outline-box">
 				
 				<h:outputText value="#{bundle['query.rawHits']}:" />
 				<ui:include src="/outline.xhtml">
@@ -67,23 +75,23 @@
 					<ui:param name="showLegend" value="false" />
 				</ui:include>
 				
-				<h:inputHidden id="sliceStart" value="#{xsampleQueryData.begin}" />
-				<h:inputHidden id="sliceEnd" value="#{xsampleQueryData.end}" />
+				<h:inputHidden id="sliceStart" value="#{queryData.begin}" />
+				<h:inputHidden id="sliceEnd" value="#{queryData.end}" />
 				
 				<h:outputText value="#{bundle['query.sliceInfo']}:" />
 				<br/>
 				<h:outputText id="sliceRangeText"
-					value="#{bundle['query.sliceBegin']} #{xsampleQueryData.begin} #{bundle['query.sliceEnd']} #{xsampleQueryData.end}" />
+					value="#{bundle['query.sliceBegin']} #{queryData.begin} #{bundle['query.sliceEnd']} #{queryData.end}" />
 				<p:slider widgetVar="sliceRangeSelect" for="sliceStart,sliceEnd" 
 					display="sliceRangeText" onSlide="updateSlice(event, ui);" 
 					styleClass="excerpt-select" range="true" displayTemplate="#{bundle['query.sliceBegin']} {min} #{bundle['query.sliceEnd']} {max}" 
-					minValue="1" maxValue="#{xsampleQueryData.range}" />    
+					minValue="1" maxValue="#{queryData.range}" />    
 				
 				<h:outputLabel for="excerptSize" value="#{bundle['excerptSize']}: " />
-				<h:outputText id="excerptSize" value="#{xsampleSliceData.size}" /> 
+				<h:outputText id="excerptSize" value="#{queryData.size}" /> 
 				<br/>
 				<h:outputLabel for="excerptPercent" value="#{bundle['excerptPercent']}: " />
-				<h:outputText id="excerptPercent" value="#{xsampleSliceData.percent}%" />
+				<h:outputText id="excerptPercent" value="#{queryData.percent}%" />
 				<br/>
 				<h:outputLabel for="totalPercent" value="#{bundle['totalPercent']}: " 
 					rendered="#{queryPage.showQuota}" />
