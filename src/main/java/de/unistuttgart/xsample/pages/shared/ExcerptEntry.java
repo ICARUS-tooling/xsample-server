@@ -54,4 +54,8 @@ public class ExcerptEntry implements Serializable {
 	public long getLimit() { return limit; }
 	public void setLimit(long limit) { this.limit = limit; }
 	
+	@Override
+	public String toString() {
+		return String.format("%s@[corpus=%s, limit=%d, fragments=%s]", getClass().getSimpleName(), corpusId, limit, fragments);
+	}
 }

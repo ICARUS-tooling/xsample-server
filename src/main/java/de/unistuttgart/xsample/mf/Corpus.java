@@ -128,6 +128,10 @@ public class Corpus implements Serializable, SelfValidating {
 		SelfValidating.validateOptionalNested(parts);
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName()+"@"+(id==null ? "no-id" : id);
+	}
 	
 	public static Builder builder() { return new Builder(); }
 

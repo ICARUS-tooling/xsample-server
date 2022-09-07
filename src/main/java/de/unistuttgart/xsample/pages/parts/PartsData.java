@@ -27,4 +27,11 @@ public class PartsData implements DataBean {
 	public void setSelectedParts(List<Corpus> selectedParts) { this.selectedParts = selectedParts; }
 
 	public boolean isEmpty() { return selectedParts==null || selectedParts.isEmpty(); }
+	
+	public boolean containsPart(Corpus part) { return selectedParts!=null && selectedParts.contains(part); }
+
+	@Override
+	public String toString() {
+		return String.format("%s@[selectedParts=%s]", getClass().getSimpleName(), selectedParts);
+	}
 }

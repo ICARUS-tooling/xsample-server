@@ -3,6 +3,7 @@
  */
 package de.unistuttgart.xsample.pages.download;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._boolean;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
@@ -65,5 +66,10 @@ public class DownloadData implements DataBean {
 	public void clear() {
 		entries.clear();
 		lookup.clear();
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("%s@[includeAnno=%b, entries=%s]", getClass().getSimpleName(), _boolean(includeAnnotations), entries);
 	}
 }

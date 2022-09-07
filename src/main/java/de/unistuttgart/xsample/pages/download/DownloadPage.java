@@ -73,7 +73,6 @@ import de.unistuttgart.xsample.io.NonClosingOutputStreamDelegate;
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.mf.LegalNote;
 import de.unistuttgart.xsample.mf.ManifestFile;
-import de.unistuttgart.xsample.mf.XsampleManifest;
 import de.unistuttgart.xsample.mp.Mapping;
 import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
@@ -115,11 +114,6 @@ public class DownloadPage extends XsamplePage {
 	@Override
 	protected void rollBack() {
 		//TODO do we actually have anything to roll back here?
-	}
-	
-	public boolean isHasAnnotations() {
-		XsampleManifest manifest = sharedData.getManifest();
-		return manifest!=null && manifest.hasManifests();
 	}
 	
 	@Transactional

@@ -81,6 +81,11 @@ public abstract class DataverseFile implements Serializable, SelfValidating {
 		checkState("Missing 'id' field", id!=null);
 //		checkState("Must define either id or persistent-id", id!=null || persistentId!=null);
 	}
+	
+	@Override
+	public String toString() {
+		return getClass().getSimpleName()+"@"+(label==null ? "no-label" : label);
+	}
 
 	protected static abstract class AbstractBuilder<B extends DataverseFile.AbstractBuilder<B, F>, F extends DataverseFile> 
 		extends BuilderBase<F> {

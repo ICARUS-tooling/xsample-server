@@ -54,4 +54,9 @@ public class SliceData implements DataBean {
 	public boolean isValid() {
 		return begin>=1 && end>=1;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("%s@[begin=%d, end=%d]", getClass().getSimpleName(), begin, end);
+	}
 }

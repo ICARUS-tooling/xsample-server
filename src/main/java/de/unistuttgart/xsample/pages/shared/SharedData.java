@@ -176,6 +176,10 @@ public class SharedData implements DataBean {
 				.isEmpty();
 	}
 	
+	public boolean isHasAnnotations() {
+		return manifest!=null && manifest.hasManifests();
+	}
+	
 	/** Find top-level corpus in manifest (if present) with given id */
 	public Corpus findCorpus(String corpusId) {
 		requireNonNull(corpusId);
