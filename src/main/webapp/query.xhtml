@@ -140,7 +140,7 @@
 			var style = exceeded ? OUTLINE_EXCEEDED : OUTLINE_EXCERPT;
 		
 			var canvas = document.getElementById('excerpt');
-			paintExcerpt(canvas, quota, excerpt, range, style);	
+			paintExcerpt(canvas, true, quota, excerpt, range, style);	
 			
 			document.getElementById('query:excerptSize').textContent = count;
 			document.getElementById('query:excerptPercent').textContent = percent + "%";
@@ -196,7 +196,7 @@
 			
 			var range = Number(document.getElementById('query:resultRange').value);
 		
-			paintExcerpt(canvas, [], hits, range, OUTLINE_MATCHES);	
+			paintExcerpt(canvas, true, [], hits, range, OUTLINE_MATCHES);	
 		}
 		
 		function updateOutline() {	
@@ -214,7 +214,7 @@
 			
 			var range = Number(document.getElementById('query:excerptRange').value);
 		
-			paintExcerpt(canvas, [], matches, range, OUTLINE_MATCHES);	
+			paintExcerpt(canvas, true, [], matches, range, OUTLINE_MATCHES);	
 		}
 		
 		function initOutline() {							

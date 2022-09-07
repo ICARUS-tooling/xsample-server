@@ -15,6 +15,8 @@
 		</div>
 	
 		<div>
+			<p:commandButton rendered="#{xsampleSession.debug}" value="#{bundle['welcome.resetQuota']}" 
+				action="#{welcomePage.resetQuota}" render="@all" />
 			<p:outputPanel id="outline">
 				<p:panel rendered="#{welcomePage.showOutline}"> 
 					<f:facet name="header">
@@ -76,8 +78,6 @@
 		        		<p:messages id="navMsg" for="navMsgs" showSummary="true" closable="true" showDetail="false" redisplay="false" />
 						<p:commandButton value="#{bundle['continue']}" 
 							action="#{welcomePage.next}" update="navMsg" />
-						<p:commandButton rendered="#{xsampleSession.debug}" value="#{bundle['welcome.resetQuota']}" 
-							action="#{welcomePage.resetQuota}" render="@all" />
 					</f:facet>
 				</p:panel>
 			</p:outputPanel>

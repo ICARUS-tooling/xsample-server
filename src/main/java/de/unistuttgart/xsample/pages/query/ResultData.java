@@ -3,57 +3,44 @@
  */
 package de.unistuttgart.xsample.pages.query;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.List;
-
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
 import de.unistuttgart.xsample.qe.Result;
-import de.unistuttgart.xsample.util.DataBean;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 /**
- * Data encapsulating a search result and the encoded hits as string.
- * 
  * @author Markus Gärtner
  *
  */
 @Named
 @ViewScoped
-public class ResultData implements DataBean {
-	
-	private static final long serialVersionUID = -2444737450466782057L;
+public class ResultData extends SearchUtilityData {
 
-	/** Raw result data */
-	private List<Result> results = new ObjectArrayList<>();
-	
-	/** Result data mapped into native segments of the primary data */
-	private List<Result> mappedSegments = new ObjectArrayList<>();
-	
-	/** Encoded search result mapped to proper segments */
-	private String segments = "";
-	/** Encoded search result as native (sub)segments */
-	private String resultHits = "";
-	
+	private static final long serialVersionUID = 5842207950786664322L;
+
+	/** Result segments as returned by the engine */
+	private Result rawResult;
+	/** Result mapped to primary segments for excerpt generation */
+	private Result mappedResult;
 	/** Number of possible result segments */
 	private long limit = -1;
 	
-	public List<Result> getResults() { return results; }	
-	public void setResults(List<Result> results) { this.results = requireNonNull(results); }
+	public Result getRawResult() { return rawResult; }
+	public void setRawResult(Result rawResult) { this.rawResult = rawResult; }
 	
-	public List<Result> getMappedSegments() { return mappedSegments; }	
-	public void setMappedSegments(List<Result> mappedSegments) { this.mappedSegments = requireNonNull(mappedSegments); }
-
-	public String getSegments() { return segments; }
-	public void setSegments(String encodedResults) { this.segments = encodedResults; }
+	public Result getMappedResult() { return mappedResult; }
+	public void setMappedResult(Result mappedResult) { this.mappedResult = mappedResult; }
 	
 	public long getLimit() { return limit; }
-	public void setLimit(long resultRange) { this.limit = resultRange; }
+	public void setLimit(long limit) { this.limit = limit; }
 	
-	public String getResultHits() { return resultHits; }
-	public void setResultHits(String resultHits) { this.resultHits = resultHits; }
+	@Override
+	public void reset() {
+		super.reset();
+		
+		rawResult = null;
+		mappedResult = null;
+		limit = -1;
+	}
 	
-	public boolean isHasResults() { return results!=null && !results.isEmpty(); }
 }

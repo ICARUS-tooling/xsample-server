@@ -163,7 +163,7 @@ public class QueryPage extends XsamplePage {
 		}
 		
 		queryData.setResults(results);
-		queryData.setExcerptLimit(info.getSegments());
+		queryData.setLimit(info.getSegments());
 	}
 
 	/** Callback for button to continue workflow */
@@ -199,11 +199,11 @@ public class QueryPage extends XsamplePage {
 			 * or tampering with the JS code on the client side!
 			 */
 			long usedUpSlots = XSampleUtils.combinedSize(fragments, quota);
-			if(usedUpSlots>entry.getExcerptLimit()) {
+			if(usedUpSlots>entry.getLimit()) {
 				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
-						_long(entry.getExcerptLimit()), entry.getResource(), sharedData.getServer(), sharedData.getDataverseUser()));
+						_long(entry.getLimit()), entry.getResource(), sharedData.getServer(), sharedData.getDataverseUser()));
 				Messages.addError(NAV_MSG, BundleUtil.get("query.msg.quotaExceeded"), 
-						mapped.getCorpusId(), _long(usedUpSlots), _long(entry.getExcerptLimit()));
+						mapped.getCorpusId(), _long(usedUpSlots), _long(entry.getLimit()));
 				reset = true;
 				break;
 			}

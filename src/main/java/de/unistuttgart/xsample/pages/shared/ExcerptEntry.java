@@ -40,6 +40,12 @@ public class ExcerptEntry implements Serializable {
 		this.fragments = fragments;
 	}
 	
+	public String encode() {
+		return isEmpty() ? "" : XmpFragment.encodeAll(fragments);
+	}
+	
+	public boolean isEmpty() { return fragments==null || fragments.isEmpty(); }
+	
 	/** Reset the fragment data on this excerpt */
 	public void clear() {
 		fragments = null;

@@ -15,10 +15,16 @@ import javax.inject.Named;
 public class PartData extends ExcerptUtilityData {
 
 	private static final long serialVersionUID = -4223925752620450354L;
+	
+	private long offset = 0;
 
+	public long getOffset() { return offset; }
+	public void setOffset(long offset) { this.offset = offset; }
+	
+	@Override
 	public void reset() {
-		setExcerptLimit(0);
-		setSegments(0);
-		setQuota("");
+		super.reset();
+		
+		offset = 0;
 	}
 }

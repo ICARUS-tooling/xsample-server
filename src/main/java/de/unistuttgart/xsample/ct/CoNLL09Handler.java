@@ -49,7 +49,7 @@ public class CoNLL09Handler implements AnnotationHandler {
 				if(targetBegin!=-1 && targetEnd!=-1 && targetEnd>=targetBegin) {
 					for(long page = targetBegin; page<=targetEnd; page++) {
 						// Mapping produces 0-based page indices
-						if(filter.test(page)) {
+						if(filter.test(page+1)) {
 							writer.append("# sentenceIndex=").append(String.valueOf(sentenceIndex+1)).append('\n');
 							writer.append("# pageIndex=").append(String.valueOf(page+1)).append('\n');
 							buffer.print(writer);

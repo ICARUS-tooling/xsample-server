@@ -22,6 +22,7 @@ package de.unistuttgart.xsample.pages.slice;
 import static de.unistuttgart.xsample.util.XSampleUtils._long;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -35,7 +36,6 @@ import javax.inject.Named;
 
 import org.omnifaces.util.Messages;
 
-import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.mf.Corpus;
@@ -114,7 +114,8 @@ public class SlicePage extends XsamplePage {
 		if(part!=null) {
 			long segments = corpusData.getSegments(part);
 			partData.setSegments(segments);
-			partData.setExcerptLimit((long) Math.floor(segments * services.getDoubleSetting(Key.ExcerptLimit)));
+			partData.setLimit(corpusData.getLimit(part));
+			partData.setOffset(corpusData.getOffset(part));
 			
 			if(entry!=null) {
 				XmpExcerpt quota = entry.getQuota();
@@ -135,6 +136,9 @@ public class SlicePage extends XsamplePage {
 
 		refreshPart(part, entry);
 		refreshSlice(entry);
+
+		refreshGlobalExcerpt();
+		refreshGlobalQuota();
 	}
 	
 	/** Reset all slices and refresh shared data */
@@ -142,19 +146,34 @@ public class SlicePage extends XsamplePage {
 		allEntries().forEach(ExcerptEntry::clear);
 		refreshSlice(currentEntry());
 	}
+	
+	public long getSegments() {
+		return partsData.getSelectedParts().stream()
+				.mapToLong(corpusData::getSegments)
+				.sum();
+	}
+	
+	public long getLimit() {
+		return partsData.getSelectedParts().stream()
+				.mapToLong(corpusData::getLimit)
+				.sum();
+	}
 
 	/** Callback for button to continue workflow */
 	public void next() {
-		//TODO commit currently selected part as well
+		// Commit current excerpt since we normal only do this on a selection change!
+		commitExcerpt();
 		
 		for(ExcerptEntry entry : allEntries().collect(Collectors.toList())) {
 			final List<XmpFragment> fragments = entry.getFragments();
-			final List<XmpFragment> quota = entry.getQuota().getFragments();
 			
 			if(fragments==null || fragments.isEmpty()) {
 				entry.clear();
 				continue;
 			}
+			
+			XmpExcerpt excerpt = entry.getQuota();
+			final List<XmpFragment> quota = excerpt==null ? Collections.emptyList() : excerpt.getFragments();
 			
 			/* The following issue should never occur, since we do the same
 			 * validation on the client side to enable/disable the button.
@@ -171,7 +190,7 @@ public class SlicePage extends XsamplePage {
 			}
 			
 			// Everything's fine, continue the workflow
-			entry.setFragments(fragments);
+//			entry.setFragments(fragments); no need to set the fragments again
 		}
 		
 		forward(DownloadPage.PAGE);
@@ -197,6 +216,20 @@ public class SlicePage extends XsamplePage {
 //		System.out.printf("selectionChanged: sliceData=%s dlData=%s%n", sliceData, downloadData);
 	}
 	
+	private void refreshGlobalQuota() {
+		System.out.println("refreshGlobalQuota: "+partsData.getSelectedParts());
+		corpusData.setQuota(XmpFragment.encodeQuotas(partsData.getSelectedParts().stream()
+				.map(downloadData::findEntry), corpusData::getSegments));
+		System.out.println("refreshGlobalQuota: "+corpusData.getQuota());
+	}
+	
+	private void refreshGlobalExcerpt() {
+		System.out.println("refreshGlobalExcerpt: "+partsData.getSelectedParts());
+		corpusData.setExcerpt(XmpFragment.encodeEntries(partsData.getSelectedParts().stream()
+				.map(downloadData::findEntry), corpusData::getSegments));
+		System.out.println("refreshGlobalExcerpt: "+corpusData.getExcerpt());
+	}
+	
 	private void commitExcerpt() {
 		final Corpus corpus = selectionData.getSelectedCorpus();
 		if(corpus!=null) {
@@ -206,9 +239,11 @@ public class SlicePage extends XsamplePage {
 				begin = sliceData.getBegin();
 				end = sliceData.getEnd();
 				entry.setFragments(Arrays.asList(XmpFragment.of(begin, end)));
+				partData.setExcerpt(entry.encode());
 			} else {
 				entry.clear();
 			}
+			refreshGlobalExcerpt();
 //			System.out.printf("commitExcerpt: part=%s begin=%d end=%d%n",corpus.getId(), begin, end);
 		}
 	}

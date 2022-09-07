@@ -247,7 +247,7 @@ public class WelcomePage extends XsamplePage {
 			double percent = (double) used / segments * 100.0;
 			properties.add(new Property("quota-used", String.valueOf(used)));
 			properties.add(new Property("quota-ratio", String.format("%.2f%%", _double(percent))));
-			final long limit = (long) (segments * services.getDoubleSetting(Key.ExcerptLimit));
+			final long limit = corpusData.getLimit(corpus);
 			properties.add(new Property("quota-limit", String.valueOf(limit)));
 			
 			if(used>=limit) {
@@ -308,7 +308,7 @@ public class WelcomePage extends XsamplePage {
 		
 		// If we're not allowed to blanket return the entire corpus, do a quota check
 		if(!isSmallFile) {
-			long limit = (long)(segments * services.getDoubleSetting(Key.ExcerptLimit));
+			long limit = corpusData.getLimit(corpus);
 			long usedUpSlots = XSampleUtils.combinedSize(fragments, entry.getQuota().getFragments());
 			if(usedUpSlots > limit) {
 				String text = BundleUtil.format("welcome.msg.staticExcerptExceedsQuota", 
@@ -800,8 +800,9 @@ public class WelcomePage extends XsamplePage {
 		final XmpDataverse server = sharedData.getServer();
 		
 		long totalSegmemnts = 0;
-		
+
 		final List<Corpus> corpora = sharedData.getManifest().getAllParts();
+		final double limitFactor = services.getDoubleSetting(Key.ExcerptLimit);
 		
 		// Load all corpus files
 		for(Corpus corpus : corpora) {
@@ -844,9 +845,11 @@ public class WelcomePage extends XsamplePage {
 					return false;
 				}
 				
-				totalSegmemnts += segmentsToUse;
-				
 				corpusData.registerSegments(corpusId, segmentsToUse);
+				corpusData.registerOffset(corpusId, totalSegmemnts);
+				corpusData.registerLimit(corpusId, (long) Math.floor(segmentsToUse * limitFactor));
+				
+				totalSegmemnts += segmentsToUse;
 				
 				context.fileInfos.add(fileInfo);
 			} finally {
@@ -855,7 +858,7 @@ public class WelcomePage extends XsamplePage {
 		}
 
 		corpusData.setSegments(totalSegmemnts);
-		corpusData.setExcerptLimit((long) Math.floor(totalSegmemnts * services.getDoubleSetting(Key.ExcerptLimit)));
+		corpusData.setLimit((long) Math.floor(totalSegmemnts * limitFactor));
 		
 		assert context.fileInfos.size()==corpora.size() : "Missed files in loading process";
 		
@@ -899,8 +902,7 @@ public class WelcomePage extends XsamplePage {
 			fixed = staticExcerpt.getSpanType()==SpanType.FIXED;
 			
 			if(fixed) {
-				long segments = corpusData.getSegments(corpus);
-				limit = (long) (services.getDoubleSetting(Key.ExcerptLimit) * segments);
+				limit = corpusData.getLimit(corpus);
 			} else {
 				limit = (long) (services.getDoubleSetting(Key.ExcerptLimit) * 100);
 			}
@@ -980,7 +982,6 @@ public class WelcomePage extends XsamplePage {
 	//TODO we need a better way to compute global quota across all the involved resources
 	boolean checkQuota(Context context) {
 		final XmpDataverseUser user = sharedData.getDataverseUser();
-		final double limitFactor = services.getDoubleSetting(Key.ExcerptLimit);
 		
 		//TODO tricky to calculate with small files..?
 		long globalQuota = 0;
@@ -992,7 +993,7 @@ public class WelcomePage extends XsamplePage {
 			final Corpus corpus = sharedData.findCorpus(resource);
 
 			final long segments = corpusData.getSegments(corpus);
-			final long limit = (long) Math.floor(segments * limitFactor);
+			final long limit = corpusData.getLimit(corpus);
 			
 			final ExcerptEntry entry = new ExcerptEntry();
 			entry.setCorpusId(corpus.getId());

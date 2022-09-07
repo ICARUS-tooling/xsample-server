@@ -23,6 +23,8 @@ import static de.unistuttgart.xsample.util.XSampleUtils.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
@@ -34,6 +36,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
 
 /**
  * Models a span of 1-based indices.
@@ -53,6 +57,52 @@ public class XmpFragment implements Comparable<XmpFragment> {
 		return String.valueOf(f.getBeginIndex())+"-"+String.valueOf(f.getEndIndex());
 	}
 	
+	public static String encode(XmpFragment f, long offset) {
+		if(f.size()==1) {
+			return String.valueOf(f.getBeginIndex()+offset);
+		} 
+		
+		return String.valueOf(f.getBeginIndex()+offset)+"-"+String.valueOf(f.getEndIndex()+offset);
+	}
+	
+	public static String encodeEntries(Stream<ExcerptEntry> entries, ToLongFunction<String> offsets) {
+		StringBuilder sb = new StringBuilder(100);
+		LongValue offset = new LongValue();
+		entries.forEachOrdered( entry -> {
+			List<XmpFragment> fragments = entry.getFragments();
+			if(fragments!=null && !fragments.isEmpty()) {
+				for (int i = 0; i < fragments.size(); i++) {
+					if(sb.length()>0) {
+						sb.append(',');
+					}
+					sb.append(encode(fragments.get(i), offset.value));
+				}
+			}
+			offset.value += offsets.applyAsLong(entry.getCorpusId());
+		});
+		return sb.toString();
+	}
+	
+	public static String encodeQuotas(Stream<ExcerptEntry> entries, ToLongFunction<String> offsets) {
+		StringBuilder sb = new StringBuilder(100);
+		LongValue offset = new LongValue();
+		entries.forEachOrdered( entry -> {
+			List<XmpFragment> fragments = Optional.ofNullable(entry.getQuota())
+					.map(XmpExcerpt::getFragments)
+					.orElse(null);
+			if(fragments!=null && !fragments.isEmpty()) {
+				for (int i = 0; i < fragments.size(); i++) {
+					if(sb.length()>0) {
+						sb.append(',');
+					}
+					sb.append(encode(fragments.get(i), offset.value));
+				}
+			}
+			offset.value += offsets.applyAsLong(entry.getCorpusId());
+		});
+		return sb.toString();
+	}
+	
 	public static String encodeAll(List<XmpFragment> fragments) {
 		StringBuilder sb = new StringBuilder(fragments.size()*4);
 		for (int i = 0; i < fragments.size(); i++) {
@@ -61,6 +111,17 @@ public class XmpFragment implements Comparable<XmpFragment> {
 			}
 			sb.append(encode(fragments.get(i)));
 		}
+		return sb.toString();
+	}
+	
+	public static String encodeAll(Stream<XmpFragment> fragments) {
+		StringBuilder sb = new StringBuilder(100);
+		fragments.forEachOrdered(f -> {
+			if(sb.length()>0) {
+				sb.append(',');
+			}
+			sb.append(encode(f));
+		});
 		return sb.toString();
 	}
 	
@@ -202,5 +263,9 @@ public class XmpFragment implements Comparable<XmpFragment> {
 		}
 		
 		return false;
+	}
+	
+	private static final class LongValue {
+		private long value = 0;
 	}
 }

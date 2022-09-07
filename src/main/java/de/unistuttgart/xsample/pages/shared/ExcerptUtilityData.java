@@ -25,23 +25,35 @@ import de.unistuttgart.xsample.util.DataBean;
  * @author Markus Gärtner
  *
  */
+@SuppressWarnings("serial")
 public abstract class ExcerptUtilityData implements DataBean {
-
-	private static final long serialVersionUID = 8667731210507380998L;
 
 	/** Total number of segments available */
 	private long segments = 1;
 	/** Upper limit of allowed segments to be published */
-	private long excerptLimit = 1;
+	private long limit = 1;
 	/** Encoded used up quota */
 	private String quota = "";
+	/** Encoded user-selected excerpt */
+	private String excerpt = "";
 	
 	public long getSegments() { return segments; }
 	public void setSegments(long range) { this.segments = range; }
 	
-	public long getExcerptLimit() { return excerptLimit; }
-	public void setExcerptLimit(long limit) { this.excerptLimit = limit; }
+	public long getLimit() { return limit; }
+	public void setLimit(long limit) { this.limit = limit; }
 	
 	public String getQuota() { return quota; }
 	public void setQuota(String quota) { this.quota = quota; }
+	
+	public String getExcerpt() { return excerpt; }
+	public void setExcerpt(String excerpt) { this.excerpt = excerpt; }
+	
+	public void reset() {
+		// We use -1 here to prevent div-by-zero issues and to easily indicate missing values in the ui
+		segments = -1;
+		limit = -1;
+		quota = "";
+		excerpt = "";
+	}
 }

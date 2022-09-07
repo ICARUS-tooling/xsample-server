@@ -19,19 +19,12 @@
  */
 package de.unistuttgart.xsample.pages;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.inject.Inject;
 
 import org.primefaces.PrimeFaces;
 
 import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.XsampleServices.Key;
-import de.unistuttgart.xsample.dv.XmpExcerpt;
-import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
-import de.unistuttgart.xsample.pages.shared.ExcerptUtilityData;
 import de.unistuttgart.xsample.pages.shared.SharedData;
 import de.unistuttgart.xsample.pages.shared.WorkflowData;
 
@@ -49,25 +42,6 @@ public class XsamplePage {
 	
 	@Inject
 	protected SharedData sharedData;
-	
-	protected void initGlobalQuota(ExcerptUtilityData data) {
-		final double limit = services.getDoubleSetting(Key.ExcerptLimit);
-		final long segments = sharedData.getSegments();
-		data.setGlobalSegments(segments);
-		data.setGlobalLimit((long) Math.floor(segments * limit));
-		
-		final List<XmpFragment> totalQuota = new ArrayList<>();
-		for(ExcerptEntry entry : sharedData.getEntries()) {
-			XmpExcerpt quota = entry.getQuota();
-			if(!quota.isEmpty()) {
-				totalQuota.addAll(quota.getFragments());
-			}
-		}
-		
-		if(!totalQuota.isEmpty()) {
-			data.setGlobalQuota(XmpFragment.encodeAll(totalQuota));
-		}
-	}
 	
 	protected boolean isSmallFile(long size) {
 		return size<=services.getLongSetting(Key.SmallFileLimit);

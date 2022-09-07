@@ -11,7 +11,7 @@
 			valueChangeListener="#{changeHandler[handlerMethod]}"
 			var="part" converter="corpusConverter">
 			<f:selectItems value="#{limited ? partsData.selectedParts : sharedData.manifest.allParts}" var="part"
-				itemLabel="#{XSampleUtils.trim2Size(part.title, 70)}"
+				itemLabel="#{XSampleUtils.trim2Size(part.title)}"
 				itemValue="#{part}" />
 			<p:ajax update="#{empty ajaxUpdate ? '@this' : ajaxUpdate}" 
 				process="#{empty ajaxProcess ? '@this' : ajaxProcess}" 
@@ -32,7 +32,7 @@
 				<f:facet name="header">
 					<h:outputText value="#{bundle['parts.corpusTitle']}" />
 				</f:facet>
-				<h:outputText value="#{XSampleUtils.trim2Size(part.title, 70)}" />
+				<h:outputText value="#{XSampleUtils.trim2Size(part.title)}" />
 			</p:column>
 		</p:selectOneMenu>
 	</h:panelGroup>

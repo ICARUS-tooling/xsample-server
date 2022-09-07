@@ -7,7 +7,7 @@
 
 	<h:form id="slice">	
 		<p:remoteCommand name="initSlice" action="#{slicePage.init}" 
-			process="@this" update="@form" oncomplete="initOutline()" />
+			process="@this" update="@form" oncomplete="initOutline();initGlobalOutline()" />
 				
 		<p:panel>
 			<f:facet name="header">
@@ -17,7 +17,7 @@
 				<ui:include src="/select_corpus.xhtml">
 					<ui:param name="limited" value="true" />
 					<ui:param name="ajaxUpdate" value="sliceData sliceOutline" />
-					<ui:param name="ajaxOncomplete" value="initOutline()" />
+					<ui:param name="ajaxOncomplete" value="initAllOutlines()" />
 					<ui:param name="changeHandler" value="#{slicePage}" />
 					<ui:param name="handlerMethod" value="selectionChanged" />
 				</ui:include>	
@@ -27,15 +27,15 @@
 			<p:outputPanel id="sliceData" layout="block">			
 				<h:inputHidden id="excerptStart" value="#{sliceData.begin}" />
 				<h:inputHidden id="excerptEnd" value="#{sliceData.end}" />
-				<h:inputHidden id="excerptThreshold" value="#{partData.excerptLimit}" readonly="#{true}" />
+				<h:inputHidden id="excerptThreshold" value="#{partData.limit}" readonly="#{true}" />
 				<h:inputHidden id="excerptSegments" value="#{partData.segments}" readonly="#{true}" />
 				<h:inputHidden id="excerptQuota" value="#{partData.quota}" readonly="#{true}" />
-				<div jsf:rendered="#{sharedData.multiPartCorpus and false}">
-					<h:inputHidden id="globalSegments" value="#{corpusData.segments}" readonly="#{true}" />
-					<h:inputHidden id="globalThreshold" value="#{corpusData.excerptLimit}" readonly="#{true}" />
+				<div jsf:rendered="#{sharedData.multiPartCorpus}">
+					<h:inputHidden id="excerptOffset" value="#{partData.offset}" readonly="#{true}" />
+					<h:inputHidden id="globalSegments" value="#{slicePage.segments}" readonly="#{true}" />
+					<h:inputHidden id="globalThreshold" value="#{slicePage.limit}" readonly="#{true}" />
 					<h:inputHidden id="globalQuota" value="#{corpusData.quota}" readonly="#{true}" />
-					<!-- <h:inputHidden id="globalUsed" value="#{sliceData.globalUsed}" readonly="#{true}" />
-					<h:inputHidden id="globalExcerpt" value="#{sliceData.globalExcerpt}" readonly="#{true}" /> -->
+					<h:inputHidden id="globalExcerpt" value="#{corpusData.excerpt}" readonly="#{true}" />
 				</div>	
 			</p:outputPanel>
 			
@@ -47,7 +47,7 @@
 						display="segmentsText" onSlide="updateExcerpt(event, ui);" 
 						styleClass="excerpt-select" range="true" displayTemplate="{min} - {max}" 
 						minValue="1" maxValue="#{partData.segments}">
-						<p:ajax process="sliceData" oncomplete="console.log('slider-ajax-done')" />
+						<p:ajax process="sliceData" oncomplete="initOutline();refreshGlobalOutline()" />
 					</p:slider>    
 					
 					<h:outputLabel for="excerptSize" value="#{bundle['excerptSize']}: " />
@@ -62,26 +62,23 @@
 						<ui:param name="canvasClass" value="excerpt-outline stack-top" />
 						<ui:param name="showLegend" value="false" />
 					</ui:include>
-					
-					<!-- 
-				
-					<h:outputText value="#{bundle['slice.completeExcerpt']}: " />
-					<h:outputText id="globalSize" style="margin-top: 2em" 
-						value="#{sliceData.globalUsed}/#{sliceData.globalSegments}" /> 
-					<h:outputText id="globalPercent" style="margin-top: 2em" 
-						rendered="#{slicePage.showGlobalQuota}" />
-					<br/>
-					<h:outputLabel for="totalPercent" value="#{bundle['totalPercent']}: " 
-						rendered="#{slicePage.showQuota}" />
-					<h:outputText id="totalPercent" style="margin-top: 2em" 
-						rendered="#{slicePage.showQuota}" />
-					<br/>
-					<ui:include src="/outline.xhtml">
-						<ui:param name="canvasId" value="globalOutline" />
-						<ui:param name="canvasClass" value="excerpt-outline stack-bottom" />
-						<ui:param name="showLegend" value="true" />
-					</ui:include>
-					 -->
+							
+					<div jsf:rendered="#{sharedData.multiPartCorpus}">		
+						<h:outputText value="#{bundle['slice.completeExcerpt']}: " />
+						<h:outputText id="globalSize" style="margin-top: 2em" value="??" /> 
+						<h:outputText id="globalPercent" style="margin-top: 2em; margin-left: 2em" value="??" />
+						<br/>
+						<h:outputLabel for="totalPercent" value="#{bundle['totalPercent']}: " 
+							rendered="#{not empty corpusData.quota}" />
+						<h:outputText id="totalPercent" style="margin-top: 2em" 
+							rendered="#{not empty corpusData.quota}" value="??" />
+						<br/>
+						<ui:include src="/outline.xhtml">
+							<ui:param name="canvasId" value="globalOutline" />
+							<ui:param name="canvasClass" value="excerpt-outline stack-bottom" />
+							<ui:param name="showLegend" value="true" />
+						</ui:include>
+					</div>	
 				</div>
 			</p:outputPanel>
 		
@@ -96,81 +93,8 @@
 				
 	<h:outputScript library="js" name="xsample-common.js" target="body" />
 	<h:outputScript library="js" name="xsample-slice.js" target="body" />
+	<h:outputScript library="js" name="slice-ui.js" target="body" />
 	<h:outputScript >	
-
-		var quota = [];
-		var globalQuota = [];
-		
-		function updateExcerpt(_, ui) {
-			var begin = ui.values[0];
-			var end = ui.values[1];
-			refreshOutline(begin, end);
-		}
-		
-		function refreshOutline(begin, end) {
-			var count = end - begin + 1;
-			var segments = Number(document.getElementById('slice:excerptSegments').value);
-			var percent = count / segments * 100.0;
-			var limit = Number(document.getElementById('slice:excerptThreshold').value);
-			var canvas = document.getElementById('outline');
-			var excerpt = [toFragment(begin, end)];
-			var used = combinedSize(quota, excerpt, limit);
-			var exceeded = used>limit;
-			var style = exceeded ? OUTLINE_EXCEEDED : OUTLINE_EXCERPT;
-		
-			paintExcerpt(canvas, quota, excerpt, segments, style);	
-			
-			document.getElementById('slice:excerptSize').textContent = count + "/" + segments;
-			document.getElementById('slice:excerptPercent').textContent = percent.toFixed(1) + "%";
-			if(quota.length>0) {				
-				var totalPercent = used / segments * 100.0;
-				document.getElementById('slice:totalPercent').textContent = totalPercent.toFixed(1) + "%";
-			}
-			if(exceeded) {
-				PF('wv_continue').disable();
-			} else {
-				PF('wv_continue').enable();
-			}
-			
-			console.log("refreshOutline: begin=%i end=%i segments=%i percent=%f used=%i limit=%i quota=%O", begin, end, segments, percent, used, limit, quota);
-		}
-		
-		function initOutline() {	
-			var canvas = document.getElementById('outline');				
-			if(canvas == null) return;
-				
-			resizeCanvas(canvas);
-						
-			quota = parseFragments(document.getElementById('slice:excerptQuota').value);
-			//console.log(quota);
-			
-			var begin = Number(document.getElementById('slice:excerptStart').value);
-			var end = Number(document.getElementById('slice:excerptEnd').value);
-			refreshOutline(begin, end);
-			console.log("initOutline: begin=%i end=%i quota=%O", begin, end, quota);
-		}
-		
-		function initGlobalOutline() {		
-			var canvas = document.getElementById('globalOutline');				
-			if(canvas == null) return;
-			
-			resizeCanvas(canvas);
-						
-			globalQuota = parseFragments(document.getElementById('slice:globalQuota').value);					
-			var excerpt = parseFragments(document.getElementById('slice:globalExcerpt').value);
-						
-			var segments = Number(document.getElementById('slice:globalSegments').value);
-			var limit = Number(document.getElementById('slice:globalThreshold').value);
-		
-			paintExcerpt(canvas, quota, excerpt, segments, OUTLINE_EXCERPT);	
-				
-			if(quota.length>0) {			
-				var used = combinedSize(quota, excerpt, limit);	
-				var totalPercent = used / segments * 100.0;
-				document.getElementById('slice:globalPercent').textContent = totalPercent.toFixed(1) + "%";
-			}
-		}
-
 		$('document').ready(function(){
 			initSlice();
 		});

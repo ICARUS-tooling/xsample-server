@@ -26,20 +26,58 @@ public class CorpusData extends ExcerptUtilityData {
 	
 	/** Maps corpus ids to the determined segment counts that should be used for them */
 	private Object2LongMap<String> segmentsByCorpus = new Object2LongOpenHashMap<>();
+	private Object2LongMap<String> limitByCorpus = new Object2LongOpenHashMap<>();
+	private Object2LongMap<String> offsetByCorpus = new Object2LongOpenHashMap<>();
 
 	public CorpusData() {
 		segmentsByCorpus.defaultReturnValue(-1);
+		limitByCorpus.defaultReturnValue(-1);
+		offsetByCorpus.defaultReturnValue(-1);
 	}
+	
+	// SEGMENTS
 	
 	public void registerSegments(String corpusId, long segments) {
 		segmentsByCorpus.put(requireNonNull(corpusId), segments);
+	}	
+	public long getSegments(String partId) {
+		long segments = segmentsByCorpus.getLong(requireNonNull(partId));
+		if(segments==-1)
+			throw new IllegalArgumentException("Unknown corpus id: "+partId);
+		return segments;
+	}	
+	public long getSegments(Corpus part) {
+		return getSegments(part.getId());
 	}
 	
-	public long getSegments(Corpus part) {
-		long segments = segmentsByCorpus.getLong(requireNonNull(part).getId());
-		if(segments==-1)
-			throw new IllegalArgumentException("Unknown corpus id: "+part.getId());
-		return segments;
+	// LIMIT
+	
+	public void registerLimit(String corpusId, long limit) {
+		limitByCorpus.put(requireNonNull(corpusId), limit);
+	}	
+	public long getLimit(String partId) {
+		long limit = limitByCorpus.getLong(requireNonNull(partId));
+		if(limit==-1)
+			throw new IllegalArgumentException("Unknown corpus id: "+partId);
+		return limit;
+	}	
+	public long getLimit(Corpus part) {
+		return getLimit(part.getId());
+	}
+	
+	// OFFSET
+	
+	public void registerOffset(String corpusId, long limit) {
+		offsetByCorpus.put(requireNonNull(corpusId), limit);
+	}	
+	public long getOffset(String partId) {
+		long limit = offsetByCorpus.getLong(requireNonNull(partId));
+		if(limit==-1)
+			throw new IllegalArgumentException("Unknown corpus id: "+partId);
+		return limit;
+	}	
+	public long getOffset(Corpus part) {
+		return getOffset(part.getId());
 	}
 	
 }
