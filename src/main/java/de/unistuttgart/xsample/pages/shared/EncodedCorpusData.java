@@ -26,7 +26,7 @@ import de.unistuttgart.xsample.util.DataBean;
  *
  */
 @SuppressWarnings("serial")
-public abstract class ExcerptUtilityData implements DataBean {
+public abstract class EncodedCorpusData implements DataBean {
 
 	/** Total number of segments available */
 	private long segments = 1;

@@ -20,7 +20,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
  */
 @Named
 @ViewScoped
-public class CorpusData extends ExcerptUtilityData {
+public class CorpusData extends EncodedCorpusData {
 	
 	private static final long serialVersionUID = 2235465150226921953L;
 	

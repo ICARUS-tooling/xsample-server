@@ -9,12 +9,14 @@ import javax.inject.Named;
 import de.unistuttgart.xsample.qe.Result;
 
 /**
+ * Search results and utility data for a single corpus part.
+ * 
  * @author Markus Gärtner
  *
  */
 @Named
 @ViewScoped
-public class ResultData extends SearchUtilityData {
+public class ResultData extends EncodedResultData {
 
 	private static final long serialVersionUID = 5842207950786664322L;
 

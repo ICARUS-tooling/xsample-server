@@ -12,7 +12,7 @@ import javax.inject.Named;
  */
 @Named
 @ViewScoped
-public class PartData extends ExcerptUtilityData {
+public class PartData extends EncodedCorpusData {
 
 	private static final long serialVersionUID = -4223925752620450354L;
 	

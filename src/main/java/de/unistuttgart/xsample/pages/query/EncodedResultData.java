@@ -6,11 +6,13 @@ package de.unistuttgart.xsample.pages.query;
 import de.unistuttgart.xsample.util.DataBean;
 
 /**
+ * Models basic properties of encoded search results.
+ * 
  * @author Markus Gärtner
  *
  */
 @SuppressWarnings("serial")
-public abstract class SearchUtilityData implements DataBean {
+public abstract class EncodedResultData implements DataBean {
 
 	/** Encoded search result mapped to proper segments */
 	private String segments = "";

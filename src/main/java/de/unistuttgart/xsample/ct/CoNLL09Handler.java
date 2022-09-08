@@ -54,6 +54,7 @@ public class CoNLL09Handler implements AnnotationHandler {
 							writer.append("# pageIndex=").append(String.valueOf(page+1)).append('\n');
 							buffer.print(writer);
 							writer.append('\n');
+							writer.flush();
 						}
 					}
 				}

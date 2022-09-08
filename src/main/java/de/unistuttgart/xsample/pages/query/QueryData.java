@@ -25,6 +25,8 @@ import javax.inject.Named;
 import de.unistuttgart.xsample.util.DataBean;
 
 /**
+ * Input data for the query process. That is, query payload and configuration data.
+ * 
  * @author Markus Gärtner
  *
  */
