@@ -1,11 +1,11 @@
 package de.unistuttgart.xsample.pages.shared;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._long;
+
 import java.io.Serializable;
 import java.util.List;
 
-import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.dv.XmpResource;
 
 /**
  * 
@@ -20,10 +20,6 @@ public class ExcerptEntry implements Serializable {
 	private String corpusId;
 	/** Designated output */
 	private List<XmpFragment> fragments;
-	/** DB wrapper for the source */
-	private XmpResource resource;
-	/** Used up quota */
-	private XmpExcerpt quota;
 	/** Limit within the associated corpus */
 	private long limit;
 	
@@ -40,10 +36,6 @@ public class ExcerptEntry implements Serializable {
 		this.fragments = fragments;
 	}
 	
-	public String encode() {
-		return isEmpty() ? "" : XmpFragment.encodeAll(fragments);
-	}
-	
 	public boolean isEmpty() { return fragments==null || fragments.isEmpty(); }
 	
 	/** Reset the fragment data on this excerpt */
@@ -51,17 +43,11 @@ public class ExcerptEntry implements Serializable {
 		fragments = null;
 	}
 	
-	public XmpResource getResource() { return resource; }
-	public void setResource(XmpResource xmpResource) { this.resource = xmpResource; }
-	
-	public XmpExcerpt getQuota() { return quota; }
-	public void setQuota(XmpExcerpt quota) { this.quota = quota; }
-	
 	public long getLimit() { return limit; }
 	public void setLimit(long limit) { this.limit = limit; }
 	
 	@Override
 	public String toString() {
-		return String.format("%s@[corpus=%s, limit=%d, fragments=%s]", getClass().getSimpleName(), corpusId, limit, fragments);
+		return String.format("%s@[corpus=%s, limit=%d, fragments=%s]", getClass().getSimpleName(), corpusId, _long(limit), fragments);
 	}
 }

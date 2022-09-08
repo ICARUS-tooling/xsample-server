@@ -28,6 +28,9 @@ public class CorpusData extends EncodedCorpusData {
 	private Object2LongMap<String> segmentsByCorpus = new Object2LongOpenHashMap<>();
 	private Object2LongMap<String> limitByCorpus = new Object2LongOpenHashMap<>();
 	private Object2LongMap<String> offsetByCorpus = new Object2LongOpenHashMap<>();
+	
+	/** Number of segments used up by quota */
+	private long quotaSize = 0;
 
 	public CorpusData() {
 		segmentsByCorpus.defaultReturnValue(-1);
@@ -35,8 +38,22 @@ public class CorpusData extends EncodedCorpusData {
 		offsetByCorpus.defaultReturnValue(-1);
 	}
 	
-	// SEGMENTS
+	@Override
+	public void reset() {
+		super.reset();
+		
+		segmentsByCorpus.clear();
+		limitByCorpus.clear();
+		offsetByCorpus.clear();
+		
+		quotaSize = 0;
+	}
 	
+	public long getQuotaSize() { return quotaSize; }
+	public void setQuotaSize(long quotaSize) { this.quotaSize = quotaSize; }
+	
+	// SEGMENTS
+
 	public void registerSegments(String corpusId, long segments) {
 		segmentsByCorpus.put(requireNonNull(corpusId), segments);
 	}	

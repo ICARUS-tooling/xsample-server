@@ -21,10 +21,7 @@ package de.unistuttgart.xsample.dv;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -35,7 +32,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 
-import de.unistuttgart.xsample.util.XSampleUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 /**
  * @author Markus Gärtner
@@ -60,7 +57,7 @@ public class XmpExcerpt {
 	private XmpResource resource;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "excerpt")
-	private List<XmpFragment> fragments = new ArrayList<>();
+	private List<XmpFragment> fragments = new ObjectArrayList<>();
 
 	private transient long size = -1;
 
@@ -96,9 +93,10 @@ public class XmpExcerpt {
 	private void validateSize() {
 		if(fragments.isEmpty()) {
 			size = 0;
+		} else {
+			//TODO not overflow conscious!!
+			size = fragments.stream().mapToLong(XmpFragment::size).sum();
 		}
-		//TODO not overflow conscious!!
-		size = fragments.stream().mapToLong(XmpFragment::size).sum();
 	}
 	
 	public long size() {
@@ -116,26 +114,7 @@ public class XmpExcerpt {
 		invalidateSize();
 	}
 	
-	public void merge(List<XmpFragment> others) {
-		if(others.isEmpty()) {
-			return;
-		}
-		
-		List<XmpFragment> ours = new ArrayList<>(fragments);
-		fragments.clear();
-		invalidateSize();
-		
-		Consumer<XmpFragment> distinct = f -> {
-			f.setExcerpt(this);
-			fragments.add(f);
-		};
-		BiConsumer<XmpFragment, XmpFragment> overlap = (f1, f2) -> {
-			// f1 is ours, f2 is theirs
-			f1.setBeginIndex(Math.min(f1.getBeginIndex(), f2.getBeginIndex()));
-			f1.setEndIndex(Math.max(f1.getEndIndex(), f2.getEndIndex()));
-			fragments.add(f1);
-		};
-		
-		XSampleUtils.merge(ours, others, distinct, overlap);
-	}
+	@Override
+	public String toString() { return String.format("XmpExcerpt@[id=%d, user=%s, resource=%s, fragments=%s]", 
+			id, dataverseUser, resource, fragments); }
 }

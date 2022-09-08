@@ -22,7 +22,6 @@ package de.unistuttgart.xsample.pages.slice;
 import static de.unistuttgart.xsample.util.XSampleUtils._long;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -45,6 +44,7 @@ import de.unistuttgart.xsample.pages.download.DownloadPage;
 import de.unistuttgart.xsample.pages.parts.PartsData;
 import de.unistuttgart.xsample.pages.shared.CorpusData;
 import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
+import de.unistuttgart.xsample.pages.shared.FragmentCodec;
 import de.unistuttgart.xsample.pages.shared.PartData;
 import de.unistuttgart.xsample.pages.shared.SelectionData;
 import de.unistuttgart.xsample.util.BundleUtil;
@@ -116,12 +116,10 @@ public class SlicePage extends XsamplePage {
 			partData.setSegments(segments);
 			partData.setLimit(corpusData.getLimit(part));
 			partData.setOffset(corpusData.getOffset(part));
-			
-			if(entry!=null) {
-				XmpExcerpt quota = entry.getQuota();
-				if(!quota.isEmpty()) {
-					partData.setQuota(XmpFragment.encodeAll(quota.getFragments()));
-				}
+
+			XmpExcerpt quota = findQuota(part);
+			if(!quota.isEmpty()) {
+				partData.setQuota(FragmentCodec.encodeAll(quota.getFragments()));
 			}
 		}
 	}
@@ -172,18 +170,17 @@ public class SlicePage extends XsamplePage {
 				continue;
 			}
 			
-			XmpExcerpt excerpt = entry.getQuota();
-			final List<XmpFragment> quota = excerpt==null ? Collections.emptyList() : excerpt.getFragments();
+			XmpExcerpt excerpt = findQuota(entry.getCorpusId());
 			
 			/* The following issue should never occur, since we do the same
 			 * validation on the client side to enable/disable the button.
 			 * We need this additional sanity check to defend against bugs 
 			 * or tampering with the JS code on the client side!
 			 */
-			long usedUpSlots = XSampleUtils.combinedSize(fragments, quota);
+			long usedUpSlots = XSampleUtils.combinedSize(fragments, excerpt.getFragments());
 			if(usedUpSlots>entry.getLimit()) {
 				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
-						_long(entry.getLimit()), entry.getResource(), sharedData.getServer(), sharedData.getDataverseUser()));
+						_long(entry.getLimit()), entry.getCorpusId(), sharedData.getServer(), sharedData.getDataverseUser()));
 				Messages.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
 						_long(usedUpSlots), _long(entry.getLimit()));
 				return;
@@ -218,15 +215,27 @@ public class SlicePage extends XsamplePage {
 	
 	private void refreshGlobalQuota() {
 		System.out.println("refreshGlobalQuota: "+partsData.getSelectedParts());
-		corpusData.setQuota(XmpFragment.encodeQuotas(partsData.getSelectedParts().stream()
-				.map(downloadData::findEntry), corpusData::getSegments));
+		final FragmentCodec fc = new FragmentCodec();
+		for(Corpus part : partsData.getSelectedParts()) {
+			final XmpExcerpt quota = findQuota(part);
+			final long offset = corpusData.getOffset(part);
+			fc.append(quota.getFragments(), offset);
+		}
+		corpusData.setQuota(fc.toString());
 		System.out.println("refreshGlobalQuota: "+corpusData.getQuota());
 	}
 	
 	private void refreshGlobalExcerpt() {
 		System.out.println("refreshGlobalExcerpt: "+partsData.getSelectedParts());
-		corpusData.setExcerpt(XmpFragment.encodeEntries(partsData.getSelectedParts().stream()
-				.map(downloadData::findEntry), corpusData::getSegments));
+		final FragmentCodec fc = new FragmentCodec();
+		for(Corpus part : partsData.getSelectedParts()) {
+			final ExcerptEntry entry = downloadData.findEntry(part);
+			if(entry!=null) {
+				final long offset = corpusData.getOffset(part);
+				fc.append(entry.getFragments(), offset);
+			}
+		}
+		corpusData.setExcerpt(fc.toString());
 		System.out.println("refreshGlobalExcerpt: "+corpusData.getExcerpt());
 	}
 	
@@ -239,31 +248,12 @@ public class SlicePage extends XsamplePage {
 				begin = sliceData.getBegin();
 				end = sliceData.getEnd();
 				entry.setFragments(Arrays.asList(XmpFragment.of(begin, end)));
-				partData.setExcerpt(entry.encode());
+				partData.setExcerpt(FragmentCodec.encodeAll(entry.getFragments()));
 			} else {
 				entry.clear();
 			}
 			refreshGlobalExcerpt();
 //			System.out.printf("commitExcerpt: part=%s begin=%d end=%d%n",corpus.getId(), begin, end);
 		}
-	}
-	
-	public boolean isShowQuota() {
-		ExcerptEntry entry = currentEntry();
-		return entry!=null && entry.getQuota()!=null && !entry.getQuota().isEmpty();
-	}
-	
-	public boolean isShowGlobalQuota() {
-		return !allEntries()
-				.map(ExcerptEntry::getQuota)
-				.filter(Objects::nonNull)
-				.allMatch(XmpExcerpt::isEmpty);
-	}
-	
-	public long getQuotaSize() {
-		return allEntries()
-				.map(ExcerptEntry::getQuota)
-				.mapToLong(XmpExcerpt::size)
-				.sum();
 	}
 }

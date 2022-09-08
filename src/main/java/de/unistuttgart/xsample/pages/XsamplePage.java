@@ -25,6 +25,10 @@ import org.primefaces.PrimeFaces;
 
 import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.XsampleServices.Key;
+import de.unistuttgart.xsample.dv.XmpExcerpt;
+import de.unistuttgart.xsample.dv.XmpResource;
+import de.unistuttgart.xsample.mf.Corpus;
+import de.unistuttgart.xsample.mf.DataverseFile;
 import de.unistuttgart.xsample.pages.shared.SharedData;
 import de.unistuttgart.xsample.pages.shared.WorkflowData;
 
@@ -66,5 +70,37 @@ public class XsamplePage {
 		if(workflow.forward(page)) {
 			updatePage();
 		}
+	}
+	
+	// RESOURCE LOOKUP
+	
+	protected XmpResource findResource(String corpusId) {
+		return findResource(sharedData.findCorpus(corpusId));
+	}
+	protected XmpResource findResource(Corpus corpus) {
+		DataverseFile file = corpus.getPrimaryData();
+		if(file==null)
+			throw new IllegalArgumentException("Corpus doesn't have a file: "+corpus.getId());
+		return services.findResource(sharedData.getServer(), file.getId());
+	}
+	protected XmpResource findResource(Long fileId) {
+		return services.findResource(sharedData.getServer(), fileId);
+	}
+	
+	// QUOTA LOOKUP
+	
+	protected XmpExcerpt findQuota(String corpusId) {
+		return findQuota(sharedData.findCorpus(corpusId));
+	}
+	protected XmpExcerpt findQuota(Corpus corpus) {
+		XmpResource resource = findResource(corpus);
+		return findQuota(resource);
+	}
+	protected XmpExcerpt findQuota(XmpResource resource) {
+		return services.findQuota(sharedData.getDataverseUser(), resource);
+	}
+	protected XmpExcerpt findQuota(Long fileId) {
+		XmpResource resource = services.findResource(sharedData.getServer(), fileId);
+		return services.findQuota(sharedData.getDataverseUser(), resource);
 	}
 }

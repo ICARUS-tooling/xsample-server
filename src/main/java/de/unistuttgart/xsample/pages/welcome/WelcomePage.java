@@ -235,24 +235,25 @@ public class WelcomePage extends XsamplePage {
 				properties.add(new Property("legal-source", legal.getSource()));
 			}
 		}
-		//TODO add legal info from manifest
-
-		final ExcerptEntry entry = downloadData.findEntry(corpusId);
 		
 		if(isSmallFile(corpusData.getSegments(corpus))) {
 			properties.add(new Property("small-file", "true"));
-		} else if(entry!=null && entry.getQuota()!=null && !entry.getQuota().isEmpty()) {
-			long used = entry.getQuota().size();
+		}
+
+
+		final long limit = corpusData.getLimit(corpus);
+		properties.add(new Property("quota-limit", String.valueOf(limit)));
+		final XmpExcerpt quota = findQuota(corpus);		
+		if(!quota.isEmpty()) {
+			long used = quota.size();
 			final long segments = corpusData.getSegments(corpus);
 			double percent = (double) used / segments * 100.0;
 			properties.add(new Property("quota-used", String.valueOf(used)));
 			properties.add(new Property("quota-ratio", String.format("%.2f%%", _double(percent))));
-			final long limit = corpusData.getLimit(corpus);
-			properties.add(new Property("quota-limit", String.valueOf(limit)));
 			
-			if(used>=limit) {
+			if(used>=limit && !isSmallFile(segments)) {
 				logger.log(Level.SEVERE, String.format("Quota of %d used up on resource %s by user %s", 
-						_long(limit), entry.getResource(), sharedData.getDataverseUser()));
+						_long(limit), quota.getResource(), sharedData.getDataverseUser()));
 				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.quotaExceeded", 
 						_long(used), corpus.getTitle());
 			}
@@ -293,7 +294,6 @@ public class WelcomePage extends XsamplePage {
 		}
 		
 		// Now calculate part of the corpus to be returned
-		final ExcerptEntry entry = downloadData.findEntry(corpus.getId());
 		final boolean isSmallFile = isSmallFile(segments);		
 		final long first;
 		final long last;
@@ -309,7 +309,7 @@ public class WelcomePage extends XsamplePage {
 		// If we're not allowed to blanket return the entire corpus, do a quota check
 		if(!isSmallFile) {
 			long limit = corpusData.getLimit(corpus);
-			long usedUpSlots = XSampleUtils.combinedSize(fragments, entry.getQuota().getFragments());
+			long usedUpSlots = XSampleUtils.combinedSize(fragments, findQuota(corpus).getFragments());
 			if(usedUpSlots > limit) {
 				String text = BundleUtil.format("welcome.msg.staticExcerptExceedsQuota", 
 						_long(begin), _long(end), corpus.getId());
@@ -318,6 +318,7 @@ public class WelcomePage extends XsamplePage {
 			}
 		}
 
+		final ExcerptEntry entry = downloadData.findEntry(corpus.getId());
 		entry.setFragments(fragments);
 		downloadData.setEntries(Arrays.asList(entry));
 		
@@ -399,10 +400,9 @@ public class WelcomePage extends XsamplePage {
 	
 	@Transactional
 	public void resetQuota() {
-		final XmpDataverseUser user = sharedData.getDataverseUser();
-		for(ExcerptEntry entry : downloadData.getEntries()) {
-			final XmpExcerpt excerpt = services.findQuota(user, entry.getResource());
-			excerpt.clear();
+		for(Corpus part : sharedData.getManifest().getAllParts()) {
+			final XmpExcerpt quota = findQuota(part);
+			quota.clear();
 		}
 	}
 	
@@ -559,7 +559,7 @@ public class WelcomePage extends XsamplePage {
 		
 		// Now check that it is a valid URL and initialize our client wrapper
 		try {
-			new URL(address);
+			new URL(address).toString();
 		} catch(MalformedURLException e) {
 			message(FacesMessage.SEVERITY_ERROR,"welcome.msg.invalidDataverseUrl", address);
 			return false;
@@ -723,7 +723,7 @@ public class WelcomePage extends XsamplePage {
 		return true;
 	}
 	
-	private boolean analyeCopy(XmpLocalCopy copy, XmpFileInfo fileInfo, ExcerptHandler excerptHandler, String label) {
+	private boolean analyzeCopy(XmpLocalCopy copy, XmpFileInfo fileInfo, ExcerptHandler excerptHandler, String label) {
 		final Charset encoding = Charset.forName(copy.getEncoding());
 		try(InputStream in = cache.openLocal(copy)) {
 			excerptHandler.analyze(fileInfo, encoding, in);
@@ -835,7 +835,7 @@ public class WelcomePage extends XsamplePage {
 				// Ensure we have metadata about the file
 				final XmpFileInfo fileInfo = services.findFileInfo(resource);
 				fileInfo.setSourceType(sourceType);
-				if(!fileInfo.isSet() && !analyeCopy(copy, fileInfo, excerptHandler, corpusId)) {
+				if(!fileInfo.isSet() && !analyzeCopy(copy, fileInfo, excerptHandler, corpusId)) {
 					return false;
 				} 
 				
@@ -997,22 +997,38 @@ public class WelcomePage extends XsamplePage {
 			
 			final ExcerptEntry entry = new ExcerptEntry();
 			entry.setCorpusId(corpus.getId());
-			entry.setResource(resource);
-			entry.setQuota(excerpt);
 			entry.setLimit(limit);
 			downloadData.addEntry(entry);
 			
-			if(!isSmallFile(segments) && !excerpt.isEmpty()) {
-				final long quota = excerpt.size();
-				
-				if(quota>=limit) {
-					logger.log(Level.SEVERE, String.format("Quota of %d used up on resource %s by user %s", 
-							_long(limit), resource, user));
+			final long quota = excerpt.size();
+			globalQuota += quota;
+			
+			// Small files can be given out completely, but they still fully count against the global threshold!
+			if(!isSmallFile(segments) && quota>=limit) {
+				logger.log(Level.SEVERE, String.format("Quota of %d/%d used up on corpus '%s' by user %s", 
+						_long(limit), _long(segments), resource, user));
+				Severity severity = sharedData.isMultiPartCorpus() ? FacesMessage.SEVERITY_WARN : FacesMessage.SEVERITY_ERROR;
+				message(severity, "welcome.msg.quotaExceeded", 
+						_long(quota), _long(segments), copy.getTitle(), corpus.getId());
+			}
+		}
+		corpusData.setQuotaSize(globalQuota);
+		
+		//TODO Would need to repeated clarification from Felicitas on whether a corpus of 100% small files can be given out as a whole
+		if(!sharedData.isOnlySmallFiles()) {
+			final long globalLimit = corpusData.getLimit();
+			if(globalQuota>=globalLimit) {
+				if(sharedData.isMultiPartCorpus()) {
+					final long globalSegments = corpusData.getSegments();
+					final Corpus root = sharedData.getManifest().getCorpus();
+					//TODO strictly speaking user can still pick some other resource
+					logger.log(Level.SEVERE, String.format("Quota of %d/%d used up on corpus '%s' by user %s", 
+							_long(globalLimit), _long(globalSegments), root.getTitle(), user));
 					message(FacesMessage.SEVERITY_ERROR, "welcome.msg.quotaExceeded", 
-							_long(quota), copy.getTitle());
-					
-					return false;
+							_long(globalQuota), _long(globalSegments), root.getTitle());
 				}
+				
+				return false;
 			}
 		}
 		

@@ -39,6 +39,8 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -78,6 +80,7 @@ import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.XSampleUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 /**
  * @author Markus Gärtner
@@ -124,7 +127,8 @@ public class DownloadPage extends XsamplePage {
 		
 		// Early check if we already obsoleted the source data
 		for(ExcerptEntry entry : entries) {
-			XmpLocalCopy copy = cache.getCopy(entry.getResource());
+			final XmpResource resource = findResource(entry.getCorpusId());
+			final XmpLocalCopy copy = cache.getCopy(resource);
 			if(copy==null || !cache.isPopulated(copy)) {
 				Messages.addGlobalError(BundleUtil.get("download.msg.resourceDeleted"));
 				return;
@@ -230,10 +234,36 @@ public class DownloadPage extends XsamplePage {
 
 		// If everything went well, add to quota
 		for(ExcerptEntry entry : entries) {
-			final XmpExcerpt quota = entry.getQuota();
-			quota.merge(entry.getFragments());
+			final XmpExcerpt quota = findQuota(entry.getCorpusId());
+			merge(quota, entry.getFragments());
 			services.update(quota);
 		}
+		services.sync();
+	}
+	
+	private void merge(XmpExcerpt excerpt, List<XmpFragment> others) {
+		if(others.isEmpty()) {
+			return;
+		}
+				
+		List<XmpFragment> ours = new ObjectArrayList<>(excerpt.getFragments());
+		excerpt.clear();
+		
+		ours.forEach(services::delete);
+		
+		Consumer<XmpFragment> distinct = f -> {
+			excerpt.addFragment(f);
+			services.store(f);
+		};
+		BiConsumer<XmpFragment, XmpFragment> overlap = (f1, f2) -> {
+			// f1 is ours, f2 is theirs
+			f1.setBeginIndex(Math.min(f1.getBeginIndex(), f2.getBeginIndex()));
+			f1.setEndIndex(Math.max(f1.getEndIndex(), f2.getEndIndex()));
+			excerpt.addFragment(f1);
+			services.store(f1);
+		};
+		
+		XSampleUtils.merge(ours, others, distinct, overlap);
 	}
 	
 	private void addIndex(ZipOutputStream zipOut, List<ExcerptEntry> entries,

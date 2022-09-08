@@ -33,6 +33,12 @@ import com.google.gson.annotations.SerializedName;
 
 import de.unistuttgart.xsample.util.SelfValidating;
 
+/**
+ * Models a 0-based span.
+ * 
+ * @author Markus Gärtner
+ *
+ */
 public class Span implements Serializable, SelfValidating {
 
 	private static final long serialVersionUID = -5616064267813758508L;

@@ -30,10 +30,6 @@ import java.util.logging.Logger;
 
 import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.dv.XmpDataverse;
-import de.unistuttgart.xsample.dv.XmpDataverseUser;
-import de.unistuttgart.xsample.dv.XmpExcerpt;
-import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.dv.XmpResource;
 
 /**
  * @author Markus Gärtner
@@ -86,21 +82,21 @@ public class DebugUtils {
 		}
 	}
 	
-	public static void makeQuota(XsampleServices services) {
-		if(!isActive()) {
-			return;
-		}
-
-		String url = getProperty("dataverse.url");
-		Long file = Long.valueOf(getProperty("dataverse.file"));
-		XmpDataverse dataverse = services.findDataverseByUrl(url).get();
-		XmpResource xmpResource = services.findResource(dataverse, file);
-		XmpDataverseUser user = services.findDataverseUser(dataverse, getProperty("user.name"));
-		
-		XmpExcerpt quota = services.findQuota(user, xmpResource);
-		quota.clear();
-		
-		String data = getProperty("user.quota");
-		XmpFragment.decodeAll(data).forEach(quota::addFragment);
-	}
+//	public static void makeQuota(XsampleServices services) {
+//		if(!isActive()) {
+//			return;
+//		}
+//
+//		String url = getProperty("dataverse.url");
+//		Long file = Long.valueOf(getProperty("dataverse.file"));
+//		XmpDataverse dataverse = services.findDataverseByUrl(url).get();
+//		XmpResource xmpResource = services.findResource(dataverse, file);
+//		XmpDataverseUser user = services.findDataverseUser(dataverse, getProperty("user.name"));
+//		
+//		XmpExcerpt quota = services.findQuota(user, xmpResource);
+//		quota.clear();
+//		
+//		String data = getProperty("user.quota");
+//		FragmentCodec.decodeAll(data).forEach(quota::addFragment);
+//	}
 }

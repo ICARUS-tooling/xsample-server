@@ -144,7 +144,8 @@ public class XsampleServices {
 			resource = new XmpResource();
 			resource.setFile(file);
 			resource.setDataverse(dataverse);
-			resource = em.merge(resource);
+//			resource = em.merge(resource);
+			em.persist(resource);
 		} else {
 			resource = resources.get(0);
 		}
@@ -190,7 +191,8 @@ public class XsampleServices {
 			dataverseUser = new XmpDataverseUser();
 			dataverseUser.setId(new UserId(url, userId));
 			dataverseUser.setDataverse(dataverse);
-			dataverseUser = em.merge(dataverseUser);
+//			dataverseUser = em.merge(dataverseUser);
+			em.persist(dataverseUser);
 		} else {
 			dataverseUser = dataverseUsers.get(0);
 		}
@@ -216,7 +218,8 @@ public class XsampleServices {
 			excerpt = new XmpExcerpt();
 			excerpt.setResource(resource);
 			excerpt.setDataverseUser(user);
-			excerpt = em.merge(excerpt);
+//			excerpt = em.merge(excerpt);
+			em.persist(excerpt);
 		} else {
 			excerpt = excerpts.get(0);
 		}
@@ -262,7 +265,8 @@ public class XsampleServices {
 			log.finer("creating file info for resource: "+resource);
 			fileInfo = new XmpFileInfo();
 			fileInfo.setResource(resource);
-			fileInfo = em.merge(fileInfo);
+//			fileInfo = em.merge(fileInfo);
+			em.persist(fileInfo);
 		} else {
 			fileInfo = fileInfos.get(0);
 		}

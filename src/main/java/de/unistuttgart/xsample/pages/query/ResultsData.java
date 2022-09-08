@@ -33,12 +33,20 @@ public class ResultsData extends EncodedResultData {
 	/** Result data for each part mapped into native segments of the primary data */
 	private final Map<String, Result> mappedResults = new Object2ObjectOpenHashMap<>();
 	/** Number of possible result segments for all parts */
-	private final Object2LongMap<String> rawSegments = new Object2LongOpenHashMap<>();
+	private final Object2LongMap<String> rawSegmentsByCorpus = new Object2LongOpenHashMap<>();
+	
+	/** Accumulated raw segments */
+	private long rawSegments = 0;
 	
 	public ResultsData() {
-		rawSegments.defaultReturnValue(-1);
+		rawSegmentsByCorpus.defaultReturnValue(-1);
 	}
 	
+	public long getRawSegments() { return rawSegments; }
+	public void setRawSegments(long rawSegments) { this.rawSegments = rawSegments; }
+	
+	// RAW RESULTS
+
 	public Result getRawResult(Corpus corpus) {
 		return getRawResult(corpus.getId());
 	}
@@ -51,6 +59,8 @@ public class ResultsData extends EncodedResultData {
 	public void registerRawResult(String corpusId, Result result) {
 		rawResults.put(corpusId, result);
 	}
+	
+	// MAPPED RESULTS
 	
 	public Result getMappedResult(Corpus corpus) {
 		return getMappedResult(corpus.getId());
@@ -65,17 +75,19 @@ public class ResultsData extends EncodedResultData {
 		mappedResults.put(corpusId, result);
 	}
 	
+	// RAW SEGMENTS
+	
 	public long getRawSegments(Corpus corpus) {
 		return getRawSegments(corpus.getId());
 	}
 	public long getRawSegments(String corpusId) {
-		long segments = rawSegments.getLong(requireNonNull(corpusId));
+		long segments = rawSegmentsByCorpus.getLong(requireNonNull(corpusId));
 		if(segments==-1)
 			throw new IllegalArgumentException("Unknown ocrpus id: "+corpusId);
 		return segments;
 	}
 	public void registerRawSegments(String corpusId, long segments) {
-		rawSegments.put(corpusId, segments);
+		rawSegmentsByCorpus.put(corpusId, segments);
 	}
 	
 	@Override
@@ -84,7 +96,9 @@ public class ResultsData extends EncodedResultData {
 		
 		rawResults.clear();
 		mappedResults.clear();
-		rawSegments.clear();
+		rawSegmentsByCorpus.clear();
+		
+		rawSegments = 0;
 	}
 	
 	public boolean isEmpty() { return rawResults==null || rawResults.isEmpty(); }
