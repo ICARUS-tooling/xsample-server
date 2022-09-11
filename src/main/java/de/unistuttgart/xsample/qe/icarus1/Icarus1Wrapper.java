@@ -30,6 +30,7 @@ import java.util.Properties;
 
 import de.unistuttgart.xsample.qe.QueryException;
 import de.unistuttgart.xsample.qe.QueryException.QueryErrorCode;
+import de.unistuttgart.xsample.qe.QueryResult;
 import de.unistuttgart.xsample.qe.Result;
 import de.unistuttgart.xsample.qe.icarus1.match.ConstraintContext;
 import de.unistuttgart.xsample.qe.icarus1.match.Search;
@@ -48,8 +49,7 @@ public class Icarus1Wrapper {
 		checkNotEmpty(queryString);
 		requireNonNull(settings);
 		
-		ConstraintContext context = ConstraintContext.defaultContext();
-		query = new SearchQuery(context);		
+		query = new SearchQuery(ConstraintContext.defaultContext());		
 		try {
 			query.parseQueryString(queryString);
 		} catch (UnsupportedFormatException e) {
@@ -57,23 +57,25 @@ public class Icarus1Wrapper {
 		}
 		
 		options = new Options(settings);
+		
+		
 	}
 
-	public ResultPart evaluate(Reader reader) throws QueryException {
+	public QueryResult evaluate(Reader reader) throws QueryException {
 		requireNonNull(reader);
 		checkState("Query not initialized", query!=null);
 		
 		final CONLL09SentenceDataReader conllReader = new CONLL09SentenceDataReader(true);
-		final List<SentenceData> corpus;
+		final List<SentenceData> part;
 		try {
-			corpus = conllReader.readAll(reader, null);
+			part = conllReader.readAll(reader, null);
 		} catch (IOException e) {
 			throw new QueryException("Failed to load corpus file", QueryErrorCode.IO_ERROR, e);
 		} catch (UnsupportedFormatException e) {
 			throw new QueryException("Failed to parse corpus data", QueryErrorCode.UNSUPPORTED_FORMAT, e);
 		}
 		
-		final Search search = new Search(query, options, corpus);
+		final Search search = new Search(query, options, part);
 		
 		try {
 			search.init();
@@ -82,7 +84,7 @@ public class Icarus1Wrapper {
 			throw new QueryException("Internal search error", QueryErrorCode.INTERNAL_ERROR, e);
 		}
 	
-		return new ResultPart(search.getResult(), corpus.size());
+		return new QueryResult(search.getResult(), part.size());
 	}
 	
 	public static class ResultPart {

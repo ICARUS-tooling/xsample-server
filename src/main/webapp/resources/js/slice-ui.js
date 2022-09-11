@@ -14,11 +14,13 @@ function updateExcerpt(_, ui) {
 }
 
 function refreshOutline(begin, end) {
+	var canvas = document.getElementById('form:outlineCanvas');				
+	if(canvas == null) return;
+	
 	var count = end - begin + 1;
-	var segments = Number(document.getElementById('slice:excerptSegments').value);
+	var segments = Number(document.getElementById('form:excerptSegments').value);
 	var percent = count / segments * 100.0;
-	var limit = Number(document.getElementById('slice:excerptThreshold').value);
-	var canvas = document.getElementById('outline');
+	var limit = Number(document.getElementById('form:excerptThreshold').value);
 	var excerpt = [toFragment(begin, end)];
 	var used = combinedSize(quota, excerpt, limit);
 	var exceeded = used>limit;
@@ -26,8 +28,8 @@ function refreshOutline(begin, end) {
 
 	paintExcerpt(canvas, true, quota, excerpt, segments, style);	
 	
-	document.getElementById('slice:excerptSize').textContent = count + "/" + segments;
-	document.getElementById('slice:excerptPercent').textContent = percent.toFixed(1) + "%";
+	document.getElementById('form:excerptSize').textContent = count + "/" + segments;
+	document.getElementById('form:excerptPercent').textContent = percent.toFixed(1) + "%";
 	
 	if(exceeded) {
 		PF('wv_continue').disable();
@@ -40,27 +42,29 @@ function refreshOutline(begin, end) {
 }
 
 function initOutline() {	
-	var canvas = document.getElementById('outline');				
+	var canvas = document.getElementById('form:outlineCanvas');				
 	if(canvas == null) return;
 		
 	resizeCanvas(canvas);
 				
-	quota = parseFragments(document.getElementById('slice:excerptQuota').value);
+	quota = parseFragments(document.getElementById('form:excerptQuota').value);
 	
-	var begin = Number(document.getElementById('slice:excerptStart').value);
-	var end = Number(document.getElementById('slice:excerptEnd').value);
+	var begin = Number(document.getElementById('form:excerptStart').value);
+	var end = Number(document.getElementById('form:excerptEnd').value);
 	refreshOutline(begin, end);
 	
 	console.log("initOutline: begin=%i end=%i quota=%O", begin, end, quota);
 }		
 
 function refreshGlobalOutline() {
-	var offset = Number(document.getElementById('slice:excerptOffset').value);
-	var begin = Number(document.getElementById('slice:excerptStart').value) + offset;
-	var end = Number(document.getElementById('slice:excerptEnd').value) + offset;
-	var segments = Number(document.getElementById('slice:globalSegments').value);
-	var limit = Number(document.getElementById('slice:globalThreshold').value);
-	var canvas = document.getElementById('globalOutline');
+	var canvas = document.getElementById('form:globalOutlineCanvas');			
+	if(canvas == null) return;
+	
+	var offset = Number(document.getElementById('form:excerptOffset').value);
+	var begin = Number(document.getElementById('form:excerptStart').value) + offset;
+	var end = Number(document.getElementById('form:excerptEnd').value) + offset;
+	var segments = Number(document.getElementById('form:globalSegments').value);
+	var limit = Number(document.getElementById('form:globalThreshold').value);
 	var excerpt = globalExcerpt.concat([toFragment(begin, end)]);
 	var count = sizeOf(excerpt);
 	
@@ -69,11 +73,11 @@ function refreshGlobalOutline() {
 
 	paintExcerpt(canvas, true, globalQuota, excerpt, segments, OUTLINE_EXCERPT);	
 	
-	document.getElementById('slice:globalSize').textContent = count + "/" + segments;
-	document.getElementById('slice:globalPercent').textContent = percent.toFixed(1) + "%";
+	document.getElementById('form:globalSize').textContent = count + "/" + segments;
+	document.getElementById('form:globalPercent').textContent = percent.toFixed(1) + "%";
 	if(globalQuota.length>0) {				
 		var totalPercent = used / segments * 100.0;
-		document.getElementById('slice:totalPercent').textContent = totalPercent.toFixed(1) + "%";
+		document.getElementById('form:totalPercent').textContent = totalPercent.toFixed(1) + "%";
 	}
 	
 	console.log("refreshGlobalOutline: begin=%i end=%i segments=%i percent=%f used=%i limit=%i globalExcerpt=%O globalQuota=%O", 
@@ -81,21 +85,15 @@ function refreshGlobalOutline() {
 }
 
 function initGlobalOutline() {		
-	var canvas = document.getElementById('globalOutline');				
+	var canvas = document.getElementById('globalOutlineCanvas');				
 	if(canvas == null) return;
 	
 	resizeCanvas(canvas);
 				
-	globalQuota = parseFragments(document.getElementById('slice:globalQuota').value);					
-	globalExcerpt = parseFragments(document.getElementById('slice:globalExcerpt').value);
+	globalQuota = parseFragments(document.getElementById('form:globalQuota').value);					
+	globalExcerpt = parseFragments(document.getElementById('form:globalExcerpt').value);
 				
 	refreshGlobalOutline();
 	
 	console.log("initGlobalOutline: globalExcerpt=%O globalQuota=%O", globalExcerpt, globalQuota);
 }
-
-function initAllOutlines() {
-	initOutline();
-	initGlobalOutline();
-}
-	

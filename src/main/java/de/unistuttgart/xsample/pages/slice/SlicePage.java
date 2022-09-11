@@ -21,32 +21,20 @@ package de.unistuttgart.xsample.pages.slice;
 
 import static de.unistuttgart.xsample.util.XSampleUtils._long;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.enterprise.context.RequestScoped;
-import javax.faces.event.ValueChangeEvent;
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.omnifaces.util.Messages;
 
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.mf.Corpus;
-import de.unistuttgart.xsample.pages.XsamplePage;
-import de.unistuttgart.xsample.pages.download.DownloadData;
 import de.unistuttgart.xsample.pages.download.DownloadPage;
-import de.unistuttgart.xsample.pages.parts.PartsData;
-import de.unistuttgart.xsample.pages.shared.CorpusData;
+import de.unistuttgart.xsample.pages.shared.AbstractSlicePage;
 import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
-import de.unistuttgart.xsample.pages.shared.FragmentCodec;
-import de.unistuttgart.xsample.pages.shared.PartData;
-import de.unistuttgart.xsample.pages.shared.SelectionData;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.XSampleUtils;
 
@@ -56,106 +44,13 @@ import de.unistuttgart.xsample.util.XSampleUtils;
  */
 @Named
 @RequestScoped
-public class SlicePage extends XsamplePage {
+public class SlicePage extends AbstractSlicePage {
 	
 	public static final String PAGE = "slice";
 	
 	private static final Logger logger = Logger.getLogger(SlicePage.class.getCanonicalName());
 	
 	static final String NAV_MSG = "navMsgs";
-
-	@Inject
-	SliceData sliceData;
-	@Inject
-	PartsData partsData;
-	@Inject
-	PartData partData;
-	@Inject
-	SelectionData selectionData;
-	@Inject
-	CorpusData corpusData;
-	@Inject
-	DownloadData downloadData;
-		
-	private Stream<ExcerptEntry> allEntries() {
-		return sharedData.getManifest().getAllParts()
-				.stream()
-				.map(Corpus::getId)
-				.map(downloadData::findEntry)
-				.filter(Objects::nonNull);
-	}
-	
-	private ExcerptEntry currentEntry() {
-		Corpus part = selectionData.getSelectedCorpus();
-		return part==null ? null : downloadData.findEntry(part);
-	}
-	
-	private void refreshSlice(ExcerptEntry entry) {
-		sliceData.reset();
-		if(entry!=null) {
-			List<XmpFragment> fragments = entry.getFragments();
-			if(fragments!=null && fragments.size()==1) {
-				XmpFragment fragment = fragments.get(0);
-				sliceData.setBegin(fragment.getBeginIndex());
-				sliceData.setEnd(fragment.getEndIndex());
-			}
-		}
-		
-		if(!sliceData.isValid()) {
-			sliceData.setBegin(1);
-			sliceData.setEnd(1);
-		}
-		
-//		System.out.printf("refreshSlice: part=%s begin=%d end=%d%n", entry==null? "?" : entry.getCorpusId(),sliceData.getBegin(), sliceData.getEnd());
-	}
-
-	private void refreshPart(Corpus part, ExcerptEntry entry) {
-		partData.reset();
-		if(part!=null) {
-			long segments = corpusData.getSegments(part);
-			partData.setSegments(segments);
-			partData.setLimit(corpusData.getLimit(part));
-			partData.setOffset(corpusData.getOffset(part));
-
-			XmpExcerpt quota = findQuota(part);
-			if(!quota.isEmpty()) {
-				partData.setQuota(FragmentCodec.encodeAll(quota.getFragments()));
-			}
-		}
-	}
-	
-	public void init() {
-		Corpus part = selectionData.getSelectedCorpus();
-		if(part==null || !partsData.containsPart(part)) {
-			part = partsData.getSelectedParts().get(0);
-			selectionData.setSelectedCorpus(part);
-		}
-		ExcerptEntry entry = downloadData.findEntry(part);
-
-		refreshPart(part, entry);
-		refreshSlice(entry);
-
-		refreshGlobalExcerpt();
-		refreshGlobalQuota();
-	}
-	
-	/** Reset all slices and refresh shared data */
-	public void reset() {
-		allEntries().forEach(ExcerptEntry::clear);
-		refreshSlice(currentEntry());
-	}
-	
-	public long getSegments() {
-		return partsData.getSelectedParts().stream()
-				.mapToLong(corpusData::getSegments)
-				.sum();
-	}
-	
-	public long getLimit() {
-		return partsData.getSelectedParts().stream()
-				.mapToLong(corpusData::getLimit)
-				.sum();
-	}
 
 	/** Callback for button to continue workflow */
 	public void next() {
@@ -191,69 +86,5 @@ public class SlicePage extends XsamplePage {
 		}
 		
 		forward(DownloadPage.PAGE);
-	}
-	
-	public void selectionChanged(ValueChangeEvent evt) {
-
-//		System.out.printf("selectionChanged: old=%s new=%s%n",
-//				Optional.ofNullable(evt.getOldValue()).map(Corpus.class::cast).map(Corpus::getId).orElse("null"), 
-//				Optional.ofNullable(evt.getNewValue()).map(Corpus.class::cast).map(Corpus::getId).orElse("null"));
-		
-		// If we had a selected part, commit current slice as fragments
-		commitExcerpt();
-		
-		if(evt.getNewValue()!=null) {
-			final Corpus part = (Corpus) evt.getNewValue();
-			final ExcerptEntry entry = downloadData.findEntry(part);
-			
-			refreshPart(part, entry);
-			refreshSlice(entry);
-		}
-		
-//		System.out.printf("selectionChanged: sliceData=%s dlData=%s%n", sliceData, downloadData);
-	}
-	
-	private void refreshGlobalQuota() {
-		System.out.println("refreshGlobalQuota: "+partsData.getSelectedParts());
-		final FragmentCodec fc = new FragmentCodec();
-		for(Corpus part : partsData.getSelectedParts()) {
-			final XmpExcerpt quota = findQuota(part);
-			final long offset = corpusData.getOffset(part);
-			fc.append(quota.getFragments(), offset);
-		}
-		corpusData.setQuota(fc.toString());
-		System.out.println("refreshGlobalQuota: "+corpusData.getQuota());
-	}
-	
-	private void refreshGlobalExcerpt() {
-		System.out.println("refreshGlobalExcerpt: "+partsData.getSelectedParts());
-		final FragmentCodec fc = new FragmentCodec();
-		for(Corpus part : partsData.getSelectedParts()) {
-			final ExcerptEntry entry = downloadData.findEntry(part);
-			if(entry!=null) {
-				final long offset = corpusData.getOffset(part);
-				fc.append(entry.getFragments(), offset);
-			}
-		}
-		corpusData.setExcerpt(fc.toString());
-		System.out.println("refreshGlobalExcerpt: "+corpusData.getExcerpt());
-	}
-	
-	private void commitExcerpt() {
-		final Corpus corpus = selectionData.getSelectedCorpus();
-		if(corpus!=null) {
-			final ExcerptEntry entry = downloadData.findEntry(corpus);
-			long begin = -1, end = -1;
-			if(sliceData.getBegin()>0 && sliceData.getEnd()>0) {
-				begin = sliceData.getBegin();
-				end = sliceData.getEnd();
-				entry.setFragments(Arrays.asList(XmpFragment.of(begin, end)));
-				partData.setExcerpt(FragmentCodec.encodeAll(entry.getFragments()));
-			} else {
-				entry.clear();
-			}
-			refreshGlobalExcerpt();
-//			System.out.printf("commitExcerpt: part=%s begin=%d end=%d%n",corpus.getId(), begin, end);
-		}
 	}
 }

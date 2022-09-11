@@ -15,18 +15,18 @@ import de.unistuttgart.xsample.util.DataBean;
 public abstract class EncodedResultData implements DataBean {
 
 	/** Encoded search result mapped to proper segments */
-	private String segments = "";
+	private String mappedHits = "";
 	/** Encoded search result as native (sub)segments */
-	private String resultHits = "";
+	private String rawHits = "";
 
-	public String getSegments() { return segments; }
-	public void setSegments(String encodedResults) { this.segments = encodedResults; }
+	public String getMappedHits() { return mappedHits; }
+	public void setMappedHits(String encodedResults) { this.mappedHits = encodedResults; }
 	
-	public String getResultHits() { return resultHits; }
-	public void setResultHits(String resultHits) { this.resultHits = resultHits; }
+	public String getRawHits() { return rawHits; }
+	public void setRawHits(String resultHits) { this.rawHits = resultHits; }
 	
 	public void reset() {
-		segments = "";
-		resultHits = "";
+		mappedHits = "";
+		rawHits = "";
 	}
 }

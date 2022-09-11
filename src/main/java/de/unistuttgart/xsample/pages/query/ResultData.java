@@ -25,7 +25,7 @@ public class ResultData extends EncodedResultData {
 	/** Result mapped to primary segments for excerpt generation */
 	private Result mappedResult;
 	/** Number of possible result segments */
-	private long limit = -1;
+	private long rawSegments = -1;
 	
 	public Result getRawResult() { return rawResult; }
 	public void setRawResult(Result rawResult) { this.rawResult = rawResult; }
@@ -33,8 +33,8 @@ public class ResultData extends EncodedResultData {
 	public Result getMappedResult() { return mappedResult; }
 	public void setMappedResult(Result mappedResult) { this.mappedResult = mappedResult; }
 	
-	public long getLimit() { return limit; }
-	public void setLimit(long limit) { this.limit = limit; }
+	public long getRawSegments() { return rawSegments; }
+	public void setRawSegments(long limit) { this.rawSegments = limit; }
 	
 	@Override
 	public void reset() {
@@ -42,7 +42,7 @@ public class ResultData extends EncodedResultData {
 		
 		rawResult = null;
 		mappedResult = null;
-		limit = -1;
+		rawSegments = -1;
 	}
 	
 }

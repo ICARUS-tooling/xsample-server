@@ -19,6 +19,8 @@
  */
 package de.unistuttgart.xsample.pages.slice;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._long;
+
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
@@ -57,6 +59,6 @@ public class SliceData implements DataBean {
 	
 	@Override
 	public String toString() {
-		return String.format("%s@[begin=%d, end=%d]", getClass().getSimpleName(), begin, end);
+		return String.format("%s@[begin=%d, end=%d]", getClass().getSimpleName(), _long(begin), _long(end));
 	}
 }

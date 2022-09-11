@@ -58,7 +58,6 @@ import de.unistuttgart.xsample.pages.shared.SharedData;
 import de.unistuttgart.xsample.qe.MappingException.MappingErrorCode;
 import de.unistuttgart.xsample.qe.QueryException.QueryErrorCode;
 import de.unistuttgart.xsample.qe.icarus1.Icarus1Wrapper;
-import de.unistuttgart.xsample.qe.icarus1.Icarus1Wrapper.ResultPart;
 import de.unistuttgart.xsample.util.XSampleUtils;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
@@ -85,12 +84,11 @@ public class QueryEngine implements Serializable {
 	@Inject
 	CorpusData corpusData;
 	
-	public QueryInfo query(String query) throws QueryException {
+	public List<QueryResult> query(String query) throws QueryException {
 		Icarus1Wrapper wrapper = new Icarus1Wrapper();
 		wrapper.init(query, new Properties()); //TODO forward search settings
 		
-		List<Result> results = new ObjectArrayList<>();
-		long segments = 0;
+		List<QueryResult> results = new ObjectArrayList<>();
 		
 		for(Corpus corpus : excerptData.getManifest().getAllParts()) {
 			final ManifestFile manifest = excerptData.findManifest(corpus);
@@ -111,12 +109,9 @@ public class QueryEngine implements Serializable {
 						InputStream in = new CipherInputStream(raw, cipher);
 						Reader reader = new InputStreamReader(in, encoding);) {
 					
-					ResultPart resultPart = wrapper.evaluate(reader);
-					if(!resultPart.isEmpty()) {
-						results.add(resultPart.getResult());
-					}
-					// Acucmulate searchable segments in any case
-					segments += resultPart.getSegments();
+					QueryResult resultPart = wrapper.evaluate(reader);
+					resultPart.getResult().setCorpusId(corpus.getId());
+					results.add(resultPart);
 				}
 			} catch(QueryException e) {
 				// Decorate exception with contextual info and rethrow
@@ -131,22 +126,23 @@ public class QueryEngine implements Serializable {
 			}
 		}
 		
-		return new QueryInfo(results, segments);
+		return results;
 	}
 	
 	/** Maps 0-based hits in the annotation space into 1-based segments of the primary data.
 	 * @throws MappingException */
-	public List<Result> mapSegments(List<Result> results) throws MappingException {
+	public List<Result> mapSegments(List<QueryResult> results) throws MappingException {
 		requireNonNull(results);
 		checkArgument("Only supports a single result set currently", results.size()==1);
 		
 		List<Result> result = new ArrayList<>();
 		
-		for(Result original : results) {
+		for(QueryResult original : results) {
 			if(original.isEmpty()) {
 				continue;
 			}
-			final String corpusId = original.getCorpusId();
+			Result r = original.getResult();
+			final String corpusId = r.getCorpusId();
 			final Result mapped = new Result();
 			mapped.setCorpusId(corpusId);
 			final Corpus corpus = excerptData.findCorpus(corpusId);
@@ -159,7 +155,7 @@ public class QueryEngine implements Serializable {
 			
 			Mapping mapping;
 			try {
-				mapping = excerptData.getMapping(null, services, cache);
+				mapping = excerptData.getMapping(mappingFile, services, cache);
 			} catch (UnsupportedContentTypeException e) {
 				throw new MappingException("Can't read mapping format", MappingErrorCode.UNSUPPORTED_FORMAT, mappingFile.getLabel(), e);
 			} catch (GeneralSecurityException e) {
@@ -171,7 +167,7 @@ public class QueryEngine implements Serializable {
 			}
 			
 			try {
-				map(original, mapping, mapped, corpusData.getSegments(corpus));
+				map(r, mapping, mapped, corpusData.getSegments(corpus));
 			} catch(RuntimeException e) {
 				throw new MappingException("Unexpected internal error", MappingErrorCode.INTERNAL_ERROR, mappingFile.getLabel(), e);
 			}

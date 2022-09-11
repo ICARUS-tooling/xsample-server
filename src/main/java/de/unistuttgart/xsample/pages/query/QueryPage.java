@@ -19,14 +19,12 @@
  */
 package de.unistuttgart.xsample.pages.query;
 
-import static de.unistuttgart.xsample.util.XSampleUtils._long;
 import static de.unistuttgart.xsample.util.XSampleUtils.isNullOrEmpty;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.LongStream;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
@@ -35,20 +33,19 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.omnifaces.util.Messages;
 
-import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.mf.XsampleManifest;
-import de.unistuttgart.xsample.pages.XsamplePage;
-import de.unistuttgart.xsample.pages.download.DownloadPage;
-import de.unistuttgart.xsample.pages.shared.SharedData.ExcerptEntry;
+import de.unistuttgart.xsample.mf.Corpus;
+import de.unistuttgart.xsample.pages.shared.AbstractSlicePage;
+import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
+import de.unistuttgart.xsample.pages.shared.FragmentCodec;
 import de.unistuttgart.xsample.qe.MappingException;
 import de.unistuttgart.xsample.qe.QueryEngine;
 import de.unistuttgart.xsample.qe.QueryException;
-import de.unistuttgart.xsample.qe.QueryInfo;
+import de.unistuttgart.xsample.qe.QueryResult;
 import de.unistuttgart.xsample.qe.Result;
 import de.unistuttgart.xsample.util.BundleUtil;
-import de.unistuttgart.xsample.util.XSampleUtils;
 
 /**
  * @author Markus Gärtner
@@ -56,7 +53,7 @@ import de.unistuttgart.xsample.util.XSampleUtils;
  */
 @Named
 @RequestScoped
-public class QueryPage extends XsamplePage {
+public class QueryPage extends AbstractSlicePage {
 	
 	public static final String PAGE = "query";
 	
@@ -70,20 +67,15 @@ public class QueryPage extends XsamplePage {
 	
 	@Inject
 	QueryData queryData;
-	
-	@Inject
-	QueryView view;
-	
 	@Inject
 	QueryEngine queryEngine;
-
-	public void init() {
-		initGlobalQuota(queryData);
-		
-		final XsampleManifest manifest = sharedData.getManifest();
-		
-		//TODO further initialize query data
-	}
+	@Inject
+	ResultData resultData;
+	@Inject
+	ResultsData resultsData;
+	
+	@Override
+	public boolean isAllowEmptySlice() { return true; }
 
 	private static void queryMessage(Severity severity, String key, Object...args) {
 		String text = BundleUtil.format(key, args);
@@ -91,16 +83,26 @@ public class QueryPage extends XsamplePage {
 		FacesContext.getCurrentInstance().addMessage(QUERY_MSG, msg);
 	}
 	
+	private String cleanQuery(String query) {
+		return StringEscapeUtils.unescapeHtml4(query);
+	}
+	
 	/** Callback for button to run ICARUS query */
 	public void runQuery() {
-		String rawQuery = view.getQuery();
+		String rawQuery = queryData.getQuery();
 		if(isNullOrEmpty(rawQuery)) {
 			return;
 		}
 		
-		QueryInfo info;
+		String query = cleanQuery(rawQuery);
+		
+		resultData.reset();
+		resultsData.reset();
+		
+		// Execute actual search
+		List<QueryResult> results;
 		try {
-			info = queryEngine.query(rawQuery);
+			results = queryEngine.query(query);
 		} catch(QueryException e) {
 			logger.log(Level.SEVERE, "Query evaluation failed: "+e.getMessage(), e);
 			String resourceId = e.getResourceId().orElse(sharedData.getManifest().getCorpus().getId());
@@ -116,21 +118,18 @@ public class QueryPage extends XsamplePage {
 			}
 			return;
 		}
-		final List<Result> results = info.getResults();
+		
+		long rawSegments = results.stream()
+				.mapToLong(QueryResult::getSegments)
+				.sum();
+		
+		results = results.stream()
+				.filter(r -> !r.isEmpty())
+				.collect(Collectors.toList());
 		
 		if(results.isEmpty()) {
 			Messages.addInfo(NAV_MSG, BundleUtil.get("query.msg.noHits"), rawQuery);
-			queryData.setResultHits("");
-			queryData.setSegments("");
-			queryData.getMappedSegments().clear();
-		} else {
-			// Accumulate and encode hits
-			long[] hits = results.stream()
-					.map(Result::getHits)
-					.flatMapToLong(LongStream::of)
-					.toArray();
-			queryData.setResultHits(XmpFragment.encodeAll(hits));
-			
+		} else {			
 			// Perform mapping
 			List<Result> mappedSegments;
 			try {
@@ -152,82 +151,133 @@ public class QueryPage extends XsamplePage {
 				return;
 			}
 			assert mappedSegments.size()==results.size() : "corpus lost in mapping process";
-			queryData.setMappedSegments(mappedSegments);
-
-			// Accumulate and encode mapped segments
-			long[] segments = mappedSegments.stream()
-					.map(Result::getHits)
-					.flatMapToLong(LongStream::of)
-					.toArray();
-			queryData.setSegments(XmpFragment.encodeAll(segments));
+			
+			FragmentCodec globalHits = new FragmentCodec();
+			FragmentCodec globalSegments = new FragmentCodec();
+			
+			for (int i = 0; i < results.size() && i < mappedSegments.size(); i++) {
+				QueryResult raw = results.get(i);
+				Result mapped = mappedSegments.get(i);
+				
+				globalHits.append(raw.getResult().getHits());
+				globalSegments.append(mapped.getHits());
+				
+				// Update individual parts data
+				resultsData.registerRawResult(raw.getResult());
+				resultsData.registerMappedResult(mapped);
+				resultsData.registerRawSegments(raw.getResult().getCorpusId(), raw.getSegments());
+			}
+			
+			// Update global data
+			resultsData.setRawHits(globalHits.toString());
+			resultsData.setMappedHits(globalSegments.toString());
+			resultsData.setRawSegments(rawSegments);
+			
+			Corpus part = resetSelection();
+			ExcerptEntry entry = downloadData.findEntry(part);
+			refreshPart(part, entry);
+		}		
+	}
+	
+	@Override
+	protected Corpus resetSelection() {
+		Corpus part = null;
+		if(!resultsData.isEmpty()) {
+			part = partsData.getSelectedParts().stream()
+					.filter(resultsData::hasResults)
+					.findFirst()
+					.orElse(null);
 		}
+		if(part==null) {
+			return super.resetSelection();
+		}
+		return part;
+	}
+	
+	@Override
+	protected void refreshPart(Corpus part, ExcerptEntry entry) {
+		resultData.reset();
 		
-		queryData.setResults(results);
-		queryData.setLimit(info.getSegments());
+		super.refreshPart(part, entry);
+		
+		if(part!=null && resultsData.hasResults(part)) {
+			resultData.setRawSegments(resultsData.getRawSegments(part));
+			Result raw = resultsData.getMappedResult(part);
+			resultData.setRawResult(raw);
+			resultData.setRawHits(raw==null ? "" : FragmentCodec.encodeAll(raw.getHits()));
+			Result mapped = resultsData.getMappedResult(part);
+			resultData.setMappedResult(mapped);
+			resultData.setMappedHits(mapped==null ? "" : FragmentCodec.encodeAll(mapped.getHits()));
+		}
+	}
+	
+	@Override
+	protected void assignDefaultSlice() {
+		// TODO use resultData to pick a slot of width 1 as initial selection
+		super.assignDefaultSlice();
 	}
 
 	/** Callback for button to continue workflow */
 	public void next() {
-		final List<Result> results = queryData.getResults();
-		if(results.isEmpty()) {
-			logger.severe("Client side result check failed! <this error needs more log context!!!!>");
-			Messages.addError(NAV_MSG, BundleUtil.get("query.msg.emptyResult"));
-			return;
-		}
+		//TODO rework
 		
-		final List<Result> mappedSegments = queryData.getMappedSegments();
-		if(results.isEmpty()) {
-			logger.severe("Client side result check failed! <this error needs more log context!!!!>");
-			Messages.addError(NAV_MSG, BundleUtil.get("query.msg.emptyMapping"));
-			return;
-		}
-		
-		boolean reset = false;
-		
-		final List<XmpFragment> slice = Arrays.asList(XmpFragment.of(
-				queryData.getBegin(), queryData.getEnd()));
-		
-		for(Result mapped : mappedSegments) {
-			final ExcerptEntry entry = sharedData.findEntry(mapped.getCorpusId());
-			final List<XmpFragment> quota = entry.getQuota().getFragments();
-			final List<XmpFragment> rawFragments = XSampleUtils.asFragments(mapped);
-			final List<XmpFragment> fragments = XSampleUtils.intersect(rawFragments, slice);
-			
-			/* The following issue should never occur, since we do the same
-			 * validation on the client side to enable/disable the button.
-			 * We need this additional sanity check to defend against bugs 
-			 * or tampering with the JS code on the client side!
-			 */
-			long usedUpSlots = XSampleUtils.combinedSize(fragments, quota);
-			if(usedUpSlots>entry.getLimit()) {
-				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
-						_long(entry.getLimit()), entry.getResource(), sharedData.getServer(), sharedData.getDataverseUser()));
-				Messages.addError(NAV_MSG, BundleUtil.get("query.msg.quotaExceeded"), 
-						mapped.getCorpusId(), _long(usedUpSlots), _long(entry.getLimit()));
-				reset = true;
-				break;
-			}
-			
-			entry.setFragments(fragments);
-		}
-		
-		// If we failed at some point make sure all excerpts are cleared and we bail
-		if(reset) {
-			sharedData.getEntries().forEach(ExcerptEntry::clear);
-			
-			return;
-		}
-		
-		// All fine, continue on to download
-		forward(DownloadPage.PAGE);
+//		final List<Result> results = queryData.getResult();
+//		if(results.isEmpty()) {
+//			logger.severe("Client side result check failed! <this error needs more log context!!!!>");
+//			Messages.addError(NAV_MSG, BundleUtil.get("query.msg.emptyResult"));
+//			return;
+//		}
+//		
+//		final List<Result> mappedSegments = queryData.getMappedSegments();
+//		if(results.isEmpty()) {
+//			logger.severe("Client side result check failed! <this error needs more log context!!!!>");
+//			Messages.addError(NAV_MSG, BundleUtil.get("query.msg.emptyMapping"));
+//			return;
+//		}
+//		
+//		boolean reset = false;
+//		
+//		final List<XmpFragment> slice = Arrays.asList(XmpFragment.of(
+//				queryData.getBegin(), queryData.getEnd()));
+//		
+//		for(Result mapped : mappedSegments) {
+//			final ExcerptEntry entry = sharedData.findEntry(mapped.getCorpusId());
+//			final List<XmpFragment> quota = entry.getQuota().getFragments();
+//			final List<XmpFragment> rawFragments = XSampleUtils.asFragments(mapped);
+//			final List<XmpFragment> fragments = XSampleUtils.intersect(rawFragments, slice);
+//			
+//			/* The following issue should never occur, since we do the same
+//			 * validation on the client side to enable/disable the button.
+//			 * We need this additional sanity check to defend against bugs 
+//			 * or tampering with the JS code on the client side!
+//			 */
+//			long usedUpSlots = XSampleUtils.combinedSize(fragments, quota);
+//			if(usedUpSlots>entry.getLimit()) {
+//				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
+//						_long(entry.getLimit()), entry.getResource(), sharedData.getServer(), sharedData.getDataverseUser()));
+//				Messages.addError(NAV_MSG, BundleUtil.get("query.msg.quotaExceeded"), 
+//						mapped.getCorpusId(), _long(usedUpSlots), _long(entry.getLimit()));
+//				reset = true;
+//				break;
+//			}
+//			
+//			entry.setFragments(fragments);
+//		}
+//		
+//		// If we failed at some point make sure all excerpts are cleared and we bail
+//		if(reset) {
+//			sharedData.getEntries().forEach(ExcerptEntry::clear);
+//			
+//			return;
+//		}
+//		
+//		// All fine, continue on to download
+//		forward(DownloadPage.PAGE);
 	}
 	
 	@Override
 	protected void rollBack() {
-		sharedData.getEntries().forEach(ExcerptEntry::clear);
-	}
-	
-	public boolean isShowQuota() {
-		return sharedData.hasEntry(entry -> !entry.getQuota().isEmpty());
+		resultData.reset();
+		resultsData.reset();
 	}
 }

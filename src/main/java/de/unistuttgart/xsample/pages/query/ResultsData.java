@@ -31,7 +31,7 @@ public class ResultsData extends EncodedResultData {
 	/** Raw result data for each part */
 	private final  Map<String, Result> rawResults = new Object2ObjectOpenHashMap<>();
 	/** Result data for each part mapped into native segments of the primary data */
-	private final Map<String, Result> mappedResults = new Object2ObjectOpenHashMap<>();
+	private final Map<String, Result> mappedResultsByCorpus = new Object2ObjectOpenHashMap<>();
 	/** Number of possible result segments for all parts */
 	private final Object2LongMap<String> rawSegmentsByCorpus = new Object2LongOpenHashMap<>();
 	
@@ -39,7 +39,7 @@ public class ResultsData extends EncodedResultData {
 	private long rawSegments = 0;
 	
 	public ResultsData() {
-		rawSegmentsByCorpus.defaultReturnValue(-1);
+		rawSegmentsByCorpus.defaultReturnValue(0);
 	}
 	
 	public long getRawSegments() { return rawSegments; }
@@ -53,11 +53,11 @@ public class ResultsData extends EncodedResultData {
 	public Result getRawResult(String corpusId) {
 		Result result = rawResults.get(requireNonNull(corpusId));
 		if(result==null)
-			throw new IllegalArgumentException("Unknown ocrpus id: "+corpusId);
+			throw new IllegalArgumentException("Unknown corpus id: "+corpusId);
 		return result;
 	}
-	public void registerRawResult(String corpusId, Result result) {
-		rawResults.put(corpusId, result);
+	public void registerRawResult(Result result) {
+		rawResults.put(result.getCorpusId(), result);
 	}
 	
 	// MAPPED RESULTS
@@ -66,13 +66,13 @@ public class ResultsData extends EncodedResultData {
 		return getMappedResult(corpus.getId());
 	}
 	public Result getMappedResult(String corpusId) {
-		Result result = mappedResults.get(requireNonNull(corpusId));
+		Result result = mappedResultsByCorpus.get(requireNonNull(corpusId));
 		if(result==null)
-			throw new IllegalArgumentException("Unknown ocrpus id: "+corpusId);
+			throw new IllegalArgumentException("Unknown corpus id: "+corpusId);
 		return result;
 	}
-	public void registerMappedResult(String corpusId, Result result) {
-		mappedResults.put(corpusId, result);
+	public void registerMappedResult(Result result) {
+		mappedResultsByCorpus.put(result.getCorpusId(), result);
 	}
 	
 	// RAW SEGMENTS
@@ -83,7 +83,7 @@ public class ResultsData extends EncodedResultData {
 	public long getRawSegments(String corpusId) {
 		long segments = rawSegmentsByCorpus.getLong(requireNonNull(corpusId));
 		if(segments==-1)
-			throw new IllegalArgumentException("Unknown ocrpus id: "+corpusId);
+			throw new IllegalArgumentException("Unknown corpus id: "+corpusId);
 		return segments;
 	}
 	public void registerRawSegments(String corpusId, long segments) {
@@ -95,11 +95,19 @@ public class ResultsData extends EncodedResultData {
 		super.reset();
 		
 		rawResults.clear();
-		mappedResults.clear();
+		mappedResultsByCorpus.clear();
 		rawSegmentsByCorpus.clear();
 		
 		rawSegments = 0;
 	}
 	
 	public boolean isEmpty() { return rawResults==null || rawResults.isEmpty(); }
+	
+	public boolean hasResults(Corpus part) {
+		return hasResults(part.getId());
+	}
+	public boolean hasResults(String corpusId) {
+		// We use the mapped data here, since results can be pruned by not being in a mapped section
+		return mappedResultsByCorpus.containsKey(corpusId);
+	}
 }

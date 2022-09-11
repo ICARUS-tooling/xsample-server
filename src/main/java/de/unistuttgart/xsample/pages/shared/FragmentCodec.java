@@ -6,6 +6,7 @@ package de.unistuttgart.xsample.pages.shared;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.function.LongConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
@@ -16,7 +17,7 @@ import de.unistuttgart.xsample.dv.XmpFragment;
  * @author Markus Gärtner
  *
  */
-public class FragmentCodec {
+public class FragmentCodec implements LongConsumer {
 	
 	private static final char SEP = ',';
 	private static final String SEP_STRING = String.valueOf(SEP);
@@ -153,6 +154,29 @@ public class FragmentCodec {
 		if(buffer.length()>0) {
 			buffer.append(SEP);
 		}
+	}
+	
+	@Override
+	public void accept(long value) {
+		append(value);
+	}
+	
+	public FragmentCodec append(long value) {
+		maybeAppendSep();
+		buffer.append(String.valueOf(value));
+		return this;
+	}
+	
+	public FragmentCodec append(long[] values) {
+		for(long value : values) {
+			append(value);
+		}
+		return this;
+	}
+	
+	public FragmentCodec append(LongStream values) {
+		values.forEach(this);
+		return this;
 	}
 	
 	public FragmentCodec append(XmpFragment fragment) {

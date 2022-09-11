@@ -21,29 +21,29 @@ package de.unistuttgart.xsample.qe;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.List;
-
 /**
  * Models raw results from a corpus query evaluation.
  * 
  * @author Markus Gärtner
  *
  */
-public class QueryInfo {
+public class QueryResult {
 
-	private final List<Result> results;
+	private final Result result;
 	private final long segments;
 	
-	public QueryInfo(List<Result> results, long segments) {
-		this.results = requireNonNull(results);
+	public QueryResult(Result result, long segments) {
+		this.result = requireNonNull(result);
 		this.segments = segments;
 	}
 	
-	public List<Result> getResults() {
-		return results;
+	public Result getResult() {
+		return result;
 	}
 	/** Total number of searchable segments in the corpus or part that was searched */
 	public long getSegments() {
 		return segments;
 	}
+	
+	public boolean isEmpty() { return result.isEmpty(); }
 }

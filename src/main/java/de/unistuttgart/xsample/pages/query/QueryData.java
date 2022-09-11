@@ -19,6 +19,9 @@
  */
 package de.unistuttgart.xsample.pages.query;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._boolean;
+import static de.unistuttgart.xsample.util.XSampleUtils._int;
+
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
@@ -37,11 +40,17 @@ public class QueryData implements DataBean {
 	private static final long serialVersionUID = -3741300128814073907L;
 	
 	/** The raw query as defined by the user */
-	private String query;
+	private String query = "[form=Der]";
 	
 	private boolean caseSensitive = true;
 	private int limit = 0;
 	
 	public String getQuery() { return query; }
 	public void setQuery(String selectedCorpus) { this.query = selectedCorpus; }
+	
+	@Override
+	public String toString() {
+		return String.format("%s@[query=%d, caseSensitive=%b, limit=%d]", getClass().getSimpleName(),
+				query, _boolean(caseSensitive), _int(limit));
+	}
 }

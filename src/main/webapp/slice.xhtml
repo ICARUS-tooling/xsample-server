@@ -5,9 +5,9 @@
 	xmlns:ui="http://java.sun.com/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
 
-	<h:form id="slice">	
+	<h:form id="form">	
 		<p:remoteCommand name="initSlice" action="#{slicePage.init}" 
-			process="@this" update="@form" oncomplete="initOutline();initGlobalOutline()" />
+			process="@this" update="@form" oncomplete="slice_initAllOutlines()" />
 				
 		<p:panel>
 			<f:facet name="header">
@@ -17,7 +17,7 @@
 				<ui:include src="/select_corpus.xhtml">
 					<ui:param name="limited" value="true" />
 					<ui:param name="ajaxUpdate" value="sliceData sliceOutline" />
-					<ui:param name="ajaxOncomplete" value="initAllOutlines()" />
+					<ui:param name="ajaxOncomplete" value="slice_initAllOutlines()" />
 					<ui:param name="changeHandler" value="#{slicePage}" />
 					<ui:param name="handlerMethod" value="selectionChanged" />
 				</ui:include>	
@@ -58,12 +58,13 @@
 					<br/>
 					
 					<ui:include src="/outline.xhtml">
-						<ui:param name="canvasId" value="outline" />
+						<ui:param name="canvasId" value="outlineCanvas" />
 						<ui:param name="canvasClass" value="excerpt-outline stack-top" />
 						<ui:param name="showLegend" value="false" />
 					</ui:include>
 							
 					<div jsf:rendered="#{sharedData.multiPartCorpus}">
+						<p:separator />
 						<h:outputText value="#{bundle['slice.completeExcerpt']}: " />
 						<h:outputText id="globalSize" style="margin-top: 2em" value="??" /> 
 						<h:outputText id="globalPercent" style="margin-top: 2em; margin-left: 2em" value="??" />
@@ -74,7 +75,7 @@
 							rendered="#{not empty corpusData.quota}" value="??" />
 						<br/>
 						<ui:include src="/outline.xhtml">
-							<ui:param name="canvasId" value="globalOutline" />
+							<ui:param name="canvasId" value="globalOutlineCanvas" />
 							<ui:param name="canvasClass" value="excerpt-outline stack-bottom" />
 							<ui:param name="showLegend" value="true" />
 						</ui:include>
@@ -97,6 +98,16 @@
 	<h:outputScript >	
 		$('document').ready(function(){
 			initSlice();
-		});
+		});		
+
+		function slice_refreshAllOutlines() {
+			refreshOutline()
+			refreshGlobalOutline();
+		}
+		
+		function slice_initAllOutlines() {
+			initOutline();
+			initGlobalOutline();
+		}
 	</h:outputScript>
 </ui:composition>
