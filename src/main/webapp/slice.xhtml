@@ -7,7 +7,7 @@
 
 	<h:form id="form">	
 		<p:remoteCommand name="initSlice" action="#{slicePage.init}" 
-			process="@this" update="@form" oncomplete="slice_initAllOutlines()" />
+			process="@this" update="@form" oncomplete="slice_initAllExcerpts()" />
 				
 		<p:panel>
 			<f:facet name="header">
@@ -17,7 +17,7 @@
 				<ui:include src="/select_corpus.xhtml">
 					<ui:param name="limited" value="true" />
 					<ui:param name="ajaxUpdate" value="sliceData sliceOutline" />
-					<ui:param name="ajaxOncomplete" value="slice_initAllOutlines()" />
+					<ui:param name="ajaxOncomplete" value="slice_initAllExcerpts()" />
 					<ui:param name="changeHandler" value="#{slicePage}" />
 					<ui:param name="handlerMethod" value="selectionChanged" />
 				</ui:include>	
@@ -43,11 +43,12 @@
 				<div class="outline-box">
 					<h:outputText style="margin-bottom: 2em" value="#{bundle['segments']} " />
 					<h:outputText id="segmentsText" style="margin-bottom: 2em" />
-					<p:slider for="excerptStart,excerptEnd" 
+					
+					<p:slider for="form:excerptStart,form:excerptEnd" 
 						display="segmentsText" onSlide="updateExcerpt(event, ui);" 
 						styleClass="excerpt-select" range="true" displayTemplate="{min} - {max}" 
 						minValue="1" maxValue="#{partData.segments}">
-						<p:ajax process="sliceData" oncomplete="initOutline();refreshGlobalOutline()" />
+						<p:ajax process="sliceData" oncomplete="initExcerpt();refreshGlobalExcerpt()" />
 					</p:slider>    
 					
 					<h:outputLabel for="excerptSize" value="#{bundle['excerptSize']}: " />
@@ -58,7 +59,7 @@
 					<br/>
 					
 					<ui:include src="/outline.xhtml">
-						<ui:param name="canvasId" value="outlineCanvas" />
+						<ui:param name="canvasId" value="excerptCanvas" />
 						<ui:param name="canvasClass" value="excerpt-outline stack-top" />
 						<ui:param name="showLegend" value="false" />
 					</ui:include>
@@ -75,7 +76,7 @@
 							rendered="#{not empty corpusData.quota}" value="??" />
 						<br/>
 						<ui:include src="/outline.xhtml">
-							<ui:param name="canvasId" value="globalOutlineCanvas" />
+							<ui:param name="canvasId" value="globalExcerptCanvas" />
 							<ui:param name="canvasClass" value="excerpt-outline stack-bottom" />
 							<ui:param name="showLegend" value="true" />
 						</ui:include>
@@ -100,14 +101,14 @@
 			initSlice();
 		});		
 
-		function slice_refreshAllOutlines() {
-			refreshOutline()
-			refreshGlobalOutline();
+		function slice_refreshAllExcerpts() {
+			refreshExcerpt()
+			refreshGlobalExcerpt();
 		}
 		
-		function slice_initAllOutlines() {
-			initOutline();
-			initGlobalOutline();
+		function slice_initAllExcerpts() {
+			initExcerpt();
+			initGlobalExcerpt();
 		}
 	</h:outputScript>
 </ui:composition>

@@ -7,8 +7,8 @@
 	
 	<h:form id="form">
 		<p:remoteCommand name="initQuery" action="#{queryPage.init}"
-			process="@this" update="@form" oncomplete="query_initAllOutlines()" />
-			
+			process="@this" update="@form" oncomplete="query_initAllExcerpts()" />		
+		
 		<p:outputPanel id="sliceData" layout="block">			
 			<h:inputHidden id="excerptStart" value="#{sliceData.begin}" />
 			<h:inputHidden id="excerptEnd" value="#{sliceData.end}" />
@@ -17,8 +17,8 @@
 			<h:inputHidden id="excerptQuota" value="#{partData.quota}" readonly="#{true}" />
 			<div jsf:rendered="#{sharedData.multiPartCorpus}">
 				<h:inputHidden id="excerptOffset" value="#{partData.offset}" readonly="#{true}" />
-				<h:inputHidden id="globalSegments" value="#{slicePage.segments}" readonly="#{true}" />
-				<h:inputHidden id="globalThreshold" value="#{slicePage.limit}" readonly="#{true}" />
+				<h:inputHidden id="globalSegments" value="#{queryPage.segments}" readonly="#{true}" />
+				<h:inputHidden id="globalThreshold" value="#{queryPage.limit}" readonly="#{true}" />
 				<h:inputHidden id="globalQuota" value="#{corpusData.quota}" readonly="#{true}" />
 				<h:inputHidden id="globalExcerpt" value="#{corpusData.excerpt}" readonly="#{true}" />
 			</div>	
@@ -34,20 +34,13 @@
 				<h:inputHidden id="globalRawSegments" value="#{resultsData.rawSegments}" readonly="#{true}" />
 			</div>	
 		</p:outputPanel>
-		
-		<!-- 
-		<p:inputTextarea widgetVar="editor" value="#{queryData.query}" rows="6" cols="40" 
-			placeholder="#{bundle['query.editor.placeholder']}"
-			required="true">
-			<p:ajax update="runQuery" />
-		</p:inputTextarea> -->
 				
-		<p:textEditor widgetVar="editor" height="150" placeholder="#{bundle['query.editor.placeholder']}"
+		<p:textEditor id="editor" height="150" placeholder="#{bundle['query.editor.placeholder']}"
 				value="#{queryData.query}" secure="true" required="true" allowBlocks="false"
 				allowFormatting="false" allowImages="false" allowLinks="false" allowStyles="false">
 			<f:facet name="toolbar">
 				<span class="ql-formats">
-					There be cool stuff for customizing queries...
+					Excerpt generation based on ICARUS
 				</span>
 			</f:facet>
 			<p:ajax update="runQuery" />
@@ -56,97 +49,98 @@
 		<div>
 			<p:messages for="queryMsgs" id="queryMsg" closable="true" redisplay="false" skipDetailIfEqualsSummary="true" />
 			
-			<p:commandButton id="runQuery" value="#{bundle['query.runQuery']}" action="#{queryPage.runQuery}" disabled="#{empty queryData.query}">
-				<p:ajax oncomplete="query_refreshAllOutlines();"
-						update="sliceData resultData queryMsg slice @this" />
-			</p:commandButton>
+			<p:commandButton id="runQuery" value="#{bundle['query.runQuery']}" 
+					action="#{queryPage.runQuery}" disabled="#{empty queryData.query}"
+					oncomplete="query_refreshAllExcerpts()" process="@form" 
+					update="sliceData resultData excerptSlider" />
 		</div>
-		<div jsf:id="slice">
-			<div jsf:rendered="#{not empty resultData.rawHits or true}" class="outline-box">
 				
+		<p:separator />
+		
+		<div jsf:id="queryOutline" class="outline-box">				
+			<div jsf:rendered="#{sharedData.multiPartCorpus}">
+				<h:outputText value="#{bundle['slice.selectedCorpus']}" 
+					style="margin-right: 5em" />
+				<ui:include src="/select_corpus.xhtml">
+					<ui:param name="limited" value="true" />
+					<ui:param name="ajaxUpdate" value="sliceData queryOutline" />
+					<ui:param name="ajaxOncomplete" value="query_initAllExcerpts()" />
+					<ui:param name="changeHandler" value="#{queryPage}" />
+					<ui:param name="handlerMethod" value="selectionChanged" />
+				</ui:include>	
+				<p:commandButton value="#{bundle['slice.resetAll']}" action="#{queryPage.reset}" process="@this" update="@form" />		
+			</div>
+			
+			<!-- RAW HITS -->
+			<h:outputLabel for="@next" value="#{bundle['query.rawHits']}: " />
+			<h:outputText id="rawHitsCount" value="??" />
+			<ui:include src="/outline.xhtml">
+				<ui:param name="canvasId" value="rawHitsCanvas" />
+				<ui:param name="canvasClass" value="excerpt-outline stack-top" />
+				<ui:param name="showLegend" value="false" />
+			</ui:include>
+			
+			<!-- MAPPED HITS -->
+			<h:outputLabel for="@next" value="#{bundle['query.mappedHits']}: " />
+			<h:outputText id="mappedHitsCount" value="??" />
+			<ui:include src="/outline.xhtml">
+				<ui:param name="canvasId" value="mappedHitsCanvas" />
+				<ui:param name="canvasClass" value="excerpt-outline stack-intermediate" />
+				<ui:param name="showLegend" value="false" />
+			</ui:include>
+			
+			<h:outputLabel for="@next" value="#{bundle['query.sliceInfo']}: " />
+			<h:outputText id="segmentsText" value="??" />
+			
+			<p:slider for="form:excerptStart,form:excerptEnd" 
+				id="excerptSlider"
+				display="segmentsText" onSlide="updateExcerpt(event, ui);" 
+				styleClass="excerpt-select" range="true" displayTemplate="{min} - {max}" 
+				minValue="1" maxValue="#{partData.segments}">
+				<p:ajax process="sliceData" oncomplete="initExcerpt();refreshGlobalExcerpt()" />
+			</p:slider>  
+			
+			<h:outputLabel for="excerptSize" value="#{bundle['excerptSize']}: " />
+			<h:outputText id="excerptSize" style="margin-top: 2em" value="??" /> 
+			<br/>
+			<h:outputLabel for="excerptPercent" value="#{bundle['excerptPercent']}: " />
+			<h:outputText id="excerptPercent" style="margin-top: 2em" value="??" />
+			<br/>
+			
+			<!-- EXCERPT -->
+			<ui:include src="/outline.xhtml">
+				<ui:param name="canvasId" value="excerptCanvas" />
+				<ui:param name="canvasClass" value="excerpt-outline stack-bottom" />
+				<ui:param name="showLegend" value="#{not sharedData.multiPartCorpus}" />
+			</ui:include>
+					
+			<!-- GLOBAL HITS -->
+			<div jsf:rendered="#{sharedData.multiPartCorpus}">
 				<p:separator />
 				
-				<div jsf:rendered="#{sharedData.multiPartCorpus}">
-					<h:outputText value="#{bundle['slice.selectedCorpus']}" 
-						style="margin-right: 5em" />
-					<ui:include src="/select_corpus.xhtml">
-						<ui:param name="limited" value="true" />
-						<ui:param name="ajaxUpdate" value="sliceData sliceOutline" />
-						<ui:param name="ajaxOncomplete" value="query_initAllOutlines()" />
-						<ui:param name="changeHandler" value="#{slicePage}" />
-						<ui:param name="handlerMethod" value="selectionChanged" />
-					</ui:include>	
-					<p:commandButton value="#{bundle['slice.resetAll']}" action="#{slicePage.reset}" process="@this" update="@form" />		
-				</div>
-				
-				<!-- RAW HITS -->
-				<h:outputText value="#{bundle['query.rawHits']}:" />
+				<h:outputText value="#{bundle['query.globalMappedHits']}: " />
+				<br/>
 				<ui:include src="/outline.xhtml">
-					<ui:param name="canvasId" value="rawHitsCanvas" />
+					<ui:param name="canvasId" value="globalHitsCanvas" />
 					<ui:param name="canvasClass" value="excerpt-outline stack-top" />
 					<ui:param name="showLegend" value="false" />
 				</ui:include>
 				
-				<!-- MAPPED HITS -->
-				<h:outputText value="#{bundle['query.mappedHits']}:" />
+				<h:outputText value="#{bundle['slice.completeExcerpt']}: " />
+				<h:outputText id="globalSize" style="margin-top: 2em" value="??" /> 
+				<h:outputText id="globalPercent" style="margin-top: 2em; margin-left: 2em" value="??" />
+				<br/>
+				<h:outputLabel for="totalPercent" value="#{bundle['totalPercent']}: " 
+					rendered="#{not empty corpusData.quota}" />
+				<h:outputText id="totalPercent" style="margin-top: 2em" 
+					rendered="#{not empty corpusData.quota}" value="??" />
+				<br/>
 				<ui:include src="/outline.xhtml">
-					<ui:param name="canvasId" value="mappedHitsCanvas" />
-					<ui:param name="canvasClass" value="excerpt-outline stack-intermediate" />
-					<ui:param name="showLegend" value="false" />
+					<ui:param name="canvasId" value="globalExcerptCanvas" />
+					<ui:param name="canvasClass" value="excerpt-outline stack-bottom" />
+					<ui:param name="showLegend" value="true" />
 				</ui:include>
-				
-				<h:outputText value="#{bundle['query.sliceInfo']}:" />
-				<br/>
-				<h:outputText id="segmentsText" value="??" />
-				<p:slider for="excerptStart,excerptEnd" 
-					display="segmentsText" onSlide="updateExcerpt(event, ui);" 
-					styleClass="excerpt-select" range="true" displayTemplate="{min} - {max}" 
-					minValue="1" maxValue="#{partData.segments}">
-					<p:ajax process="sliceData" oncomplete="initOutline();refreshGlobalOutline()" />
-				</p:slider>  
-				
-				<h:outputLabel for="excerptSize" value="#{bundle['excerptSize']}: " />
-				<h:outputText id="excerptSize" style="margin-top: 2em" value="??" /> 
-				<br/>
-				<h:outputLabel for="excerptPercent" value="#{bundle['excerptPercent']}: " />
-				<h:outputText id="excerptPercent" style="margin-top: 2em" value="??" />
-				<br/>
-				
-				<!-- SLICE -->
-				<ui:include src="/outline.xhtml">
-					<ui:param name="canvasId" value="outlineCanvas" />
-					<ui:param name="canvasClass" value="excerpt-outline stack-intermediate" />
-					<ui:param name="showLegend" value="#{not sharedData.multiPartCorpus}" />
-				</ui:include>
-						
-				<!-- GLOBAL HITS -->
-				<div jsf:rendered="#{sharedData.multiPartCorpus}">
-					<p:separator />
-					
-					<h:outputText value="#{bundle['query.globalMappedHits']}: " />
-					<br/>
-					<ui:include src="/outline.xhtml">
-						<ui:param name="canvasId" value="globalHitsCanvas" />
-						<ui:param name="canvasClass" value="excerpt-outline stack-top" />
-						<ui:param name="showLegend" value="false" />
-					</ui:include>
-					
-					<h:outputText value="#{bundle['slice.completeExcerpt']}: " />
-					<h:outputText id="globalSize" style="margin-top: 2em" value="??" /> 
-					<h:outputText id="globalPercent" style="margin-top: 2em; margin-left: 2em" value="??" />
-					<br/>
-					<h:outputLabel for="totalPercent" value="#{bundle['totalPercent']}: " 
-						rendered="#{not empty corpusData.quota}" />
-					<h:outputText id="totalPercent" style="margin-top: 2em" 
-						rendered="#{not empty corpusData.quota}" value="??" />
-					<br/>
-					<ui:include src="/outline.xhtml">
-						<ui:param name="canvasId" value="globalOutlineCanvas" />
-						<ui:param name="canvasClass" value="excerpt-outline stack-bottom" />
-						<ui:param name="showLegend" value="true" />
-					</ui:include>
-				</div>	
-			</div>
+			</div>	
 		</div>
 		
 		<p:separator />
@@ -169,20 +163,20 @@
 			initQuery();
 		});		
 
-		function query_refreshAllOutlines() {
-			refreshOutline()
-			refreshGlobalOutline();
+		function query_refreshAllExcerpts() {
+			initExcerpt()
+			//refreshGlobalExcerpt();
 			refreshResults();
-			refreshGlobalResults();
-			console.log('query_refreshAllOutlines');
+			//refreshGlobalResults();
+			console.log('query_refreshAllExcerpts');
 		}
 		
-		function query_initAllOutlines() {
-			initOutline();
-			initGlobalOutline();
+		function query_initAllExcerpts() {
+			initExcerpt();
+			//initGlobalExcerpt();
 			initResults();
-			initGlobalResults();
-			console.log('query_initAllOutlines');
+			//initGlobalResults();
+			console.log('query_initAllExcerpts');
 		}
 	</h:outputScript>
 </ui:composition>

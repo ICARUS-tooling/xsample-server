@@ -22,6 +22,7 @@ package de.unistuttgart.xsample.qe;
 import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * Contains 0-based hits in ascending order for the designated target corpus.
@@ -60,9 +61,17 @@ public class Result implements Serializable {
 		this.hits = requireNonNull(hits);
 	}
 	
-	public int size() { return hits.length; }
+	public int getSize() { return hits.length; }
 	
 	public boolean isEmpty() { return hits.length==0; }
 	
 	public void clear() { setHits(EMPTY); }
+	
+	/**
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return String.format("%s@[corpusId=%s, hits=%s]", getClass().getSimpleName(), corpusId, Arrays.toString(hits));
+	}
 }

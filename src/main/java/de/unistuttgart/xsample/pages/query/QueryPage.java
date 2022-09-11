@@ -19,8 +19,10 @@
  */
 package de.unistuttgart.xsample.pages.query;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._long;
 import static de.unistuttgart.xsample.util.XSampleUtils.isNullOrEmpty;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,11 +34,15 @@ import javax.faces.application.FacesMessage.Severity;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.transaction.Transactional;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.omnifaces.util.Messages;
 
+import de.unistuttgart.xsample.dv.XmpExcerpt;
+import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.mf.Corpus;
+import de.unistuttgart.xsample.pages.download.DownloadPage;
 import de.unistuttgart.xsample.pages.shared.AbstractSlicePage;
 import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
 import de.unistuttgart.xsample.pages.shared.FragmentCodec;
@@ -46,6 +52,7 @@ import de.unistuttgart.xsample.qe.QueryException;
 import de.unistuttgart.xsample.qe.QueryResult;
 import de.unistuttgart.xsample.qe.Result;
 import de.unistuttgart.xsample.util.BundleUtil;
+import de.unistuttgart.xsample.util.XSampleUtils;
 
 /**
  * @author Markus Gärtner
@@ -88,6 +95,7 @@ public class QueryPage extends AbstractSlicePage {
 	}
 	
 	/** Callback for button to run ICARUS query */
+	@Transactional
 	public void runQuery() {
 		String rawQuery = queryData.getQuery();
 		if(isNullOrEmpty(rawQuery)) {
@@ -119,15 +127,26 @@ public class QueryPage extends AbstractSlicePage {
 			return;
 		}
 		
-		long rawSegments = results.stream()
-				.mapToLong(QueryResult::getSegments)
-				.sum();
+		long rawSegments = 0;
+		FragmentCodec rawHits = new FragmentCodec();
+		boolean hasHits = false;
+
+		for (int i = 0; i < results.size(); i++) {
+			QueryResult qr = results.get(i);
+			rawSegments += qr.getSegments();
+			resultsData.registerRawResult(qr.getResult());
+			resultsData.registerRawSegments(qr.getCorpusId(), qr.getSegments());
+			
+			if(!qr.isEmpty()) {
+				rawHits.append(qr.getResult().getHits());
+				hasHits = true;
+			}
+		}
 		
-		results = results.stream()
-				.filter(r -> !r.isEmpty())
-				.collect(Collectors.toList());
+		resultsData.setRawSegments(rawSegments);
+		resultsData.setRawHits(rawHits.toString());
 		
-		if(results.isEmpty()) {
+		if(!hasHits) {
 			Messages.addInfo(NAV_MSG, BundleUtil.get("query.msg.noHits"), rawQuery);
 		} else {			
 			// Perform mapping
@@ -152,30 +171,28 @@ public class QueryPage extends AbstractSlicePage {
 			}
 			assert mappedSegments.size()==results.size() : "corpus lost in mapping process";
 			
-			FragmentCodec globalHits = new FragmentCodec();
-			FragmentCodec globalSegments = new FragmentCodec();
+			FragmentCodec mappedHits = new FragmentCodec();
 			
 			for (int i = 0; i < results.size() && i < mappedSegments.size(); i++) {
-				QueryResult raw = results.get(i);
+				QueryResult result = results.get(i);
+				Result raw = result.getResult();
 				Result mapped = mappedSegments.get(i);
 				
-				globalHits.append(raw.getResult().getHits());
-				globalSegments.append(mapped.getHits());
+				System.out.printf("part=%s, raw=%s mapped=%s%n",raw.getCorpusId(), raw, mapped);
+				
+				mappedHits.append(mapped.getHits());
 				
 				// Update individual parts data
-				resultsData.registerRawResult(raw.getResult());
 				resultsData.registerMappedResult(mapped);
-				resultsData.registerRawSegments(raw.getResult().getCorpusId(), raw.getSegments());
 			}
 			
-			// Update global data
-			resultsData.setRawHits(globalHits.toString());
-			resultsData.setMappedHits(globalSegments.toString());
-			resultsData.setRawSegments(rawSegments);
+			resultsData.setMappedHits(mappedHits.toString());
 			
 			Corpus part = resetSelection();
 			ExcerptEntry entry = downloadData.findEntry(part);
 			refreshPart(part, entry);
+			
+			System.out.printf("runQuery: query=%s results=%s result=%s%n", queryData, resultsData, resultData);
 		}		
 	}
 	
@@ -202,7 +219,7 @@ public class QueryPage extends AbstractSlicePage {
 		
 		if(part!=null && resultsData.hasResults(part)) {
 			resultData.setRawSegments(resultsData.getRawSegments(part));
-			Result raw = resultsData.getMappedResult(part);
+			Result raw = resultsData.getRawResult(part);
 			resultData.setRawResult(raw);
 			resultData.setRawHits(raw==null ? "" : FragmentCodec.encodeAll(raw.getHits()));
 			Result mapped = resultsData.getMappedResult(part);
@@ -213,14 +230,103 @@ public class QueryPage extends AbstractSlicePage {
 	
 	@Override
 	protected void assignDefaultSlice() {
-		// TODO use resultData to pick a slot of width 1 as initial selection
-		super.assignDefaultSlice();
+		if(!resultData.isEmpty()) {
+			Result candidates = resultData.getMappedResult();
+			if(!candidates.isEmpty()) {
+				long firstUsableSlot = candidates.getHits()[0];
+				sliceData.setBegin(firstUsableSlot);
+				sliceData.setEnd(firstUsableSlot);
+			}
+		}
+		
+		if(!sliceData.isValid()) {
+			super.assignDefaultSlice();
+		}
+	}
+	
+	private static final long[] EMPTY = {};
+	
+	private static long[] filter(long[] hits, long min, long max) {
+		int first = Arrays.binarySearch(hits, min);
+		if(first < 0) first = -first - 1;
+		
+		if(first==hits.length) {
+			return EMPTY;
+		}
+		
+		int last = Arrays.binarySearch(hits, first, hits.length, max);
+		if(last < 0) {
+			last = -last - 1;
+		} else {
+			// If we actually found the value, we need to ensure it is contained in the slice
+			last = Math.max(last+1, hits.length);
+		}
+		
+		if(first==last) {
+			return EMPTY;
+		}
+		
+		return Arrays.copyOfRange(hits, first, last);
+	}
+	
+	@Override
+	protected void commitExcerpt() {
+		final Corpus corpus = selectionData.getSelectedCorpus();
+		if(corpus!=null) {
+			final ExcerptEntry entry = downloadData.findEntry(corpus);
+			long begin = -1, end = -1;
+			if(!resultData.isEmpty() && sliceData.getBegin()>0 && sliceData.getEnd()>0) {
+				begin = sliceData.getBegin();
+				end = sliceData.getEnd();
+				
+				final long[] values = filter(resultData.getMappedResult().getHits(), begin, end);
+				final List<XmpFragment> fragments = XmpFragment.from(values);
+				entry.setFragments(fragments);
+				partData.setExcerpt(FragmentCodec.encodeAll(fragments));
+			} else {
+				entry.clear();
+			}
+			refreshGlobalExcerpt();
+//			System.out.printf("commitExcerpt: part=%s begin=%d end=%d%n",corpus.getId(), begin, end);
+		}
 	}
 
 	/** Callback for button to continue workflow */
 	public void next() {
-		//TODO rework
+		// Commit current excerpt since we normal only do this on a selection change!
+		commitExcerpt();
 		
+		for(ExcerptEntry entry : allEntries().collect(Collectors.toList())) {
+			final List<XmpFragment> fragments = entry.getFragments();
+			
+			if(fragments==null || fragments.isEmpty()) {
+				entry.clear();
+				continue;
+			}
+			
+			XmpExcerpt excerpt = findQuota(entry.getCorpusId());
+			
+			/* The following issue should never occur, since we do the same
+			 * validation on the client side to enable/disable the button.
+			 * We need this additional sanity check to defend against bugs 
+			 * or tampering with the JS code on the client side!
+			 */
+			long usedUpSlots = XSampleUtils.combinedSize(fragments, excerpt.getFragments());
+			if(usedUpSlots>entry.getLimit()) {
+				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
+						_long(entry.getLimit()), entry.getCorpusId(), sharedData.getServer(), sharedData.getDataverseUser()));
+				Messages.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
+						_long(usedUpSlots), _long(entry.getLimit()));
+				return;
+			}
+		}
+		
+		forward(DownloadPage.PAGE);
+	}
+
+//	/** Callback for button to continue workflow */
+//	public void next() {
+//		
 //		final List<Result> results = queryData.getResult();
 //		if(results.isEmpty()) {
 //			logger.severe("Client side result check failed! <this error needs more log context!!!!>");
@@ -273,7 +379,7 @@ public class QueryPage extends AbstractSlicePage {
 //		
 //		// All fine, continue on to download
 //		forward(DownloadPage.PAGE);
-	}
+//	}
 	
 	@Override
 	protected void rollBack() {

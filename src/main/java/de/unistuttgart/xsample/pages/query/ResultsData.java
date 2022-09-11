@@ -3,6 +3,7 @@
  */
 package de.unistuttgart.xsample.pages.query;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._long;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Map;
@@ -109,5 +110,12 @@ public class ResultsData extends EncodedResultData {
 	public boolean hasResults(String corpusId) {
 		// We use the mapped data here, since results can be pruned by not being in a mapped section
 		return mappedResultsByCorpus.containsKey(corpusId);
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("%s@[rawHits='%s', mappedHits='%s', rawResult=%s, mappedResult=%s, rawSegments=%s, totalRawSegments=%d]", 
+				getClass().getSimpleName(), getRawHits(), getMappedHits(),
+				rawResults, mappedResultsByCorpus, rawSegmentsByCorpus, _long(rawSegments));
 	}
 }

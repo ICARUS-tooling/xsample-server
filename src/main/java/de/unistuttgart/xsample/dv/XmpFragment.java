@@ -21,6 +21,8 @@ package de.unistuttgart.xsample.dv;
 
 import static de.unistuttgart.xsample.util.XSampleUtils.checkArgument;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.LongStream;
 
 import javax.persistence.Column;
@@ -30,6 +32,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
  
 /**
  * Models a span of 1-based indices.
@@ -54,6 +58,31 @@ public class XmpFragment implements Comparable<XmpFragment> {
 	public static XmpFragment of(long value) {
 		checkArgument(value>0);
 		return of(value, value);
+	}
+	
+	public static List<XmpFragment> from(long...values) {
+		if(values.length==0) {
+			return Collections.emptyList();
+		}
+		
+		List<XmpFragment> fragments = new ObjectArrayList<>();
+		XmpFragment current = null;
+		
+		for (int i = 0; i < values.length; i++) {
+			long value = values[i];
+			if(current==null) {
+				current = of(value);
+			} else if(!current.append(value)) {
+				fragments.add(current);
+				current = of(value);
+			}
+		}
+		
+		if(current!=null) {
+			fragments.add(current);
+		}
+		
+		return fragments;
 	}
 
 	@Id

@@ -252,10 +252,11 @@ public class WelcomePage extends XsamplePage {
 			properties.add(new Property("quota-ratio", String.format("%.2f%%", _double(percent))));
 			
 			if(used>=limit && !isSmallFile(segments)) {
-				logger.log(Level.SEVERE, String.format("Quota of %d used up on resource %s by user %s", 
-						_long(limit), quota.getResource(), sharedData.getDataverseUser()));
-				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.quotaExceeded", 
-						_long(used), corpus.getTitle());
+//				logger.log(Level.SEVERE, String.format("Quota of %d used up on resource %s by user %s", 
+//						_long(limit), quota.getResource(), sharedData.getDataverseUser()));
+//				message(FacesMessage.SEVERITY_ERROR, "welcome.msg.quotaExceeded", 
+//						_long(used), corpus.getTitle());
+				properties.add(new Property("quota-exceeded", String.valueOf(true)));
 			}
 		}
 		return properties;

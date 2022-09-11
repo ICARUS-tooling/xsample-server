@@ -1,7 +1,6 @@
 /**
  * Methods for managing the slice UI
  */
- 
 
 var quota = [];
 var globalQuota = [];
@@ -10,12 +9,15 @@ var globalExcerpt = [];
 function updateExcerpt(_, ui) {
 	var begin = ui.values[0];
 	var end = ui.values[1];
-	refreshOutline(begin, end);
+	refreshExcerpt(begin, end);
 }
 
-function refreshOutline(begin, end) {
-	var canvas = document.getElementById('form:outlineCanvas');				
-	if(canvas == null) return;
+function refreshExcerpt(begin, end) {
+	var canvas = document.getElementById('excerptCanvas');					
+	if(canvas == null) {
+		console.log("refreshExcerpt: missing excerptCanvas");
+		return;	
+	}
 	
 	var count = end - begin + 1;
 	var segments = Number(document.getElementById('form:excerptSegments').value);
@@ -37,13 +39,16 @@ function refreshOutline(begin, end) {
 		PF('wv_continue').enable();
 	}
 	
-	console.log("refreshOutline: begin=%i end=%i segments=%i percent=%f used=%i limit=%i excerpts=%O quota=%O", 
+	console.log("refreshExcerpt: begin=%i end=%i segments=%i percent=%f used=%i limit=%i excerpts=%O quota=%O", 
 		begin, end, segments, percent, used, limit, excerpt, quota);
 }
 
-function initOutline() {	
-	var canvas = document.getElementById('form:outlineCanvas');				
-	if(canvas == null) return;
+function initExcerpt() {	
+	var canvas = document.getElementById('excerptCanvas');				
+	if(canvas == null) {
+		console.log("initExcerpt: missing excerptCanvas");
+		return;	
+	}
 		
 	resizeCanvas(canvas);
 				
@@ -51,14 +56,17 @@ function initOutline() {
 	
 	var begin = Number(document.getElementById('form:excerptStart').value);
 	var end = Number(document.getElementById('form:excerptEnd').value);
-	refreshOutline(begin, end);
+	refreshExcerpt(begin, end);
 	
-	console.log("initOutline: begin=%i end=%i quota=%O", begin, end, quota);
+	console.log("initExcerpt: begin=%i end=%i quota=%O", begin, end, quota);
 }		
 
-function refreshGlobalOutline() {
-	var canvas = document.getElementById('form:globalOutlineCanvas');			
-	if(canvas == null) return;
+function refreshGlobalExcerpt() {
+	var canvas = document.getElementById('globalExcerptCanvas');					
+	if(canvas == null) {
+		console.log("refreshGlobalExcerpt: missing globalExcerptCanvas");
+		return;	
+	}
 	
 	var offset = Number(document.getElementById('form:excerptOffset').value);
 	var begin = Number(document.getElementById('form:excerptStart').value) + offset;
@@ -80,20 +88,23 @@ function refreshGlobalOutline() {
 		document.getElementById('form:totalPercent').textContent = totalPercent.toFixed(1) + "%";
 	}
 	
-	console.log("refreshGlobalOutline: begin=%i end=%i segments=%i percent=%f used=%i limit=%i globalExcerpt=%O globalQuota=%O", 
+	console.log("refreshGlobalExcerpt: begin=%i end=%i segments=%i percent=%f used=%i limit=%i globalExcerpt=%O globalQuota=%O", 
 		begin, end, segments, percent, used, limit, globalExcerpt, globalQuota);
 }
 
-function initGlobalOutline() {		
-	var canvas = document.getElementById('globalOutlineCanvas');				
-	if(canvas == null) return;
+function initGlobalExcerpt() {		
+	var canvas = document.getElementById('globalExcerptCanvas');				
+	if(canvas == null) {
+		console.log("initGlobalExcerpt: missing globalExcerptCanvas");
+		return;	
+	}
 	
 	resizeCanvas(canvas);
 				
 	globalQuota = parseFragments(document.getElementById('form:globalQuota').value);					
 	globalExcerpt = parseFragments(document.getElementById('form:globalExcerpt').value);
 				
-	refreshGlobalOutline();
+	refreshGlobalExcerpt();
 	
-	console.log("initGlobalOutline: globalExcerpt=%O globalQuota=%O", globalExcerpt, globalQuota);
+	console.log("initGlobalExcerpt: globalExcerpt=%O globalQuota=%O", globalExcerpt, globalQuota);
 }

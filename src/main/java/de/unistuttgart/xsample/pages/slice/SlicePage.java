@@ -80,9 +80,6 @@ public class SlicePage extends AbstractSlicePage {
 						_long(usedUpSlots), _long(entry.getLimit()));
 				return;
 			}
-			
-			// Everything's fine, continue the workflow
-//			entry.setFragments(fragments); no need to set the fragments again
 		}
 		
 		forward(DownloadPage.PAGE);

@@ -565,7 +565,7 @@ public class TargetTree {
 	}
 
 	/**
-	 * @see de.ims.icarus.search_tools.tree.TargetTree#size()
+	 * @see de.ims.icarus.search_tools.tree.TargetTree#getSize()
 	 */
 	public int size() {
 		return size;

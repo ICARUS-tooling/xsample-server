@@ -71,9 +71,22 @@ public class CoNLL09Handler implements AnnotationHandler {
 	private static class SentenceBuffer {
 		private final BufferedReader reader;
 		private final List<String> lines = new ObjectArrayList<>();
+		
+		private String line = null;
 
 		public SentenceBuffer(BufferedReader reader) {
 			this.reader = reader;
+		}
+		
+		private String line() throws IOException {
+			if(line==null) {
+				line = reader.readLine();
+			}
+			return line;
+		}
+		
+		private void consumeLine() {
+			line = null;
 		}
 		
 		private static boolean isContentLine(String line) {
@@ -81,6 +94,8 @@ public class CoNLL09Handler implements AnnotationHandler {
 			return !line.isEmpty() && !line.startsWith("#");
 		}
 		
+		
+		//FIXME needs rework (we keep getting unsplit sentence blocks in excerpt output!)
 		boolean next() throws IOException {
 			String line;
 			

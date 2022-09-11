@@ -3,6 +3,8 @@
  */
 package de.unistuttgart.xsample.pages.query;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._long;
+
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
@@ -25,7 +27,7 @@ public class ResultData extends EncodedResultData {
 	/** Result mapped to primary segments for excerpt generation */
 	private Result mappedResult;
 	/** Number of possible result segments */
-	private long rawSegments = -1;
+	private long rawSegments = 0;
 	
 	public Result getRawResult() { return rawResult; }
 	public void setRawResult(Result rawResult) { this.rawResult = rawResult; }
@@ -42,7 +44,15 @@ public class ResultData extends EncodedResultData {
 		
 		rawResult = null;
 		mappedResult = null;
-		rawSegments = -1;
+		rawSegments = 0;
 	}
 	
+	public boolean isEmpty() { return rawResult==null || rawResult.isEmpty(); }
+	
+	@Override
+	public String toString() {
+		return String.format("%s@[rawHits='%s', mappedHits='%s', rawResult=%s, mappedResult=%s, rawSegments=%d]", 
+				getClass().getSimpleName(), getRawHits(), getMappedHits(),
+				rawResult, mappedResult, _long(rawSegments));
+	}
 }

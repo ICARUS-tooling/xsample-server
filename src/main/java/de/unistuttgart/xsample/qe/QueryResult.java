@@ -46,4 +46,5 @@ public class QueryResult {
 	}
 	
 	public boolean isEmpty() { return result.isEmpty(); }
+	public String getCorpusId() { return result.getCorpusId(); }
 }

@@ -50,7 +50,7 @@ public class QueryData implements DataBean {
 	
 	@Override
 	public String toString() {
-		return String.format("%s@[query=%d, caseSensitive=%b, limit=%d]", getClass().getSimpleName(),
+		return String.format("%s@[query=%s, caseSensitive=%b, limit=%d]", getClass().getSimpleName(),
 				query, _boolean(caseSensitive), _int(limit));
 	}
 }
