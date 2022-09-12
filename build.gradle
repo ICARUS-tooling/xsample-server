@@ -23,11 +23,10 @@ wrapper {
 }
 
 // Configuration for the Payara deployment tasks
-def deploymentFile = new File('deployment.ini')
 def deploymentConfig = new Properties()
-if(deploymentFile.exists()) {
-	deploymentFile.withReader('UTF-8') { deploymentConfig.load(it) }
-}
+rootProject.file("deployment.ini").withReader('UTF-8') { deploymentConfig.load(it) }
+
+//println deploymentConfig.toString()
 
 repositories { 
     mavenLocal()
@@ -108,6 +107,11 @@ dependencies {
 
 	// https://mvnrepository.com/artifact/org.codehaus.cargo/cargo-ant
 	cargo group: 'org.codehaus.cargo', name: 'cargo-ant', version: '1.9.1'
+	
+    //def cargoVersion = '1.10.1'
+    //cargo "org.codehaus.cargo:cargo-core-uberjar:$cargoVersion",
+    //      "org.codehaus.cargo:cargo-licensed-dtds:$cargoVersion",
+    //      "org.codehaus.cargo:cargo-ant:$cargoVersion"
 
 	// TESTING	
 
@@ -173,6 +177,7 @@ cargo {
         hostname = deploymentConfig.payaraHostname
         username = deploymentConfig.payaraUsername
         password = deploymentConfig.payaraPassword
+        //protocol = deploymentConfig.protocol
         containerProperties {
             // this is necessary only to pass blank password correctly to the cargo deployer because of a bug in the cargo gradle plugin
             property 'cargo.remote.password', deploymentConfig.payaraPassword
