@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.pages.shared.FragmentCodec;
 
 /**
  * @author Markus Gärtner
@@ -50,8 +51,8 @@ class XSampleUtilsTest {
 		"1-4,8-9;2-6;8",
 	})
 	void testCombinedSize(String s1, String s2, long size) {
-		List<XmpFragment> f1 = XmpFragment.decodeAll(s1);
-		List<XmpFragment> f2 = XmpFragment.decodeAll(s2);
+		List<XmpFragment> f1 = FragmentCodec.decodeAll(s1);
+		List<XmpFragment> f2 = FragmentCodec.decodeAll(s2);
 		assertThat(XSampleUtils.combinedSize(f1, f2)).isEqualTo(size);
 	}
 

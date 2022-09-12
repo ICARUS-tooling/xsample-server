@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
+
+	<h:panelGroup layout="inline" rendered="#{sharedData.multiPartCorpus}">
+		<p:selectOneMenu value="#{selectionData.selectedCorpus}"
+			style="width:500px" filter="true" filterMatchMode="contains"
+			valueChangeListener="#{changeHandler[handlerMethod]}"
+			var="part" converter="corpusConverter">
+			<f:selectItems value="#{limited ? partsData.selectedParts : sharedData.manifest.allParts}" var="part"
+				itemLabel="#{XSampleUtils.trim2Size(part.title)}"
+				itemValue="#{part}" />
+			<p:ajax update="#{empty ajaxUpdate ? '@this' : ajaxUpdate}" 
+				process="#{empty ajaxProcess ? '@this' : ajaxProcess}" 
+				oncomplete="#{empty ajaxOncomplete ? '$.noop' : ajaxOncomplete}" />
+			<p:column>
+				<f:facet name="header">
+					<h:outputText value="#{bundle['parts.corpusId']}" />
+				</f:facet>
+				<h:outputText value="#{part.id}" />
+			</p:column>
+			<p:column>
+				<f:facet name="header">
+                    <h:outputText value="#{bundle['parts.corpusSegments']}"/>
+                </f:facet>
+                <h:outputText value="#{corpusData.getSegments(part)}"/>
+            </p:column>
+			<p:column>
+				<f:facet name="header">
+					<h:outputText value="#{bundle['parts.corpusTitle']}" />
+				</f:facet>
+				<h:outputText value="#{XSampleUtils.trim2Size(part.title)}" />
+			</p:column>
+		</p:selectOneMenu>
+	</h:panelGroup>
+</ui:composition>

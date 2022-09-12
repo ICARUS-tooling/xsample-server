@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -162,10 +162,10 @@ public class XSampleUtils {
 		checkArgument("Result is empty", !result.isEmpty());
 		List<XmpFragment> fragments = new ArrayList<>();
 		long[] hits = result.getHits();
-		XmpFragment current = XmpFragment.of(hits[0]);
+		XmpFragment current = XmpFragment.of(hits[0]+1);
 		
 		for (int i = 1; i < hits.length; i++) {
-			long value = hits[i];
+			long value = hits[i]+1;
 			if(!current.append(value)) {
 				fragments.add(current);
 				current = XmpFragment.of(value);
@@ -206,6 +206,23 @@ public class XSampleUtils {
 		// get base64 encoded version of the key
 		return Base64.getEncoder().encodeToString(key.getEncoded());
 	}
+	
+	public static final int DISPLAY_STRING_LIMIT = 50;
+	
+	public static String trim2Size(String s) {
+		return trim2Size(s, DISPLAY_STRING_LIMIT);
+	}
+
+	public static String trim2Size(String s, int limit) {
+		checkArgument(limit>=10);
+		if(s.length()<=limit) {
+			return s;
+		}
+		
+		return s.substring(0, limit-6)+ " [...]";
+	}
+	
+	
  
 	private static final int KB = 1024;
 	private static final int MB = KB * KB;
@@ -264,6 +281,11 @@ public class XSampleUtils {
 		}
 
 		return result.toString();
+	}
+	
+	@SafeVarargs
+	public static <T> T[] _args(T...args) {
+		return args;
 	}
 
 	public static int unbox(Integer value) {

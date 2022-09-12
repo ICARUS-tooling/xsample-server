@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,6 @@
  */
 package de.unistuttgart.xsample.pages;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.inject.Inject;
 
 import org.primefaces.PrimeFaces;
@@ -29,12 +26,11 @@ import org.primefaces.PrimeFaces;
 import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
-import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.dv.XmpResource;
 import de.unistuttgart.xsample.mf.Corpus;
-import de.unistuttgart.xsample.pages.shared.XsampleExcerptData;
-import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
-import de.unistuttgart.xsample.pages.shared.XsampleWorkflow;
-import de.unistuttgart.xsample.util.ExcerptUtilityData;
+import de.unistuttgart.xsample.mf.DataverseFile;
+import de.unistuttgart.xsample.pages.shared.SharedData;
+import de.unistuttgart.xsample.pages.shared.WorkflowData;
 
 /**
  * @author Markus Gärtner
@@ -43,31 +39,16 @@ import de.unistuttgart.xsample.util.ExcerptUtilityData;
 public class XsamplePage {
 	
 	@Inject
-	protected XsampleWorkflow workflow;
+	protected WorkflowData workflow;
 	
 	@Inject
 	protected XsampleServices services;
 	
 	@Inject
-	protected XsampleExcerptData excerptData;
+	protected SharedData sharedData;
 	
-	protected void initQuota(ExcerptUtilityData data) {
-		final double limit = services.getDoubleSetting(Key.ExcerptLimit);
-		final long range = excerptData.getSegments();
-		data.setRange(range);
-		data.setLimit((long) Math.floor(range * limit));
-		
-		final List<XmpFragment> totalQuota = new ArrayList<>();
-		for(ExcerptEntry entry : excerptData.getExcerpt()) {
-			XmpExcerpt quota = entry.getQuota();
-			if(!quota.isEmpty()) {
-				totalQuota.addAll(quota.getFragments());
-			}
-		}
-		
-		if(!totalQuota.isEmpty()) {
-			data.setQuota(XmpFragment.encodeAll(totalQuota));
-		}
+	protected boolean isSmallFile(long size) {
+		return size<=services.getLongSetting(Key.SmallFileLimit);
 	}
 	
 	public final void back() {
@@ -91,11 +72,35 @@ public class XsamplePage {
 		}
 	}
 	
-	public boolean getIsMultiPartCorpus() { 
-		if(excerptData.getManifest()==null) {
-			return false;
-		}
-		List<Corpus> corpora = excerptData.getManifest().getCorpora();
-		return corpora.size()>1 || corpora.get(0).getParts().size()>1;
+	// RESOURCE LOOKUP
+	
+	protected XmpResource findResource(String corpusId) {
+		return findResource(sharedData.findCorpus(corpusId));
+	}
+	protected XmpResource findResource(Corpus corpus) {
+		DataverseFile file = corpus.getPrimaryData();
+		if(file==null)
+			throw new IllegalArgumentException("Corpus doesn't have a file: "+corpus.getId());
+		return services.findResource(sharedData.getServer(), file.getId());
+	}
+	protected XmpResource findResource(Long fileId) {
+		return services.findResource(sharedData.getServer(), fileId);
+	}
+	
+	// QUOTA LOOKUP
+	
+	protected XmpExcerpt findQuota(String corpusId) {
+		return findQuota(sharedData.findCorpus(corpusId));
+	}
+	protected XmpExcerpt findQuota(Corpus corpus) {
+		XmpResource resource = findResource(corpus);
+		return findQuota(resource);
+	}
+	protected XmpExcerpt findQuota(XmpResource resource) {
+		return services.findQuota(sharedData.getDataverseUser(), resource);
+	}
+	protected XmpExcerpt findQuota(Long fileId) {
+		XmpResource resource = services.findResource(sharedData.getServer(), fileId);
+		return services.findQuota(sharedData.getDataverseUser(), resource);
 	}
 }

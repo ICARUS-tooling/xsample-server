@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,13 +49,21 @@ public class ManifestFile extends DataverseFile {
 	@SerializedName(XsampleManifest.NS+"mappingFile")
 	private MappingFile mappingFile;
 
+	/** Id of the corpus file this manifest refers to. This allows a shallow list of
+	 * manifests to be properly linked to a complex hierarchy of corpus parts. */
+	@Expose
+	@SerializedName(XsampleManifest.NS+"corpusId")
+	private String corpusId;
+
 	public ManifestType getManifestType() { return manifestType; }
 	public MappingFile getMappingFile() { return mappingFile; }
+	public String getCorpusId() { return corpusId; }
 	
 	@Override
 	public void validate() {
 		super.validate();
 		checkState("Missing 'label' field", getLabel()!=null);
+		checkState("Missing 'corpusId' field", corpusId!=null);
 		checkState("Missing 'manifestType' field", manifestType!=null);
 		checkState("Missing 'mappingFile' field", mappingFile!=null);
 	}
@@ -80,6 +88,13 @@ public class ManifestFile extends DataverseFile {
 			requireNonNull(mappingFile);
 			checkState("Mapping file already set", instance.mappingFile==null);
 			instance.mappingFile = mappingFile;
+			return this;
+		}
+		
+		public ManifestFile.Builder corpusId(String corpusId) {
+			requireNonNull(corpusId);
+			checkState("Corpus ID already set", instance.corpusId==null);
+			instance.corpusId = corpusId;
 			return this;
 		}
 	}

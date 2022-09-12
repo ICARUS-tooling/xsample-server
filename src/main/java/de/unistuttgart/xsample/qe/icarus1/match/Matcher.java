@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -722,7 +722,7 @@ public class Matcher implements Cloneable, Comparable<Matcher> {
 		}
 
 		/**
-		 * @see de.ims.icarus.search_tools.tree.Matcher.IndexIterator#getRange()
+		 * @see de.ims.icarus.search_tools.tree.Matcher.IndexIterator#getMappedHits()
 		 */
 		@Override
 		public int getRange() {
@@ -766,7 +766,7 @@ public class Matcher implements Cloneable, Comparable<Matcher> {
 		}
 
 		/**
-		 * @see de.ims.icarus.search_tools.tree.Matcher.IndexIterator#getRange()
+		 * @see de.ims.icarus.search_tools.tree.Matcher.IndexIterator#getMappedHits()
 		 */
 		@Override
 		public int getRange() {

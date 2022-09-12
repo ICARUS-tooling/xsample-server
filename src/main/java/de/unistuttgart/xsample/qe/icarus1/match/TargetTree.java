@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -565,7 +565,7 @@ public class TargetTree {
 	}
 
 	/**
-	 * @see de.ims.icarus.search_tools.tree.TargetTree#size()
+	 * @see de.ims.icarus.search_tools.tree.TargetTree#getSize()
 	 */
 	public int size() {
 		return size;

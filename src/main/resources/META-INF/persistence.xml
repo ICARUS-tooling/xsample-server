@@ -7,7 +7,7 @@
 	<persistence-unit name="xsample" transaction-type="JTA">
 		<description>Persistence back-end for the XSample excerpt generation</description>
 		<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>    
-        <jta-data-source>jdbc/xsample</jta-data-source>
+        <jta-data-source>java:app/jdbc/xsample</jta-data-source>
         <class>de.unistuttgart.xsample.dv.UserId</class>
         <class>de.unistuttgart.xsample.dv.XmpDataverse</class>
         <class>de.unistuttgart.xsample.dv.XmpDataverseUser</class>
@@ -32,9 +32,9 @@
             <property name="javax.persistence.schema-generation.database.action" value="drop-and-create" />
 			
             <!-- configure logging -->
-            <property name="eclipselink.logging.level" value="FINE"/>
-            <property name="eclipselink.logging.level.sql" value="FINE"/>
-            <property name="eclipselink.logging.parameters" value="true"/>
+            <property name="eclipselink.logging.level" value="CONFIG"/>
+            <property name="eclipselink.logging.level.sql" value="CONFIG"/>
+            <property name="eclipselink.logging.parameters" value="false"/>
         </properties>   
 	</persistence-unit>
 	

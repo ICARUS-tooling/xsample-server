@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,10 @@ import javax.inject.Named;
 import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.XsampleSession;
-import de.unistuttgart.xsample.pages.shared.XsampleInputData;
+import de.unistuttgart.xsample.pages.shared.InputData;
 
 /**
- * Helper bean to store relevant GET parameters in our {@link XsampleInputData} bean.
+ * Helper bean to store relevant GET parameters in our {@link InputData} bean.
  * We use this instead of the JSF {@code f:viewParam} tags since the actual parameter
  * names are customizable for the XSample instance. 
  * 
@@ -45,7 +45,7 @@ import de.unistuttgart.xsample.pages.shared.XsampleInputData;
 public class ParamsInitBean {
 
 	@Inject
-	XsampleInputData inputData;
+	InputData inputData;
 	
 	@Inject
 	XsampleSession session;

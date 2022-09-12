@@ -31,6 +31,11 @@
 	    <managed-bean-class>java.lang.String</managed-bean-class>
 	    <managed-bean-scope>application</managed-bean-scope>
 	</managed-bean>
+	<managed-bean>
+	    <managed-bean-name>XSampleUtils</managed-bean-name>
+	    <managed-bean-class>de.unistuttgart.xsample.util.XSampleUtils</managed-bean-class>
+	    <managed-bean-scope>application</managed-bean-scope>
+	</managed-bean>
 	
 	<navigation-rule>
 		<from-view-id></from-view-id>

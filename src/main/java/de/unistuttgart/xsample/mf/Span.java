@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,12 @@ import com.google.gson.annotations.SerializedName;
 
 import de.unistuttgart.xsample.util.SelfValidating;
 
+/**
+ * Models a 0-based span.
+ * 
+ * @author Markus Gärtner
+ *
+ */
 public class Span implements Serializable, SelfValidating {
 
 	private static final long serialVersionUID = -5616064267813758508L;
@@ -64,6 +70,10 @@ public class Span implements Serializable, SelfValidating {
 		checkState("Missing 'span-type' field", spanType!=null);
 		checkState("Need at least 1 of 'begin' or 'end' fields", 
 				begin!=null || end!=null);
+	}
+	
+	public long length() {
+		return (begin==null || end==null || spanType!=SpanType.FIXED) ? -1 : (end.longValue()-begin.longValue()+1);
 	}
 
 	public static Span.Builder builder() { return new Builder(); }

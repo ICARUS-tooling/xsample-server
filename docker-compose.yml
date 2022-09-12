@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:9.6.24
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: always
+    environment:
+      POSTGRES_USER: xsample
+      POSTGRES_PASSWORD: xsample
+      POSTGRES_DB: xsample
+    ports:
+      - '5432:5432'
+
+  xsample:
+    depends_on:
+      - db
+    image: mcgaerty/xsample:1.0
+    ports:
+      - "8080:8080"
+      - "4848:4848"
+    restart: always
+    environment:
+      DB_SERVERNAME: db
+      DB_USER: xsample
+      DB_PASSWORD: xsample
+      DB_DATABASENAME: xsample
+
+volumes:
+    db_data: {}

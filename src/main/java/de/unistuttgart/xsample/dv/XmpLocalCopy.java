@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -172,4 +172,13 @@ public class XmpLocalCopy {
 		this.encoding = encoding;
 	}
 	
+	// UTILITY
+	
+	/** Increases the expiry timer by 2 hours if the cached file were to expire within the next hour. */
+	public void prolongExpiry() {
+		LocalDateTime expiry = getExpiresAt();
+		if(expiry.isBefore(LocalDateTime.now().plusHours(1))) {
+			setExpiresAt(expiry.plusHours(2));
+		}
+	}
 }

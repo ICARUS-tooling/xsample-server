@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@
  */
 package de.unistuttgart.xsample.pages.shared;
 
-import java.io.Serializable;
-
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
+
+import de.unistuttgart.xsample.util.DataBean;
 
 /**
  * Raw input data sent to the XSample server.
@@ -32,7 +32,7 @@ import javax.inject.Named;
  */
 @Named
 @ViewScoped
-public class XsampleInputData implements Serializable {
+public class InputData implements DataBean {
 
 	private static final long serialVersionUID = 8906894558636517419L;
 	

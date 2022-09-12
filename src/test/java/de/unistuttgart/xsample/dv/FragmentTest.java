@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import de.unistuttgart.xsample.pages.shared.FragmentCodec;
+
 /**
  * @author Markus Gärtner
  *
@@ -51,7 +53,7 @@ class FragmentTest {
 		@ValueSource(longs = {1, 99, 999999999999999L})
 		void testEncodeSingle(long value) {
 			XmpFragment f = XmpFragment.of(value);
-			assertThat(XmpFragment.encode(f)).isEqualTo(String.valueOf(value));
+			assertThat(FragmentCodec.encode(f)).isEqualTo(String.valueOf(value));
 		}
 
 		/**
@@ -68,7 +70,7 @@ class FragmentTest {
 		})
 		void testEncodeSpan(long begin, long end) {
 			XmpFragment f = XmpFragment.of(begin, end);
-			assertThat(XmpFragment.encode(f)).isEqualTo(String.format("%d-%d", _long(begin), _long(end)));
+			assertThat(FragmentCodec.encode(f)).isEqualTo(String.format("%d-%d", _long(begin), _long(end)));
 		}
 
 		/**
@@ -85,7 +87,7 @@ class FragmentTest {
 		})
 		void testDecodeSpan(long begin, long end) {
 			String s = String.format("%d-%d", _long(begin), _long(end));
-			XmpFragment f = XmpFragment.decode(s);
+			XmpFragment f = FragmentCodec.decode(s);
 			assertThat(f.getBeginIndex()).isEqualTo(begin);
 			assertThat(f.getEndIndex()).isEqualTo(end);
 		}
@@ -97,7 +99,7 @@ class FragmentTest {
 		@ValueSource(longs = {1, 99, 999999999999999L})
 		void testDecodeSingle(long value) {
 			String s = String.valueOf(value);
-			XmpFragment f = XmpFragment.decode(s);
+			XmpFragment f = FragmentCodec.decode(s);
 			assertThat(f.getBeginIndex()).isEqualTo(value);
 			assertThat(f.getEndIndex()).isEqualTo(value);
 		}
@@ -115,10 +117,10 @@ class FragmentTest {
 					XmpFragment.of(6666, 99999)
 			};
 			
-			String s = XmpFragment.encodeAll(Arrays.asList(fragments));
+			String s = FragmentCodec.encodeAll(Arrays.asList(fragments));
 			assertThat(s).isNotBlank();
 			
-			List<XmpFragment> decoded = XmpFragment.decodeAll(s);
+			List<XmpFragment> decoded = FragmentCodec.decodeAll(s);
 			assertThat(decoded).hasSize(fragments.length);
 			for (int i = 0; i < fragments.length; i++) {
 				assertThat(decoded.get(i).compareTo(fragments[i]))

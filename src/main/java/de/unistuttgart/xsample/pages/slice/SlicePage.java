@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,20 +21,20 @@ package de.unistuttgart.xsample.pages.slice;
 
 import static de.unistuttgart.xsample.util.XSampleUtils._long;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.omnifaces.util.Messages;
 
+import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
-import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.download.DownloadPage;
-import de.unistuttgart.xsample.pages.shared.XsampleExcerptData.ExcerptEntry;
+import de.unistuttgart.xsample.pages.shared.AbstractSlicePage;
+import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.XSampleUtils;
 
@@ -44,7 +44,7 @@ import de.unistuttgart.xsample.util.XSampleUtils;
  */
 @Named
 @RequestScoped
-public class SlicePage extends XsamplePage {
+public class SlicePage extends AbstractSlicePage {
 	
 	public static final String PAGE = "slice";
 	
@@ -52,68 +52,36 @@ public class SlicePage extends XsamplePage {
 	
 	static final String NAV_MSG = "navMsgs";
 
-	@Inject
-	XsampleSliceData sliceData;
-	
-	@Inject
-	SliceView view;
-	
-	private ExcerptEntry currentEntry() {
-		String corpusId = view.getSelectedCorpus();
-		return corpusId==null ? null : excerptData.findEntry(corpusId);
-	}
-	
-	public void init() {
-		initQuota(sliceData);
-		sliceData.setBegin(1);
-		sliceData.setEnd(1);
-		assert excerptData.getSelectedCorpus()!=null : "no corpus selected";
-		view.setSelectedCorpus(excerptData.getSelectedCorpus());
-	}
-	
-	@Override
-	protected void rollBack() {
-		currentEntry().clear();
-	}
-
 	/** Callback for button to continue workflow */
 	public void next() {
-		final ExcerptEntry entry = currentEntry();
-		final List<XmpFragment> fragments = Arrays.asList(XmpFragment.of(
-				sliceData.getBegin(), sliceData.getEnd()));
-		final List<XmpFragment> quota = entry.getQuota().getFragments();
+		// Commit current excerpt since we normal only do this on a selection change!
+		commitExcerpt();
 		
-		/* The following issue should never occur, since we do the same
-		 * validation on the client side to enable/disable the button.
-		 * We need this additional sanity check to defend against bugs 
-		 * or tampering with the JS code on the client side!
-		 */
-		long usedUpSlots = XSampleUtils.combinedSize(fragments, quota);
-		if(usedUpSlots>entry.getLimit()) {
-			logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
-					_long(entry.getLimit()), entry.getResource(), excerptData.getServer(), excerptData.getDataverseUser()));
-			Messages.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
-					_long(usedUpSlots), _long(entry.getLimit()));
-			return;
+		for(ExcerptEntry entry : allEntries().collect(Collectors.toList())) {
+			final List<XmpFragment> fragments = entry.getFragments();
+			
+			if(fragments==null || fragments.isEmpty()) {
+				entry.clear();
+				continue;
+			}
+			
+			XmpExcerpt excerpt = findQuota(entry.getCorpusId());
+			
+			/* The following issue should never occur, since we do the same
+			 * validation on the client side to enable/disable the button.
+			 * We need this additional sanity check to defend against bugs 
+			 * or tampering with the JS code on the client side!
+			 */
+			long usedUpSlots = XSampleUtils.combinedSize(fragments, excerpt.getFragments());
+			if(usedUpSlots>entry.getLimit()) {
+				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
+						_long(entry.getLimit()), entry.getCorpusId(), sharedData.getServer(), sharedData.getDataverseUser()));
+				Messages.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
+						_long(usedUpSlots), _long(entry.getLimit()));
+				return;
+			}
 		}
 		
-		// Everything's fine, continue the workflow
-		entry.setFragments(fragments);
-		
 		forward(DownloadPage.PAGE);
-	}
-	
-	public boolean isShowQuota() {
-		final ExcerptEntry entry = currentEntry();
-		return entry!=null && !entry.getQuota().isEmpty();
-	}
-	
-	public long getQuotaSize() {
-		final ExcerptEntry entry = currentEntry();
-		return entry==null ? 0L : entry.getQuota().size();
-	}
-	
-	public double getQuotaPercent() {
-		return (double)getQuotaSize() / sliceData.getRange() * 100.0;
 	}
 }

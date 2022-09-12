@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.sql.DataSourceDefinition;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -48,6 +49,17 @@ import de.unistuttgart.xsample.dv.XmpResource;
  * @author Markus Gärtner
  *
  */
+@DataSourceDefinition(
+	name = "java:app/jdbc/xsample",
+    className = "org.postgresql.ds.PGSimpleDataSource",
+    user = "${ENV=DB_USER:xsample}",
+    password = "${ENV=DB_PASSWORD:xsample}",
+    serverName = "${ENV=DB_SERVERNAME:localhost}",
+    portNumber = 5432,
+    databaseName = "${ENV=DB_DATABASENAME:xsample}",
+    minPoolSize = 10,
+    maxPoolSize = 50
+)
 @Stateless
 public class XsampleServices {
 	
@@ -57,17 +69,29 @@ public class XsampleServices {
 	private EntityManager em;
 	
 	static final Properties defaultSettings;
+	static final Properties settings;
 	static {
-		URL config = XsampleServices.class.getResource("/config/config.ini");
-		Properties settings = new Properties();
+		// Load default config first
+		URL config = XsampleServices.class.getResource("/config/default-config.ini");
+		Properties prop = new Properties();
+		try {
+			prop.load(config.openStream());
+		} catch (IOException e) {
+			log.log(Level.SEVERE, "Failed to load default settings", e);
+		}
+		settings = prop;
+		
+		// Now check for custom configuration
+		config = XsampleServices.class.getResource("/config/config.ini");
+		prop = new Properties(settings);
 		if(config!=null) {
 			try {
-				settings.load(config.openStream());
+				prop.load(config.openStream());
 			} catch (IOException e) {
 				log.log(Level.SEVERE, "Failed to load default settings", e);
 			}
 		}
-		defaultSettings = settings;
+		defaultSettings = prop;
 	}
 	
 	public static enum Key {
@@ -120,7 +144,8 @@ public class XsampleServices {
 			resource = new XmpResource();
 			resource.setFile(file);
 			resource.setDataverse(dataverse);
-			resource = em.merge(resource);
+//			resource = em.merge(resource);
+			em.persist(resource);
 		} else {
 			resource = resources.get(0);
 		}
@@ -166,7 +191,8 @@ public class XsampleServices {
 			dataverseUser = new XmpDataverseUser();
 			dataverseUser.setId(new UserId(url, userId));
 			dataverseUser.setDataverse(dataverse);
-			dataverseUser = em.merge(dataverseUser);
+//			dataverseUser = em.merge(dataverseUser);
+			em.persist(dataverseUser);
 		} else {
 			dataverseUser = dataverseUsers.get(0);
 		}
@@ -192,7 +218,8 @@ public class XsampleServices {
 			excerpt = new XmpExcerpt();
 			excerpt.setResource(resource);
 			excerpt.setDataverseUser(user);
-			excerpt = em.merge(excerpt);
+//			excerpt = em.merge(excerpt);
+			em.persist(excerpt);
 		} else {
 			excerpt = excerpts.get(0);
 		}
@@ -238,7 +265,8 @@ public class XsampleServices {
 			log.finer("creating file info for resource: "+resource);
 			fileInfo = new XmpFileInfo();
 			fileInfo.setResource(resource);
-			fileInfo = em.merge(fileInfo);
+//			fileInfo = em.merge(fileInfo);
+			em.persist(fileInfo);
 		} else {
 			fileInfo = fileInfos.get(0);
 		}
@@ -250,7 +278,7 @@ public class XsampleServices {
 
 	public String getSetting(Key key) {
 		//TODO replace with actual DB query once the settings backend is implemented
-		String value = defaultSettings.getProperty(key.getLabel());
+		String value = settings.getProperty(key.getLabel());
 		return value;  
 	}
 	

@@ -78,7 +78,11 @@ function findFragment(quota, segment, fromIndex, toIndex) {
  * @returns the size (at least 1) of the span
  */
 function sizeOf(fragment) {
-	return fragment.end - fragment.begin + 1;
+	if(Array.isArray(fragment)) {
+		return fragment.reduce((sum, f) => sum+f.end-f.begin+1, 0);
+	} else {
+		return fragment.end - fragment.begin + 1;
+	}
 }
 
 /**

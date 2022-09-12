@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,13 @@ import static de.unistuttgart.xsample.util.XSampleUtils.checkState;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
 import java.util.List;
 import java.util.Properties;
 
 import de.unistuttgart.xsample.qe.QueryException;
-import de.unistuttgart.xsample.qe.QueryException.ErrorCode;
+import de.unistuttgart.xsample.qe.QueryException.QueryErrorCode;
+import de.unistuttgart.xsample.qe.QueryResult;
 import de.unistuttgart.xsample.qe.Result;
 import de.unistuttgart.xsample.qe.icarus1.match.ConstraintContext;
 import de.unistuttgart.xsample.qe.icarus1.match.Search;
@@ -48,46 +49,56 @@ public class Icarus1Wrapper {
 		checkNotEmpty(queryString);
 		requireNonNull(settings);
 		
-		ConstraintContext context = ConstraintContext.defaultContext();
-		query = new SearchQuery(context);		
+		query = new SearchQuery(ConstraintContext.defaultContext());		
 		try {
 			query.parseQueryString(queryString);
 		} catch (UnsupportedFormatException e) {
-			throw new QueryException("Unsupported format in query: "+queryString, ErrorCode.SYNTAX_ERROR, e);
+			throw new QueryException("Unsupported format in query: "+queryString, QueryErrorCode.SYNTAX_ERROR, e);
 		}
 		
 		options = new Options(settings);
+		
+		
 	}
 
-	public Result evaluate(InputStream in) throws QueryException {
-		requireNonNull(in);
+	public QueryResult evaluate(Reader reader) throws QueryException {
+		requireNonNull(reader);
 		checkState("Query not initialized", query!=null);
 		
-		final Location location = new Location.Base() {
-			@Override
-			public InputStream openInputStream() throws IOException { return in; }
-		};
-		final CONLL09SentenceDataReader reader = new CONLL09SentenceDataReader(true);
-		final List<SentenceData> corpus;
+		final CONLL09SentenceDataReader conllReader = new CONLL09SentenceDataReader(true);
+		final List<SentenceData> part;
 		try {
-			corpus = reader.readAll(location, null);
+			part = conllReader.readAll(reader, null);
 		} catch (IOException e) {
-			throw new QueryException("Failed to load corpus file", ErrorCode.IO_ERROR, e);
-		} catch (UnsupportedLocationException e) {
-			throw new QueryException("Failed to load corpus file (location issue)", ErrorCode.IO_ERROR, e);
+			throw new QueryException("Failed to load corpus file", QueryErrorCode.IO_ERROR, e);
 		} catch (UnsupportedFormatException e) {
-			throw new QueryException("Failed to parse corpus data", ErrorCode.UNSUPPORTED_FORMAT, e);
+			throw new QueryException("Failed to parse corpus data", QueryErrorCode.UNSUPPORTED_FORMAT, e);
 		}
 		
-		final Search search = new Search(query, options, corpus);
+		final Search search = new Search(query, options, part);
 		
 		try {
 			search.init();
 			search.execute();
 		} catch(RuntimeException e) {
-			throw new QueryException("Internal search error", ErrorCode.INTERNAL_ERROR, e);
+			throw new QueryException("Internal search error", QueryErrorCode.INTERNAL_ERROR, e);
 		}
 	
-		return search.getResult();
+		return new QueryResult(search.getResult(), part.size());
+	}
+	
+	public static class ResultPart {
+		private final Result result;
+		private final int segments;
+		
+		public ResultPart(Result result, int segments) {
+			this.result = result;
+			this.segments = segments;
+		}
+		
+		public Result getResult() { return result; }
+		public int getSegments() { return segments; }
+		
+		public boolean isEmpty() { return result.isEmpty(); }
 	}
 }

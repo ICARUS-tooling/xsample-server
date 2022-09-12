@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
+
+	<h:form id="slice">	
+		<p:panel>
+			<f:facet name="header">
+				<h:outputText value="#{bundle['parts.multiPartInfo']}" />
+			</f:facet>
+			
+			<p:selectManyMenu value="#{partsData.selectedParts}" 
+                          var="part" filter="true"
+                          filterMatchMode="contains" showCheckbox="true"
+                          styleClass="manymenu-advanced" scrollHeight="800">
+  				<p:ajax update="continue" />
+  				<f:selectItems value="#{sharedData.manifest.allParts}" 
+  					var="part" itemLabel="#{part.title}" itemValue="#{part}"/>
+				<p:column>
+					<f:facet name="header">
+                        <h:outputText value="#{bundle['parts.corpusId']}"/>
+                    </f:facet>
+	                <h:outputText value="#{part.id}"/>
+	            </p:column>
+				<p:column>
+					<f:facet name="header">
+                        <h:outputText value="#{bundle['parts.corpusSegments']}"/>
+                    </f:facet>
+	                <h:outputText value="#{corpusData.getSegments(part)}"/>
+	            </p:column>
+				<p:column>
+					<f:facet name="header">
+                        <h:outputText value="#{bundle['parts.corpusTitle']}"/>
+                    </f:facet>
+	                <h:outputText value="#{part.title}"/>
+	            </p:column>
+			</p:selectManyMenu>
+		
+			<f:facet name="footer">
+	        	<p:messages id="navMsg" for="navMsgs" showSummary="true" showDetail="false" redisplay="false" />
+				<p:commandButton value="#{bundle['back']}" action="#{partsPage.back}" process="@form" />
+				<p:commandButton id="continue" value="#{bundle['continue']}" 
+					disabled="#{empty partsData.selectedParts}"
+					process="@form"
+					action="#{partsPage.next}" update="navMsg" />
+			</f:facet>
+		</p:panel>
+	</h:form>
+</ui:composition>

@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,12 +70,14 @@ public class XsampleApp implements Serializable {
 		
 		if(DebugUtils.isActive()) {
 			
-			logger.info("Performing debug initialization with default dataverse and resource");
+			logger.info("Performing debug initialization with default dataverse");
 
 			DebugUtils.makeDataverse(services);
 			
-			DebugUtils.makeQuota(services);
+//			DebugUtils.makeQuota(services);
 		}
+		
+		logger.info("XSample server initialized");
 	}
 	
 	public String getProperty(String key) {

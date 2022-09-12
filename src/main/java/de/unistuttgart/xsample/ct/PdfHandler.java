@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,8 +67,7 @@ public class PdfHandler implements ExcerptHandler {
 	}
 
 	@Override
-	public void excerpt(XmpFileInfo file, Charset encoding, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
-		requireNonNull(file);
+	public void excerpt(Charset encoding, InputStream in, List<XmpFragment> fragments, OutputStream out) throws IOException {
 		requireNonNull(encoding);
 		requireNonNull(in);
 		requireNonNull(fragments);

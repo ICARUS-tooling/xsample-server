@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,16 @@ public interface SelfValidating {
 	}
 	
 	public static void validateNested(SelfValidating item, String name) {
+		if(item==null)
+			throw new IllegalStateException("Missing '"+name+"' field");
+		
+		item.validate();
+	}
+	
+	public static void validateNested(SelfValidating item, String name, boolean optional) {
+		if(optional && item==null) {
+			return;
+		}
 		if(item==null)
 			throw new IllegalStateException("Missing '"+name+"' field");
 		

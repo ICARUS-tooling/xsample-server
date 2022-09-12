@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,35 +21,53 @@ package de.unistuttgart.xsample.qe;
 
 import static java.util.Objects.requireNonNull;
 
-import java.io.IOException;
+import java.util.Optional;
 
 /**
  * @author Markus Gärtner
  *
  */
-public class QueryException extends IOException {
+public class QueryException extends Exception {
 
 	private static final long serialVersionUID = 5487420639009729815L;
 	
-	private final ErrorCode code;
+	private final QueryErrorCode code;
+	private Optional<String> resourceId = Optional.empty();
 
-	public QueryException(String message, ErrorCode code, Throwable cause) {
+	public QueryException(String message, QueryErrorCode code, Throwable cause) {
+		this(message, code, null, cause);
+	}
+
+	public QueryException(String message, QueryErrorCode code, String resourceId, Throwable cause) {
 		super(message, cause);
 		this.code = requireNonNull(code);
+		this.resourceId = Optional.ofNullable(resourceId);
 	}
 
-	public QueryException(String message, ErrorCode code) {
+	public QueryException(String message, QueryErrorCode code) {
+		this(message, code, (String)null);
+	}
+
+	public QueryException(String message, QueryErrorCode code, String resourceId) {
 		super(message);
 		this.code = requireNonNull(code);
+		this.resourceId = Optional.ofNullable(resourceId);
 	}
 
-	public ErrorCode getCode() { return code; }
+	public QueryErrorCode getCode() { return code; }
 
-	public enum ErrorCode {
+	public Optional<String> getResourceId() { return resourceId; }
+	public void setCorpusId(String corpusId) {
+		this.resourceId = Optional.ofNullable(corpusId);
+	}
+
+	public enum QueryErrorCode {
 		SYNTAX_ERROR,
 		UNSUPPORTED_FORMAT,
 		IO_ERROR,
 		INTERNAL_ERROR,
+		RESOURCE_LOCKED,
+		SECURITY_ERROR,
 		;
 	}
 }

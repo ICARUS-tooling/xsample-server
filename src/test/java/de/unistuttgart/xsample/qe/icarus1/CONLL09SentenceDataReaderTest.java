@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,15 +39,11 @@ class CONLL09SentenceDataReaderTest {
 
 	@ParameterizedTest
 	@ValueSource(booleans = {true, false})
-	void testFullFile(boolean gold) throws IOException, UnsupportedLocationException, UnsupportedFormatException {
+	void testFullFile(boolean gold) throws IOException, UnsupportedFormatException {
 		final InputStream in = CONLL09SentenceDataReaderTest.class.getResourceAsStream("icarus.conll09");
-		final Location location = new Location.Base() {
-			@Override
-			public InputStream openInputStream() throws IOException { return in; }
-		};
 		final CONLL09SentenceDataReader reader = new CONLL09SentenceDataReader(gold);
 		
-		reader.init(location, Options.emptyOptions);
+		reader.init(new InputStreamReader(in, StandardCharsets.UTF_8), Options.emptyOptions);
 		
 		List<SentenceData> sentences = new ArrayList<>();
 		

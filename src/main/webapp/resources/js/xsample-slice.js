@@ -9,15 +9,18 @@ var OUTLINE_MATCHES = getCSSVariable('--outline-matches');
  * Paint a horizontal outline on the canvas
  * 
  * @param canvas the canvas widget to paint on
+ * @param reset flag to indicate whether the canvas should be cleared prior to rendering the fragments
  * @param quota array of fragment pairs
  * @param excerpt array of fragment pairs
  * @param range the total number of segments available
  * @param style the style to  use for the excerpt fragments
  */
-function paintExcerpt(canvas, quota, excerpt, range, style){
+function paintExcerpt(canvas, reset, quota, excerpt, range, style){
 	var ctx = canvas.getContext("2d");
-	// Reset canvas for new paint pass
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	// Reset canvas for new paint pass if desired
+	if(reset) {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+	}
 	ctx.globalCompositeOperation = 'source-over';
 
 	// Width in pixels of a single segment

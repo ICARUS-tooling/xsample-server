@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,10 @@
 package de.unistuttgart.xsample.dv;
 
 import static de.unistuttgart.xsample.util.XSampleUtils.checkArgument;
-import static java.util.Objects.requireNonNull;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -35,6 +33,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+ 
 /**
  * Models a span of 1-based indices.
  * 
@@ -45,70 +45,10 @@ import javax.persistence.Table;
 @Table(name = "Fragment")
 public class XmpFragment implements Comparable<XmpFragment> {
 	
-	public static String encode(XmpFragment f) {
-		if(f.size()==1) {
-			return String.valueOf(f.getBeginIndex());
-		} 
-		
-		return String.valueOf(f.getBeginIndex())+"-"+String.valueOf(f.getEndIndex());
-	}
-	
-	public static String encodeAll(List<XmpFragment> fragments) {
-		StringBuilder sb = new StringBuilder(fragments.size()*4);
-		for (int i = 0; i < fragments.size(); i++) {
-			if(i>0) {
-				sb.append(',');
-			}
-			sb.append(encode(fragments.get(i)));
-		}
-		return sb.toString();
-	}
-	
-	public static String encodeAll(long[] fragments) {
-		StringBuilder sb = new StringBuilder(fragments.length*4);
-		for (int i = 0; i < fragments.length; i++) {
-			if(i>0) {
-				sb.append(',');
-			}
-			sb.append(String.valueOf(fragments[i]));
-		}
-		return sb.toString();
-	}
-	
-	public static String encodeAll(LongStream fragments) {
-		StringBuilder sb = new StringBuilder(100);
-		fragments.forEach(fragment -> {
-			if(sb.length()>0) {
-				sb.append(',');
-			}
-			sb.append(String.valueOf(fragment));
-		});
-		return sb.toString();
-	}
-	
-	public static XmpFragment decode(String s) {
-		requireNonNull(s);
-		XmpFragment f;
-		int sep = s.indexOf('-');
-		if(sep!=-1) {
-			f = of(Long.parseUnsignedLong(s.substring(0, sep)), 
-					Long.parseUnsignedLong(s.substring(sep+1)));
-		} else {
-			f = of(Long.parseUnsignedLong(s));
-		}
-		return f;
-	}
-	
-	public static List<XmpFragment> decodeAll(String s) {
-		return Stream.of(s.split(","))
-				.map(XmpFragment::decode)
-				.collect(Collectors.toList());
-	}
-	
 	public static XmpFragment of(long from, long to) {
-		checkArgument(from>0);
-		checkArgument(to>0);
-		checkArgument(to>=from);
+		checkArgument("'from' must be greater than 0", from>0);
+		checkArgument("'tro' must be greater than 0", to>0);
+		checkArgument("'to' must be greater or equal to 'from'", to>=from);
 		XmpFragment f = new XmpFragment();
 		f.setBeginIndex(from);
 		f.setEndIndex(to);
@@ -118,6 +58,31 @@ public class XmpFragment implements Comparable<XmpFragment> {
 	public static XmpFragment of(long value) {
 		checkArgument(value>0);
 		return of(value, value);
+	}
+	
+	public static List<XmpFragment> from(long...values) {
+		if(values.length==0) {
+			return Collections.emptyList();
+		}
+		
+		List<XmpFragment> fragments = new ObjectArrayList<>();
+		XmpFragment current = null;
+		
+		for (int i = 0; i < values.length; i++) {
+			long value = values[i];
+			if(current==null) {
+				current = of(value);
+			} else if(!current.append(value)) {
+				fragments.add(current);
+				current = of(value);
+			}
+		}
+		
+		if(current!=null) {
+			fragments.add(current);
+		}
+		
+		return fragments;
 	}
 
 	@Id
@@ -132,9 +97,11 @@ public class XmpFragment implements Comparable<XmpFragment> {
 	@Column
 	private long endIndex;
 	
+	/** Return 1-based begin index */
 	public long getBeginIndex() { return beginIndex; }
 	public void setBeginIndex(long from) { this.beginIndex = from; }
-	
+
+	/** Return 1-based end index */
 	public long getEndIndex() { return endIndex; }
 	public void setEndIndex(long to) { this.endIndex = to; }
 

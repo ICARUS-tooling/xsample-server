@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
  */
 package de.unistuttgart.xsample.dv;
 
+import javax.annotation.Nullable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -53,7 +54,7 @@ public class XmpResource {
 	public XmpDataverse getDataverse() { return dataverse; }
 	public void setDataverse(XmpDataverse dataverse) { this.dataverse = dataverse; }
 
-	public Long getFile() { return file; }
+	public @Nullable Long getFile() { return file; }
 	public void setFile(Long file) { this.file = file; }
 
 	public Long getId() { return id; }

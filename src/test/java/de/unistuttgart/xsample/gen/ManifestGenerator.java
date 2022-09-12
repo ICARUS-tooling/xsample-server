@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,7 +114,7 @@ public class ManifestGenerator {
 						.manifestType(ManifestType.ICARUS_LEGACY)
 						.id(-1)
 						.mappingFile(MappingFile.builder()
-								.format(StandardMappingFormats.SOURCE_TARGET_SPAN.toString())
+								.format(StandardMappingFormats.SOURCE_TO_TARGET_SPAN.toString())
 								.mappingType(MappingType.TABULAR)
 								.id(-1)
 								.build())

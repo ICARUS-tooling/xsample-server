@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import com.google.gson.annotations.SerializedName;
  */
 public enum MappingType {
 
-	/** Tab-separated tabular format with usually 3 columns */
+	/** Tab-separated tabular format with usually 3 columns, eg. sentence, begin_page, end_page */
 	@SerializedName(XsampleManifest.NS+"tabular")
 	TABULAR,
 	;

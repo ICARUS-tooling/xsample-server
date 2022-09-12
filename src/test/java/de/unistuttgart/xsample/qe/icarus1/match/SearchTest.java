@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,9 @@ package de.unistuttgart.xsample.qe.icarus1.match;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -32,7 +33,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import de.unistuttgart.xsample.qe.Result;
 import de.unistuttgart.xsample.qe.icarus1.CONLL09SentenceDataReader;
-import de.unistuttgart.xsample.qe.icarus1.Location;
 import de.unistuttgart.xsample.qe.icarus1.Options;
 import de.unistuttgart.xsample.qe.icarus1.SentenceData;
 
@@ -44,12 +44,8 @@ class SearchTest {
 	
 	private List<SentenceData> loadCorpus() throws Exception {
 		final InputStream in = SearchTest.class.getResourceAsStream("/de/unistuttgart/xsample/qe/icarus1/icarus.conll09");
-		final Location location = new Location.Base() {
-			@Override
-			public InputStream openInputStream() throws IOException { return in; }
-		};
 		final CONLL09SentenceDataReader reader = new CONLL09SentenceDataReader(true);
-		return reader.readAll(location, null);
+		return reader.readAll(new InputStreamReader(in, StandardCharsets.UTF_8), null);
 	}
 	
 	static Stream<Arguments> queryResultProvider() {

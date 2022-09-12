@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,11 +58,12 @@ public abstract class DataverseFile implements Serializable, SelfValidating {
 
 	/** 
 	 * Optional label for identification within the XSample manifest. 
-	 * Required if the resource is referenced from another section inthe
+	 * Required if the resource is referenced from another section in the
 	 * manifest!
 	 */
 	@Expose
 	@Nullable
+	@SerializedName(XsampleManifest.NS+"label")
 	private String label;
 
 //	@Nullable
@@ -79,6 +80,11 @@ public abstract class DataverseFile implements Serializable, SelfValidating {
 //		checkState("Missing 'label' field", label!=null);
 		checkState("Missing 'id' field", id!=null);
 //		checkState("Must define either id or persistent-id", id!=null || persistentId!=null);
+	}
+	
+	@Override
+	public String toString() {
+		return getClass().getSimpleName()+"@"+(label==null ? "no-label" : label);
 	}
 
 	protected static abstract class AbstractBuilder<B extends DataverseFile.AbstractBuilder<B, F>, F extends DataverseFile> 

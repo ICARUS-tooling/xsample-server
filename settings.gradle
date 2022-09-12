@@ -1,7 +1,7 @@
 
 // For BuildScan starting from Gradle 6.x
 plugins {
-  id "com.gradle.enterprise" version "3.0"
+  id "com.gradle.enterprise" version "3.7.2"
 }
 
 

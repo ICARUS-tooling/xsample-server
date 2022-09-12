@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ public class MappingFile extends DataverseFile {
 	@Override
 	public void validate() {
 		super.validate();
+		checkState("Missing 'label' field", getLabel()!=null);
 		checkState("Missing 'format' field", format!=null);
 		checkState("Missing 'mappingType' field", mappingType!=null);
 	}

@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package de.unistuttgart.xsample.qe.icarus1;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
  
@@ -48,7 +49,7 @@ public interface SentenceDataReader {
 	 * @throws UnsupportedLocationException if the provided {@code Location}
 	 * is not supported or not valid
 	 */
-	void init(Location location, Options options) throws IOException, UnsupportedLocationException;
+	void init(Reader reader, Options options) throws IOException;
 		
 	/**
 	 * Returns the next {@code SentenceData} object available or {@code null}
@@ -70,8 +71,8 @@ public interface SentenceDataReader {
 	 */
 	void close() throws IOException;
 	
-	default List<SentenceData> readAll(Location location, Options options) throws IOException, UnsupportedLocationException, UnsupportedFormatException {
-		init(location, options);
+	default List<SentenceData> readAll(Reader reader, Options options) throws IOException, UnsupportedFormatException {
+		init(reader, options);
 		
 		List<SentenceData> sentences = new ArrayList<>();
 		

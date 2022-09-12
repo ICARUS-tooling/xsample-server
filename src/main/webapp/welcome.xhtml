@@ -15,14 +15,16 @@
 		</div>
 	
 		<div>
+			<p:commandButton rendered="#{xsampleSession.debug}" value="#{bundle['welcome.resetQuota']}" 
+				action="#{welcomePage.resetQuota}" render="@all" />
 			<p:outputPanel id="outline">
-				<p:panel rendered="#{welcomePage.showOutline}">
+				<p:panel rendered="#{welcomePage.showOutline}"> 
 					<f:facet name="header">
 						<h:outputText value="#{bundle['welcome.infoHeader']}" />
 					</f:facet>
 					<div class="p-grid">
 						<div class="p-col">
-							<p:dataTable var="property" value="#{welcomeView.manifestProperties}">
+							<p:dataTable var="property" value="#{welcomePage.manifestPropertiesForOutline}">
 								<f:facet name="header">
 									<h:outputText value="#{bundle['welcome.manifestInfoHeader']}" />
 								</f:facet>
@@ -35,20 +37,15 @@
 							</p:dataTable>
 						</div>
 						<div class="p-col">
-							<div jsf:rendered="#{welcomePage.isMultiPartCorpus}">
-								<h:outputText value="#{bundle['selectFile']}" />
-								<p:selectOneMenu value="#{welcomeView.selectedCorpus}" style="width:300px"
-										valueChangeListener="#{welcomePage.refreshFileProperties}"
-										hideNoSelectionOption="true">
-									<f:selectItem itemLabel="#{bundle['selectFile']}" itemValue="" noSelectionOption="true"/>
-		                   	 		<f:selectItems value="#{xsampleExcerptData.fileInfos}" var="info" 
-		                   	 			itemLabel="#{info.title}" itemValue="#{info.corpusId}" />
-		                   	 		<p:ajax update="fileInfo" />
-								</p:selectOneMenu>
-							</div>
-							<p:dataTable id="fileInfo" var="property" value="#{welcomeView.fileProperties}">
+							<p:dataTable id="fileInfo" var="property" value="#{welcomePage.filePropertiesForOutline}">
 								<f:facet name="header">
-									<h:outputText value="#{bundle['welcome.fileInfoHeader']}" />
+									<h:outputText value="#{bundle['welcome.fileInfoHeader']}" style="margin-right: 5em"/>
+									<ui:include src="/select_corpus.xhtml">
+										<ui:param name="limited" value="false" />
+										<ui:param name="ajaxUpdate" value="fileInfo" />
+										<ui:param name="changeHandler" value="#{welcomePage}" />
+										<ui:param name="handlerMethod" value="selectionChanged" />
+									</ui:include>
 								</f:facet>
 								<p:column headerText="#{bundle['property']}">
 									<h:outputText value="#{property.key}" />
@@ -60,6 +57,8 @@
 						</div>
 					</div>
 					
+					<p:separator />
+					
 					<div jsf:rendered="#{!welcomePage.showExcerptSelection}">
 						<h:outputText value="#{bundle['welcome.smallFile']}" />
 					</div>
@@ -67,8 +66,8 @@
 					<div jsf:rendered="#{welcomePage.showExcerptSelection}">
 						<h:outputText value="#{bundle['welcome.excerptType']}:" />
 						<p:selectOneRadio layout="pageDirection"
-							value="#{welcomeView.excerptType}">
-							<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']} (#{welcomeView.staticExcerptLabel})"
+							value="#{sharedData.excerptType}">
+							<f:selectItem itemLabel="#{bundle['welcome.excerptType.static']} (#{labelData.staticExcerptLabel})"
 								itemValue="STATIC" />
 							<f:selectItem itemLabel="#{bundle['welcome.excerptType.slice']}"
 								itemValue="SLICE" />

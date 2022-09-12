@@ -1,6 +1,6 @@
 /*
  * XSample Server
- * Copyright (C) 2020-2021 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
+ * Copyright (C) 2020-2022 Markus Gärtner <markus.gaertner@ims.uni-stuttgart.de>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,9 @@ package de.unistuttgart.xsample.pages.shared;
 
 import static java.util.Objects.requireNonNull;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.faces.view.ViewScoped;
@@ -31,6 +31,7 @@ import javax.inject.Named;
 
 import de.unistuttgart.xsample.pages.welcome.WelcomePage;
 import de.unistuttgart.xsample.util.BundleUtil;
+import de.unistuttgart.xsample.util.DataBean;
 import it.unimi.dsi.fastutil.Stack;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
@@ -40,11 +41,11 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
  */
 @Named
 @ViewScoped
-public class XsampleWorkflow implements Serializable {
+public class WorkflowData implements DataBean {
 
 	private static final long serialVersionUID = -2848543491521080449L;
 	
-	private static final Logger logger = Logger.getLogger(XsampleWorkflow.class.getCanonicalName());
+	private static final Logger logger = Logger.getLogger(WorkflowData.class.getCanonicalName());
 
 	/** Status of the analysis process */
 	private Status status = Status.LOADING;
@@ -57,6 +58,8 @@ public class XsampleWorkflow implements Serializable {
 	public String getPage() { return page; }
 	public boolean forward(String page) { 
 		requireNonNull(page);
+		
+		logger.log(Level.FINE, String.format("Navigating from '%s' to '%s'", this.page, page));
 		
 		if(this.page.equals(page)) {
 			return false;
@@ -73,7 +76,9 @@ public class XsampleWorkflow implements Serializable {
 			return false;
 		}
 		
-		this.page = history.pop();
+		String currentPage = page;
+		page = history.pop();
+		logger.log(Level.FINE, String.format("Navigating back from '%s' to '%s'", currentPage, page));
 		return true;
 	}
 
