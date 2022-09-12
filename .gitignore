@@ -43,3 +43,4 @@ local.properties
 /deployment.ini
 /dataverse_setup.ini
 /gen/
+/build_bak.gradle
