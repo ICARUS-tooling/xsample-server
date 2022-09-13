@@ -190,6 +190,13 @@ public class FragmentCodec implements LongConsumer {
 		return this;
 	}
 	
+	public FragmentCodec append(long[] values, long offset) {
+		for(long value : values) {
+			append(value + offset);
+		}
+		return this;
+	}
+	
 	public FragmentCodec append(LongStream values) {
 		values.forEach(this);
 		return this;

@@ -127,20 +127,21 @@ public class QueryPage extends AbstractSlicePage {
 			return;
 		}
 		
+		// DOubles as offset for the new result
 		long rawSegments = 0;
 		FragmentCodec rawHits = new FragmentCodec();
 		boolean hasHits = false;
 
 		for (int i = 0; i < results.size(); i++) {
 			QueryResult qr = results.get(i);
-			rawSegments += qr.getSegments();
 			resultsData.registerRawResult(qr.getResult());
 			resultsData.registerRawSegments(qr.getCorpusId(), qr.getSegments());
 			
 			if(!qr.isEmpty()) {
-				rawHits.append(qr.getResult().getHits());
+				rawHits.append(qr.getResult().getHits(), rawSegments);
 				hasHits = true;
 			}
+			rawSegments += qr.getSegments();
 		}
 		
 		resultsData.setRawSegments(rawSegments);
@@ -174,13 +175,14 @@ public class QueryPage extends AbstractSlicePage {
 			FragmentCodec mappedHits = new FragmentCodec();
 			
 			for (int i = 0; i < results.size() && i < mappedSegments.size(); i++) {
-				QueryResult result = results.get(i);
-				Result raw = result.getResult();
-				Result mapped = mappedSegments.get(i);
+				final QueryResult result = results.get(i);
+				final Result raw = result.getResult();
+				final Result mapped = mappedSegments.get(i);
+				final long offset = corpusData.getOffset(raw.getCorpusId());
 				
-				System.out.printf("part=%s, raw=%s mapped=%s%n",raw.getCorpusId(), raw, mapped);
+				System.out.printf("part=%s, offset=%d, raw=%s, mapped=%s%n", raw.getCorpusId(), _long(offset), raw, mapped);
 				
-				mappedHits.append(mapped.getHits());
+				mappedHits.append(mapped.getHits(), offset);
 				
 				// Update individual parts data
 				resultsData.registerMappedResult(mapped);
@@ -259,7 +261,7 @@ public class QueryPage extends AbstractSlicePage {
 			last = -last - 1;
 		} else {
 			// If we actually found the value, we need to ensure it is contained in the slice
-			last = Math.max(last+1, hits.length);
+			last = Math.min(last+1, hits.length);
 		}
 		
 		if(first==last) {
