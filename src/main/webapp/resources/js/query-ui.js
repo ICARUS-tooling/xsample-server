@@ -106,6 +106,8 @@ function initResults() {
 }
 
 function refreshGlobalResults() {	
+	// IMPORTANT NOTE: we only visualize the mapped segments here, not the raw ones, as the latter could render the UI unreadable 
+	
 	var canvas = document.getElementById('globalHitsCanvas');				
 	if(canvas == null) {
 		console.log("refreshGlobalResults: missing globalHitsCanvas");
@@ -116,7 +118,7 @@ function refreshGlobalResults() {
 	var hits = parseFragments(encodedHits);
 	//console.log(hits);
 	
-	var range = Number(document.getElementById('form:globalRawSegments').value);
+	var range = Number(document.getElementById('form:globalSegments').value);
 
 	paintExcerpt(canvas, true, [], hits, range, OUTLINE_MATCHES);
 	
