@@ -30,7 +30,7 @@
 			<h:inputHidden id="rawSegments" value="#{resultData.rawSegments}" readonly="#{true}" />
 			<div jsf:rendered="#{sharedData.multiPartCorpus}">
 				<h:inputHidden id="globalRawHits" value="#{resultsData.rawHits}" readonly="#{true}" />
-				<h:inputHidden id="globalMappedSegments" value="#{resultsData.mappedHits}" readonly="#{true}" />
+				<h:inputHidden id="globalMappedHits" value="#{resultsData.mappedHits}" readonly="#{true}" />
 				<h:inputHidden id="globalRawSegments" value="#{resultsData.rawSegments}" readonly="#{true}" />
 			</div>	
 		</p:outputPanel>
@@ -63,7 +63,7 @@
 					style="margin-right: 5em" />
 				<ui:include src="/select_corpus.xhtml">
 					<ui:param name="limited" value="true" />
-					<ui:param name="ajaxUpdate" value="sliceData queryOutline" />
+					<ui:param name="ajaxUpdate" value="sliceData resultData queryOutline" />
 					<ui:param name="ajaxOncomplete" value="query_initAllExcerpts()" />
 					<ui:param name="changeHandler" value="#{queryPage}" />
 					<ui:param name="handlerMethod" value="selectionChanged" />
@@ -165,17 +165,17 @@
 
 		function query_refreshAllExcerpts() {
 			initExcerpt()
-			//refreshGlobalExcerpt();
+			refreshGlobalExcerpt();
 			refreshResults();
-			//refreshGlobalResults();
+			refreshGlobalResults();
 			console.log('query_refreshAllExcerpts');
 		}
 		
 		function query_initAllExcerpts() {
 			initExcerpt();
-			//initGlobalExcerpt();
+			initGlobalExcerpt();
 			initResults();
-			//initGlobalResults();
+			initGlobalResults();
 			console.log('query_initAllExcerpts');
 		}
 	</h:outputScript>
