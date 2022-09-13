@@ -2,7 +2,7 @@
  * Methods for managing the query UI
  */
  
-var globalHits = [];
+var globalRawHits = [];
 var globalMappedHits = [];
 
 function updateExcerpt(_, ui) {
@@ -132,10 +132,10 @@ function initGlobalResults() {
 	
 	resizeCanvas(canvas);
 				
-	globalHits = parseFragments(document.getElementById('form:globalHits').value);					
+	globalRawHits = parseFragments(document.getElementById('form:globalRawHits').value);					
 	globalMappedHits = parseFragments(document.getElementById('form:globalMappedHits').value);
 				
 	refreshGlobalResults();
 	
-	console.log("initGlobalResults: globalHits=%O globalMappedHits=%O", globalHits, globalMappedHits);
+	console.log("initGlobalResults: globalRawHits=%O globalMappedHits=%O", globalRawHits, globalMappedHits);
 }

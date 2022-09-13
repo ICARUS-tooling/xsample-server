@@ -19,7 +19,6 @@
  */
 package de.unistuttgart.xsample.qe;
 
-import static de.unistuttgart.xsample.util.XSampleUtils.checkArgument;
 import static de.unistuttgart.xsample.util.XSampleUtils.decrypt;
 import static java.util.Objects.requireNonNull;
 
@@ -133,7 +132,6 @@ public class QueryEngine implements Serializable {
 	 * @throws MappingException */
 	public List<Result> mapSegments(List<QueryResult> results) throws MappingException {
 		requireNonNull(results);
-		checkArgument("Only supports a single result set currently", results.size()==1);
 		
 		List<Result> result = new ArrayList<>();
 		
