@@ -65,7 +65,7 @@ public class Icarus1Wrapper {
 		requireNonNull(reader);
 		checkState("Query not initialized", query!=null);
 		
-		final CONLL09SentenceDataReader conllReader = new CONLL09SentenceDataReader(true);
+		final CONLL09SentenceDataReader conllReader = new CONLL09SentenceDataReader(false);
 		final List<SentenceData> part;
 		try {
 			part = conllReader.readAll(reader, null);
