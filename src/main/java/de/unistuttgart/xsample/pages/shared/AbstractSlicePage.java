@@ -114,6 +114,11 @@ public abstract class AbstractSlicePage extends XsamplePage {
 		return part;
 	}
 	
+	/**
+	 * Updates {@link SelectionData}, {@link PartData}, {@link CorpusData}.
+	 * <p>
+	 * Reads {@link SelectionData}, {@link DownloadData}, {@link PartsData}, {@link CorpusData}.
+	 */
 	public void init() {
 		Corpus part = selectionData.getSelectedCorpus();
 		if(part==null || !partsData.containsPart(part)) {
@@ -145,6 +150,12 @@ public abstract class AbstractSlicePage extends XsamplePage {
 				.sum();
 	}
 	
+	/**
+	 * Updates {@link DownloadData}, {@link PartData}, {@link CorpusData}.
+	 * <p>
+	 * Reads {@link SliceData}, {@link DownloadData}, {@link SelectionData}, {@link PartsData}.
+	 * @param evt
+	 */
 	public void selectionChanged(ValueChangeEvent evt) {
 
 //		System.out.printf("selectionChanged: old=%s new=%s%n",
@@ -152,7 +163,7 @@ public abstract class AbstractSlicePage extends XsamplePage {
 //				Optional.ofNullable(evt.getNewValue()).map(Corpus.class::cast).map(Corpus::getId).orElse("null"));
 		
 		// If we had a selected part, commit current slice as fragments
-		commitExcerpt();
+//		commitExcerpt();
 		
 		if(evt.getNewValue()!=null) {
 			final Corpus part = (Corpus) evt.getNewValue();
@@ -190,7 +201,7 @@ public abstract class AbstractSlicePage extends XsamplePage {
 		System.out.println("refreshGlobalExcerpt: "+corpusData.getExcerpt());
 	}
 	
-	protected void commitExcerpt() {
+	public void addExcerpt() {
 		final Corpus corpus = selectionData.getSelectedCorpus();
 		if(corpus!=null) {
 			final ExcerptEntry entry = downloadData.findEntry(corpus);
@@ -204,7 +215,17 @@ public abstract class AbstractSlicePage extends XsamplePage {
 				entry.clear();
 			}
 			refreshGlobalExcerpt();
-//			System.out.printf("commitExcerpt: part=%s begin=%d end=%d%n",corpus.getId(), begin, end);
+//			System.out.printf("addExcerpt: part=%s begin=%d end=%d%n",corpus.getId(), begin, end);
+		}
+	}
+	
+	public void removeExcerpt() {
+		final Corpus corpus = selectionData.getSelectedCorpus();
+		if(corpus!=null) {
+			final ExcerptEntry entry = downloadData.findEntry(corpus);
+			entry.clear();
+			refreshGlobalExcerpt();
+//			System.out.printf("removeExcerpt: part=%s%n",corpus.getId());
 		}
 	}
 	

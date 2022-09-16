@@ -55,8 +55,6 @@ import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
-import org.omnifaces.util.Messages;
-
 import com.google.common.io.CountingOutputStream;
 
 import de.unistuttgart.xsample.ct.AnnotationHandler;
@@ -119,6 +117,31 @@ public class DownloadPage extends XsamplePage {
 		//TODO do we actually have anything to roll back here?
 	}
 	
+	void writeZip(ZipOutputStream zipOut, List<ExcerptEntry> entries, List<XmpLocalCopy> copies) throws IOException, 
+			GeneralSecurityException, UnsupportedContentTypeException, InterruptedException {
+		
+		// First place an index list containing all the files to expect
+		addIndex(zipOut, entries, copies);
+		
+		// Add all the excerpts
+		for(int i=0; i<entries.size(); i++) {
+			addExcerptEntry(zipOut, entries.get(i), copies.get(i));
+		}
+		
+		if(downloadData.isIncludeAnnotations()) {
+			// Add all the excerpts
+			for(int i=0; i<entries.size(); i++) {
+				addAnnotationEntry(zipOut, entries.get(i));
+			}
+		}
+		
+		// Add the legal note
+		addLegalNotes(zipOut, entries, copies);
+		
+		// Force flush of pending data
+		zipOut.finish();
+	}
+	
 	@Transactional
 	public void download() {
 		
@@ -130,7 +153,7 @@ public class DownloadPage extends XsamplePage {
 			final XmpResource resource = findResource(entry.getCorpusId());
 			final XmpLocalCopy copy = cache.getCopy(resource);
 			if(copy==null || !cache.isPopulated(copy)) {
-				Messages.addGlobalError(BundleUtil.get("download.msg.resourceDeleted"));
+				ui.addGlobalError(BundleUtil.get("download.msg.resourceDeleted"));
 				return;
 			}
 			copies.add(copy);
@@ -155,7 +178,7 @@ public class DownloadPage extends XsamplePage {
 				}
 				// Notify user and bail
 				logger.info(String.format("Copy %s of resource %s locked", copy.getFilename(), copy.getTitle()));
-				Messages.addGlobalError(BundleUtil.format("download.msg.cacheBusy", copy.getTitle()));
+				ui.addGlobalError(BundleUtil.format("download.msg.cacheBusy", copy.getTitle()));
 				return;
 			}
 		}
@@ -174,47 +197,28 @@ public class DownloadPage extends XsamplePage {
 					CountingOutputStream cout = new CountingOutputStream(out);
 					ZipOutputStream zipOut = new ZipOutputStream(cout)) {
 				
-				// First place an index list containing all the files to expect
-				addIndex(zipOut, entries, copies);
-				
-				// Add all the excerpts
-				for(int i=0; i<entries.size(); i++) {
-					addExcerptEntry(zipOut, entries.get(i), copies.get(i));
-				}
-				
-				if(downloadData.isIncludeAnnotations()) {
-					// Add all the excerpts
-					for(int i=0; i<entries.size(); i++) {
-						addAnnotationEntry(zipOut, entries.get(i));
-					}
-				}
-				
-				// Add the legal note
-				addLegalNotes(zipOut, entries, copies);
-				
-				// Force flush of pending data
-				zipOut.finish();
+				writeZip(zipOut, entries, copies);
 				
 				// Collect final size of the zip file for client information purposes
 				zipSize = cout.getCount();
 			} catch (IOException e) {
 				logger.log(Level.SEVERE, "Failed to create excerpt", e);
-				Messages.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
+				ui.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
 				response.reset();
 				return;
 			} catch (GeneralSecurityException e) {
 				logger.log(Level.SEVERE, "Failed to prepare cipher", e);
-				Messages.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
+				ui.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
 				response.reset();
 				return;
 			} catch (UnsupportedContentTypeException e) {
 				logger.log(Level.SEVERE, "Unsupported content type", e);
-				Messages.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
+				ui.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
 				response.reset();
 				return;
 			} catch (InterruptedException e) {
 				logger.log(Level.SEVERE, "Failed to acquire lock for resource", e);
-				Messages.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
+				ui.addGlobalError(BundleUtil.get("download.msg.error"), e.getMessage());
 				response.reset();
 				return;
 			}

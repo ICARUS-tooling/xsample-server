@@ -40,7 +40,7 @@ public class QueryData implements DataBean {
 	private static final long serialVersionUID = -3741300128814073907L;
 	
 	/** The raw query as defined by the user */
-	private String query = "[form=Der]";
+	private String query = "[form#althochdeutsch]";
 	
 	private boolean caseSensitive = true;
 	private int limit = 0;

@@ -29,9 +29,9 @@ import de.unistuttgart.xsample.util.DataBean;
 public abstract class EncodedCorpusData implements DataBean {
 
 	/** Total number of segments available */
-	private long segments = 1;
+	private long segments = -1;
 	/** Upper limit of allowed segments to be published */
-	private long limit = 1;
+	private long limit = -1;
 	/** Encoded used up quota */
 	private String quota = "";
 	/** Encoded user-selected excerpt */

@@ -179,7 +179,7 @@ public class LocalCache implements Serializable {
     				final boolean isDataFile = file.endsWith(DATA_SUFFIX);
     				Optional<XmpLocalCopy> copy = services.findCopy(file.toString());
     				if(copy.isPresent()) {
-    					services.delete(copy);
+    					services.delete(copy.get());
     				} else if(isDataFile) {
     					log.severe("Cache inconsistency: missing copy entry for cache file "+file);
     				}

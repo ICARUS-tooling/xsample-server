@@ -28,13 +28,13 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Named;
 
-import org.omnifaces.util.Messages;
-
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
+import de.unistuttgart.xsample.pages.download.DownloadData;
 import de.unistuttgart.xsample.pages.download.DownloadPage;
 import de.unistuttgart.xsample.pages.shared.AbstractSlicePage;
 import de.unistuttgart.xsample.pages.shared.ExcerptEntry;
+import de.unistuttgart.xsample.pages.shared.WorkflowData;
 import de.unistuttgart.xsample.util.BundleUtil;
 import de.unistuttgart.xsample.util.XSampleUtils;
 
@@ -52,10 +52,16 @@ public class SlicePage extends AbstractSlicePage {
 	
 	static final String NAV_MSG = "navMsgs";
 
-	/** Callback for button to continue workflow */
+	/** 
+	 * Callback for button to continue workflow.
+	 * <p>
+	 * Updates {@link WorkflowData}, {@link DownloadData}. 
+	 */
 	public void next() {
 		// Commit current excerpt since we normal only do this on a selection change!
-		commitExcerpt();
+//		commitExcerpt();
+
+		long totalExcerptSize = 0;
 		
 		for(ExcerptEntry entry : allEntries().collect(Collectors.toList())) {
 			final List<XmpFragment> fragments = entry.getFragments();
@@ -64,6 +70,8 @@ public class SlicePage extends AbstractSlicePage {
 				entry.clear();
 				continue;
 			}
+
+			totalExcerptSize += fragments.stream().mapToLong(XmpFragment::size).sum();
 			
 			XmpExcerpt excerpt = findQuota(entry.getCorpusId());
 			
@@ -76,12 +84,14 @@ public class SlicePage extends AbstractSlicePage {
 			if(usedUpSlots>entry.getLimit()) {
 				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
 						_long(entry.getLimit()), entry.getCorpusId(), sharedData.getServer(), sharedData.getDataverseUser()));
-				Messages.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
+				ui.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
 						_long(usedUpSlots), _long(entry.getLimit()));
 				return;
 			}
 		}
 		
-		forward(DownloadPage.PAGE);
+		if(totalExcerptSize>0) {
+			forward(DownloadPage.PAGE);
+		}
 	}
 }

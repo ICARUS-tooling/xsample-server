@@ -29,15 +29,11 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.RequestScoped;
-import javax.faces.application.FacesMessage;
-import javax.faces.application.FacesMessage.Severity;
-import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.transaction.Transactional;
 
 import org.apache.commons.text.StringEscapeUtils;
-import org.omnifaces.util.Messages;
 
 import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
@@ -84,12 +80,6 @@ public class QueryPage extends AbstractSlicePage {
 	@Override
 	public boolean isAllowEmptySlice() { return true; }
 
-	private static void queryMessage(Severity severity, String key, Object...args) {
-		String text = BundleUtil.format(key, args);
-		FacesMessage msg = new FacesMessage(severity, text, null);
-		FacesContext.getCurrentInstance().addMessage(QUERY_MSG, msg);
-	}
-	
 	private String cleanQuery(String query) {
 		return StringEscapeUtils.unescapeHtml4(query);
 	}
@@ -115,12 +105,12 @@ public class QueryPage extends AbstractSlicePage {
 			logger.log(Level.SEVERE, "Query evaluation failed: "+e.getMessage(), e);
 			String resourceId = e.getResourceId().orElse(sharedData.getManifest().getCorpus().getId());
 			switch (e.getCode()) {
-			case IO_ERROR: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.loadingError", resourceId); break;
-			case INTERNAL_ERROR: queryMessage(FacesMessage.SEVERITY_FATAL, "query.msg.internalError", resourceId); break;
-			case SYNTAX_ERROR: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.invalidQuerySyntax"); break;
-			case UNSUPPORTED_FORMAT: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.unsupportedFormat", resourceId); break;
-			case SECURITY_ERROR: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.decryptionFailed", resourceId); break;
-			case RESOURCE_LOCKED: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.cacheBusy", resourceId); break;
+			case IO_ERROR: ui.addError(QUERY_MSG, "query.msg.loadingError", resourceId); break;
+			case INTERNAL_ERROR: ui.addFatal(QUERY_MSG, "query.msg.internalError", resourceId); break;
+			case SYNTAX_ERROR: ui.addError(QUERY_MSG, "query.msg.invalidQuerySyntax"); break;
+			case UNSUPPORTED_FORMAT: ui.addError(QUERY_MSG, "query.msg.unsupportedFormat", resourceId); break;
+			case SECURITY_ERROR: ui.addError(QUERY_MSG, "query.msg.decryptionFailed", resourceId); break;
+			case RESOURCE_LOCKED: ui.addError(QUERY_MSG, "query.msg.cacheBusy", resourceId); break;
 			default:
 				break;
 			}
@@ -148,7 +138,7 @@ public class QueryPage extends AbstractSlicePage {
 		resultsData.setRawHits(rawHits.toString());
 		
 		if(!hasHits) {
-			Messages.addInfo(NAV_MSG, BundleUtil.get("query.msg.noHits"), rawQuery);
+			ui.addInfo(NAV_MSG, BundleUtil.get("query.msg.noHits"), rawQuery);
 		} else {			
 			// Perform mapping
 			List<Result> mappedSegments;
@@ -158,13 +148,13 @@ public class QueryPage extends AbstractSlicePage {
 				logger.log(Level.SEVERE, "Mapping query results failed: "+e.getMessage(), e);
 				String resourceId = e.getResourceId().orElse(sharedData.getManifest().getCorpus().getId());
 				switch (e.getCode()) {
-				case IO_ERROR: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.loadingError", resourceId); break;
-				case INTERNAL_ERROR: queryMessage(FacesMessage.SEVERITY_FATAL, "query.msg.internalError", resourceId); break;
-				case UNSUPPORTED_FORMAT: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.unsupportedFormat", resourceId); break;
-				case SECURITY_ERROR: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.decryptionFailed", resourceId); break;
-				case RESOURCE_LOCKED: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.cacheBusy", resourceId); break;
-				case MISSING_MANIFEST: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.missingManifest", resourceId); break;
-				case MISSING_MAPPING: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.missingMapping", resourceId); break;
+				case IO_ERROR: ui.addError(QUERY_MSG, "query.msg.loadingError", resourceId); break;
+				case INTERNAL_ERROR: ui.addFatal(QUERY_MSG, "query.msg.internalError", resourceId); break;
+				case UNSUPPORTED_FORMAT: ui.addError(QUERY_MSG, "query.msg.unsupportedFormat", resourceId); break;
+				case SECURITY_ERROR: ui.addError(QUERY_MSG, "query.msg.decryptionFailed", resourceId); break;
+				case RESOURCE_LOCKED: ui.addError(QUERY_MSG, "query.msg.cacheBusy", resourceId); break;
+				case MISSING_MANIFEST: ui.addError(QUERY_MSG, "query.msg.missingManifest", resourceId); break;
+				case MISSING_MAPPING: ui.addError(QUERY_MSG, "query.msg.missingMapping", resourceId); break;
 				default:
 					break;
 				}
@@ -180,7 +170,7 @@ public class QueryPage extends AbstractSlicePage {
 				final Result mapped = mappedSegments.get(i);
 				final long offset = corpusData.getOffset(raw.getCorpusId());
 				
-				System.out.printf("part=%s, offset=%d, raw=%s, mapped=%s%n", raw.getCorpusId(), _long(offset), raw, mapped);
+//				System.out.printf("part=%s, offset=%d, raw=%s, mapped=%s%n", raw.getCorpusId(), _long(offset), raw, mapped);
 				
 				mappedHits.append(mapped.getHits(), offset);
 				
@@ -194,7 +184,7 @@ public class QueryPage extends AbstractSlicePage {
 			ExcerptEntry entry = downloadData.findEntry(part);
 			refreshPart(part, entry);
 			
-			System.out.printf("runQuery: query=%s results=%s result=%s%n", queryData, resultsData, resultData);
+//			System.out.printf("runQuery: query=%s results=%s result=%s%n", queryData, resultsData, resultData);
 		}		
 	}
 	
@@ -272,7 +262,7 @@ public class QueryPage extends AbstractSlicePage {
 	}
 	
 	@Override
-	protected void commitExcerpt() {
+	public void addExcerpt() {
 		final Corpus corpus = selectionData.getSelectedCorpus();
 		if(corpus!=null) {
 			final ExcerptEntry entry = downloadData.findEntry(corpus);
@@ -296,7 +286,9 @@ public class QueryPage extends AbstractSlicePage {
 	/** Callback for button to continue workflow */
 	public void next() {
 		// Commit current excerpt since we normal only do this on a selection change!
-		commitExcerpt();
+//		commitExcerpt();
+		
+		long totalExcerptSize = 0;
 		
 		for(ExcerptEntry entry : allEntries().collect(Collectors.toList())) {
 			final List<XmpFragment> fragments = entry.getFragments();
@@ -305,6 +297,8 @@ public class QueryPage extends AbstractSlicePage {
 				entry.clear();
 				continue;
 			}
+			
+			totalExcerptSize += fragments.stream().mapToLong(XmpFragment::size).sum();
 			
 			XmpExcerpt excerpt = findQuota(entry.getCorpusId());
 			
@@ -317,13 +311,15 @@ public class QueryPage extends AbstractSlicePage {
 			if(usedUpSlots>entry.getLimit()) {
 				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
 						_long(entry.getLimit()), entry.getCorpusId(), sharedData.getServer(), sharedData.getDataverseUser()));
-				Messages.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
+				ui.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
 						_long(usedUpSlots), _long(entry.getLimit()));
 				return;
 			}
 		}
 		
-		forward(DownloadPage.PAGE);
+		if(totalExcerptSize>0) {
+			forward(DownloadPage.PAGE);
+		}
 	}
 
 //	/** Callback for button to continue workflow */

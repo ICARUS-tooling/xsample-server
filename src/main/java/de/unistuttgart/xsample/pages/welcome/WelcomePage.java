@@ -44,7 +44,6 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.application.FacesMessage.Severity;
-import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -288,9 +287,8 @@ public class WelcomePage extends XsamplePage {
 		// Make sure our designated excerpt span actually starts inside the corpus
 		long segments = corpusData.getSegments(corpus);
 		if(begin>=segments) {
-			String text = BundleUtil.format("welcome.msg.staticExcerptOutsideCorpus", 
+			ui.addError(NAV_MSG, "welcome.msg.staticExcerptOutsideCorpus",
 					_long(begin), _long(end), corpus.getId(), _long(segments));
-			FacesContext.getCurrentInstance().addMessage(NAV_MSG, new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null));
 			return false;			
 		}
 		
@@ -312,9 +310,8 @@ public class WelcomePage extends XsamplePage {
 			long limit = corpusData.getLimit(corpus);
 			long usedUpSlots = XSampleUtils.combinedSize(fragments, findQuota(corpus).getFragments());
 			if(usedUpSlots > limit) {
-				String text = BundleUtil.format("welcome.msg.staticExcerptExceedsQuota", 
+				ui.addError(NAV_MSG, PAGE, "welcome.msg.staticExcerptExceedsQuota", 
 						_long(begin), _long(end), corpus.getId());
-				FacesContext.getCurrentInstance().addMessage(NAV_MSG, new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null));
 				return false;			
 			}
 		}
@@ -383,9 +380,7 @@ public class WelcomePage extends XsamplePage {
 			
 			if(page==null) {
 				logger.severe("Unknown page result from routing in welcome page for type: "+excerptType);
-				String text = BundleUtil.format("unknownPage", excerptType);
-				FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
-				FacesContext.getCurrentInstance().addMessage(NAV_MSG, msg);
+				ui.addError(NAV_MSG, "unknownPage", excerptType);
 				return;
 			}
 			
@@ -444,10 +439,8 @@ public class WelcomePage extends XsamplePage {
 		sharedData.setVerified(true);
 	}
 
-	private static void message(Severity severity, String key, Object...args) {
-		String text = BundleUtil.format(key, args);
-		FacesMessage msg = new FacesMessage(severity, text, null);
-		FacesContext.getCurrentInstance().addMessage(INIT_MSG, msg);
+	private void message(Severity severity, String key, Object...args) {
+		ui.addMessage(INIT_MSG, severity, BundleUtil.get(key), args);
 	}
 
 	static class Step {

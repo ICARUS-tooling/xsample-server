@@ -25,6 +25,7 @@ import static java.util.Objects.requireNonNull;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
@@ -60,12 +61,12 @@ public class DownloadData implements DataBean {
 	public boolean isIncludeAnnotations() { return includeAnnotations; }
 	public void setIncludeAnnotations(boolean includeAnnotations) { this.includeAnnotations = includeAnnotations; }
 
-	public ExcerptEntry findEntry(Corpus corpus) {
+	public @Nullable ExcerptEntry findEntry(Corpus corpus) {
 		return findEntry(corpus.getId());
 	}
 
 	/** Find our entry (if present) matching given corpus id */
-	public ExcerptEntry findEntry(String corpusId) {
+	public @Nullable ExcerptEntry findEntry(String corpusId) {
 		requireNonNull(corpusId);
 		if(lookup.isEmpty() && !entries.isEmpty()) {
 			entries.forEach(e -> lookup.put(e.getCorpusId(), e));

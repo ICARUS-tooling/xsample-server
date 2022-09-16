@@ -22,8 +22,6 @@ package de.unistuttgart.xsample.pages.parts;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -68,9 +66,7 @@ public class PartsPage extends XsamplePage {
 	
 		if(page==null) {
 			logger.severe("Unknown page result from routing in parts page for type: "+excerptType);
-			String text = BundleUtil.format("welcome.msg.unknownPage", excerptType);
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, text, null);
-			FacesContext.getCurrentInstance().addMessage(NAV_MSG, msg);
+			ui.addError(NAV_MSG, BundleUtil.get("welcome.msg.unknownPage"), excerptType);
 			return;
 		}
 		

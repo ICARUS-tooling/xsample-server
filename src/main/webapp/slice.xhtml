@@ -21,6 +21,8 @@
 					<ui:param name="changeHandler" value="#{slicePage}" />
 					<ui:param name="handlerMethod" value="selectionChanged" />
 				</ui:include>	
+				<p:commandButton value="#{bundle['slice.addSlice']}" action="#{slicePage.addExcerpt}" process="@this" update="sliceOutline" />			
+				<p:commandButton value="#{bundle['slice.removeSlice']}" action="#{slicePage.removeExcerpt}" process="@this" update="sliceOutline" />			
 				<p:commandButton value="#{bundle['slice.resetAll']}" action="#{slicePage.reset}" process="@this" update="sliceData sliceOutline" />			
 			</f:facet>
 			

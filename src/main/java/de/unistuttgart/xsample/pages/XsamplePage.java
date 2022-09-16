@@ -21,8 +21,6 @@ package de.unistuttgart.xsample.pages;
 
 import javax.inject.Inject;
 
-import org.primefaces.PrimeFaces;
-
 import de.unistuttgart.xsample.XsampleServices;
 import de.unistuttgart.xsample.XsampleServices.Key;
 import de.unistuttgart.xsample.dv.XmpExcerpt;
@@ -39,11 +37,11 @@ import de.unistuttgart.xsample.pages.shared.WorkflowData;
 public class XsamplePage {
 	
 	@Inject
-	protected WorkflowData workflow;
-	
+	protected WorkflowData workflow;	
 	@Inject
 	protected XsampleServices services;
-	
+	@Inject
+	protected XsampleUi ui;
 	@Inject
 	protected SharedData sharedData;
 	
@@ -62,7 +60,7 @@ public class XsamplePage {
 	protected void rollBack() { /* no-op */ }
 	
 	protected final void updatePage() {
-		PrimeFaces.current().ajax().update(":content");
+		ui.update(":content");
 	}
 	
 	protected final void forward(String page) {

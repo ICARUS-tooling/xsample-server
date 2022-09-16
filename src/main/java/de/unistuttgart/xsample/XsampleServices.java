@@ -49,16 +49,27 @@ import de.unistuttgart.xsample.dv.XmpResource;
  * @author Markus Gärtner
  *
  */
+//@DataSourceDefinition(
+//	name = "java:app/jdbc/xsample",
+//    className = "org.postgresql.ds.PGSimpleDataSource",
+//    user = "xsample",
+//    password = "xsample",
+//    serverName = "localhost",
+//    portNumber = 5432,
+//    databaseName = "xsample",
+//    minPoolSize = 10,
+//    maxPoolSize = 50
+//)
 @DataSourceDefinition(
 	name = "java:app/jdbc/xsample",
-    className = "org.postgresql.ds.PGSimpleDataSource",
-    user = "${ENV=DB_USER:xsample}",
-    password = "${ENV=DB_PASSWORD:xsample}",
-    serverName = "${ENV=DB_SERVERNAME:localhost}",
-    portNumber = 5432,
-    databaseName = "${ENV=DB_DATABASENAME:xsample}",
-    minPoolSize = 10,
-    maxPoolSize = 50
+	className = "org.postgresql.ds.PGSimpleDataSource",
+	user = "${ENV=DB_USER:xsample}",
+	password = "${ENV=DB_PASSWORD:xsample}",
+	serverName = "${ENV=DB_SERVERNAME:localhost}",
+	portNumber = 5432,
+	databaseName = "${ENV=DB_DATABASENAME:xsample}",
+	minPoolSize = 10,
+	maxPoolSize = 50
 )
 @Stateless
 public class XsampleServices {
@@ -66,7 +77,7 @@ public class XsampleServices {
 	private static final Logger log = Logger.getLogger(XsampleServices.class.getCanonicalName());
 
 	@PersistenceContext
-	private EntityManager em;
+	EntityManager em;
 	
 	static final Properties defaultSettings;
 	static final Properties settings;
@@ -198,10 +209,6 @@ public class XsampleServices {
 		}
 		
 		return dataverseUser;
-	}
-	
-	public List<XmpDataverseUser> findAllUsers() {
-		return em.createNamedQuery("DataverseUser.findAll").getResultList();
 	}
 	
 	public XmpExcerpt findQuota(XmpDataverseUser user, XmpResource resource) {
