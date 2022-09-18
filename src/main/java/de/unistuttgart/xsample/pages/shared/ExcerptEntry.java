@@ -38,6 +38,8 @@ public class ExcerptEntry implements Serializable {
 	private List<XmpFragment> fragments;
 	/** Limit within the associated corpus */
 	private long limit;
+	/** Caches size of fragments */
+	private long size = -1;
 	
 	public String getCorpusId() {
 		return corpusId;
@@ -50,6 +52,7 @@ public class ExcerptEntry implements Serializable {
 	}
 	public void setFragments(List<XmpFragment> fragments) {
 		this.fragments = fragments;
+		size = -1;
 	}
 	
 	public boolean isEmpty() { return fragments==null || fragments.isEmpty(); }
@@ -57,6 +60,13 @@ public class ExcerptEntry implements Serializable {
 	/** Reset the fragment data on this excerpt */
 	public void clear() {
 		fragments = null;
+	}
+	
+	public long size() {
+		if(size==-1) {
+			size = isEmpty() ? 0 : fragments.stream().mapToLong(XmpFragment::size).sum();
+		}
+		return size;
 	}
 	
 	public long getLimit() { return limit; }

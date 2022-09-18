@@ -982,7 +982,6 @@ public class WelcomePage extends XsamplePage {
 		
 		for(XmpFileInfo info : context.fileInfos) {
 			final XmpResource resource = info.getResource();
-			final XmpLocalCopy copy = cache.getCopy(resource);
 			final XmpExcerpt excerpt = services.findQuota(user, resource);
 			final Corpus corpus = sharedData.findCorpus(resource);
 
@@ -1003,7 +1002,7 @@ public class WelcomePage extends XsamplePage {
 						_long(limit), _long(segments), resource, user));
 				Severity severity = sharedData.isMultiPartCorpus() ? FacesMessage.SEVERITY_WARN : FacesMessage.SEVERITY_ERROR;
 				message(severity, "welcome.msg.quotaExceeded", 
-						_long(quota), _long(segments), copy.getTitle(), corpus.getId());
+						_long(quota), _long(segments), corpus.getTitle(), corpus.getId());
 			}
 		}
 		corpusData.setQuotaSize(globalQuota);

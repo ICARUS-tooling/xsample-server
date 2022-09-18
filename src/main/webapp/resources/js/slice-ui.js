@@ -68,12 +68,12 @@ function refreshGlobalExcerpt() {
 		return;	
 	}
 	
-	var offset = Number(document.getElementById('form:excerptOffset').value);
-	var begin = Number(document.getElementById('form:excerptStart').value) + offset;
-	var end = Number(document.getElementById('form:excerptEnd').value) + offset;
+	//var offset = Number(document.getElementById('form:excerptOffset').value);
+	//var begin = Number(document.getElementById('form:excerptStart').value) + offset;
+	//var end = Number(document.getElementById('form:excerptEnd').value) + offset;
 	var segments = Number(document.getElementById('form:globalSegments').value);
 	var limit = Number(document.getElementById('form:globalThreshold').value);
-	var excerpt = globalExcerpt.concat([toFragment(begin, end)]);
+	var excerpt = globalExcerpt; //.concat([toFragment(begin, end)]);
 	var count = sizeOf(excerpt);
 	
 	var used = combinedSize(globalQuota, excerpt, limit);
@@ -88,8 +88,8 @@ function refreshGlobalExcerpt() {
 		document.getElementById('form:totalPercent').textContent = totalPercent.toFixed(1) + "%";
 	}
 	
-	console.log("refreshGlobalExcerpt: begin=%i end=%i segments=%i percent=%f used=%i limit=%i globalExcerpt=%O globalQuota=%O", 
-		begin, end, segments, percent, used, limit, globalExcerpt, globalQuota);
+	console.log("refreshGlobalExcerpt: segments=%i percent=%f used=%i limit=%i globalExcerpt=%O globalQuota=%O", 
+		segments, percent, used, limit, globalExcerpt, globalQuota);
 }
 
 function initGlobalExcerpt() {		

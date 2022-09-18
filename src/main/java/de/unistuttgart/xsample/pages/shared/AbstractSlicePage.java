@@ -19,11 +19,16 @@
  */
 package de.unistuttgart.xsample.pages.shared;
 
+import static de.unistuttgart.xsample.util.XSampleUtils._long;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
 import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 
@@ -34,12 +39,16 @@ import de.unistuttgart.xsample.pages.XsamplePage;
 import de.unistuttgart.xsample.pages.download.DownloadData;
 import de.unistuttgart.xsample.pages.parts.PartsData;
 import de.unistuttgart.xsample.pages.slice.SliceData;
+import de.unistuttgart.xsample.util.BundleUtil;
+import de.unistuttgart.xsample.util.XSampleUtils;
 
 /**
  * @author Markus Gärtner
  *
  */
 public abstract class AbstractSlicePage extends XsamplePage {
+	
+	private static final Logger logger = Logger.getLogger(AbstractSlicePage.class.getCanonicalName());
 
 	@Inject
 	protected SliceData sliceData;
@@ -62,7 +71,7 @@ public abstract class AbstractSlicePage extends XsamplePage {
 				.filter(Objects::nonNull);
 	}
 	
-	protected ExcerptEntry currentEntry() {
+	protected @Nullable ExcerptEntry currentEntry() {
 		Corpus part = selectionData.getSelectedCorpus();
 		return part==null ? null : downloadData.findEntry(part);
 	}
@@ -132,12 +141,6 @@ public abstract class AbstractSlicePage extends XsamplePage {
 		refreshGlobalQuota();
 	}
 	
-	/** Reset all slices and refresh shared data */
-	public void reset() {
-		allEntries().forEach(ExcerptEntry::clear);
-		refreshSlice(currentEntry());
-	}
-	
 	public long getSegments() {
 		return partsData.getSelectedParts().stream()
 				.mapToLong(corpusData::getSegments)
@@ -201,22 +204,58 @@ public abstract class AbstractSlicePage extends XsamplePage {
 		System.out.println("refreshGlobalExcerpt: "+corpusData.getExcerpt());
 	}
 	
+	protected void ensureExcerptAdded() {
+		if(!sharedData.isMultiPartCorpus()) {
+			addExcerpt();
+		}
+	}
+	
+	public boolean isCanReset() {
+		return downloadData.getSize() > 0;
+	}
+	
+	/** Reset all slices and refresh shared data */
+	public void reset() {
+		allEntries().forEach(ExcerptEntry::clear);
+		refreshSlice(currentEntry());
+		refreshGlobalExcerpt();
+	}
+	
+	protected List<XmpFragment> asFragments(long begin, long end) {
+		return Arrays.asList(XmpFragment.of(begin, end));
+	}
+	
+	protected boolean canApplySlice() {
+		return true;
+	}
+	
+	public boolean isCanAddExcerpt() {
+		return sliceData.isValid() && canApplySlice();
+	}
+
 	public void addExcerpt() {
 		final Corpus corpus = selectionData.getSelectedCorpus();
 		if(corpus!=null) {
 			final ExcerptEntry entry = downloadData.findEntry(corpus);
 			long begin = -1, end = -1;
-			if(sliceData.getBegin()>0 && sliceData.getEnd()>0) {
+			if(canApplySlice() && sliceData.getBegin()>0 && sliceData.getEnd()>0) {
 				begin = sliceData.getBegin();
 				end = sliceData.getEnd();
-				entry.setFragments(Arrays.asList(XmpFragment.of(begin, end)));
+				List<XmpFragment> fragments = asFragments(begin, end);
+				entry.setFragments(fragments);
 				partData.setExcerpt(FragmentCodec.encodeAll(entry.getFragments()));
 			} else {
 				entry.clear();
 			}
+			refreshSlice(entry);
 			refreshGlobalExcerpt();
 //			System.out.printf("addExcerpt: part=%s begin=%d end=%d%n",corpus.getId(), begin, end);
 		}
+	}
+	
+	public boolean isCanRemoveExcerpt() {
+		ExcerptEntry entry = currentEntry();
+		return entry!=null && entry.size() > 0;
 	}
 	
 	public void removeExcerpt() {
@@ -224,6 +263,7 @@ public abstract class AbstractSlicePage extends XsamplePage {
 		if(corpus!=null) {
 			final ExcerptEntry entry = downloadData.findEntry(corpus);
 			entry.clear();
+			refreshSlice(entry);
 			refreshGlobalExcerpt();
 //			System.out.printf("removeExcerpt: part=%s%n",corpus.getId());
 		}
@@ -231,5 +271,47 @@ public abstract class AbstractSlicePage extends XsamplePage {
 	
 	public boolean isAllowEmptySlice() {
 		return false;
+	}
+
+	/** 
+	 * Callback for button to continue workflow.
+	 * <p>
+	 * Updates {@link WorkflowData}, {@link DownloadData}. 
+	 */
+	protected void next(String clientId, String page) {
+		ensureExcerptAdded();
+
+		long totalExcerptSize = 0;
+		
+		for(ExcerptEntry entry : allEntries().collect(Collectors.toList())) {
+			final List<XmpFragment> fragments = entry.getFragments();
+			
+			if(fragments==null || fragments.isEmpty()) {
+				entry.clear();
+				continue;
+			}
+
+			totalExcerptSize += fragments.stream().mapToLong(XmpFragment::size).sum();
+			
+			XmpExcerpt excerpt = findQuota(entry.getCorpusId());
+			
+			/* The following issue should never occur, since we do the same
+			 * validation on the client side to enable/disable the button.
+			 * We need this additional sanity check to defend against bugs 
+			 * or tampering with the JS code on the client side!
+			 */
+			long usedUpSlots = XSampleUtils.combinedSize(fragments, excerpt.getFragments());
+			if(usedUpSlots>entry.getLimit()) {
+				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
+						_long(entry.getLimit()), entry.getCorpusId(), sharedData.getServer(), sharedData.getDataverseUser()));
+				ui.addError(clientId, BundleUtil.get("slice.msg.quotaExceeded"), 
+						_long(usedUpSlots), _long(entry.getLimit()));
+				return;
+			}
+		}
+		
+		if(totalExcerptSize>0) {
+			forward(page);
+		}
 	}
 }

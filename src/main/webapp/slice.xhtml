@@ -11,8 +11,7 @@
 				
 		<p:panel>
 			<f:facet name="header">
-				<h:outputText value="#{bundle['slice.selectedCorpus']}" 
-					rendered="#{sharedData.multiPartCorpus}" 
+				<h:outputText value="#{sharedData.multiPartCorpus ? bundle['slice.selectedCorpus'] : bundle['slice.excerptHeader']}" 
 					style="margin-right: 5em" />
 				<ui:include src="/select_corpus.xhtml">
 					<ui:param name="limited" value="true" />
@@ -21,9 +20,24 @@
 					<ui:param name="changeHandler" value="#{slicePage}" />
 					<ui:param name="handlerMethod" value="selectionChanged" />
 				</ui:include>	
-				<p:commandButton value="#{bundle['slice.addSlice']}" action="#{slicePage.addExcerpt}" process="@this" update="sliceOutline" />			
-				<p:commandButton value="#{bundle['slice.removeSlice']}" action="#{slicePage.removeExcerpt}" process="@this" update="sliceOutline" />			
-				<p:commandButton value="#{bundle['slice.resetAll']}" action="#{slicePage.reset}" process="@this" update="sliceData sliceOutline" />			
+				<p:commandButton value="#{bundle['slice.addSlice']}" 
+					rendered="#{sharedData.multiPartCorpus}"
+					action="#{slicePage.addExcerpt}" 
+					disabled="#{not slicePage.canAddExcerpt}"
+					process="@this" update="@form"
+					oncomplete="slice_initAllExcerpts()" />			
+				<p:commandButton value="#{bundle['slice.removeSlice']}" 
+					rendered="#{sharedData.multiPartCorpus}"
+					action="#{slicePage.removeExcerpt}" 
+					disabled="#{not slicePage.canRemoveExcerpt}"
+					process="@this" update="@form"
+					oncomplete="slice_initAllExcerpts()" />		
+				<p:commandButton value="#{bundle['slice.resetAll']}" 
+					rendered="#{sharedData.multiPartCorpus}"
+					action="#{slicePage.reset}" 
+					disabled="#{not slicePage.canReset}"
+					process="@this" update="@form"
+					oncomplete="slice_initAllExcerpts()" />			
 			</f:facet>
 			
 			<p:outputPanel id="sliceData" layout="block">			

@@ -51,12 +51,17 @@ public class DownloadData implements DataBean {
 	private List<ExcerptEntry> entries = new ObjectArrayList<>();
 	/**  Cache for improved lookup performance */
 	private transient Map<String, ExcerptEntry> lookup = new Object2ObjectOpenHashMap<>();
-	
+	/** Cached accumulated size of excerpts */
+	private long size = -1;
 	/** Flag to indicate that annotations should be made part of the final excerpt */
 	private boolean includeAnnotations = false;
 
 	public List<ExcerptEntry> getEntries() { return entries; }
-	public void setEntries(List<ExcerptEntry> excerpt) { this.entries = requireNonNull(excerpt); }
+	public void setEntries(List<ExcerptEntry> excerpt) { 
+		this.entries = requireNonNull(excerpt);
+		lookup.clear();
+		size = -1;
+	}
 
 	public boolean isIncludeAnnotations() { return includeAnnotations; }
 	public void setIncludeAnnotations(boolean includeAnnotations) { this.includeAnnotations = includeAnnotations; }
@@ -75,9 +80,17 @@ public class DownloadData implements DataBean {
 	}
 
 	public void addEntry(ExcerptEntry entry) { 
-		entries.add(requireNonNull(entry)); 
 		if(lookup.putIfAbsent(entry.getCorpusId(), entry)!=null)
 			throw new IllegalStateException("Duplicate entry ID: "+entry.getCorpusId());
+		entries.add(requireNonNull(entry)); 
+		size = -1;
+	}
+	
+	public long getSize() {
+		if(size==-1) {
+			size = entries.isEmpty() ? 0 : entries.stream().mapToLong(ExcerptEntry::size).sum();
+		}
+		return size;
 	}
 
 	public void clear() {

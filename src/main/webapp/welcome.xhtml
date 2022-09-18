@@ -79,7 +79,7 @@
 						<p:commandButton value="#{bundle['continue']}" 
 							action="#{welcomePage.next}" update="navMsg" />
 						<p:commandButton rendered="#{xsampleSession.debug}" value="#{bundle['welcome.resetQuota']}" 
-							action="#{welcomePage.resetQuota}" render="@all" />
+							action="#{welcomePage.resetQuota}" update="@all" />
 					</f:facet>
 				</p:panel>
 			</p:outputPanel>

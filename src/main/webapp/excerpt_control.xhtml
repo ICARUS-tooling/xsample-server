@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui" xmlns:jsf="http://xmlns.jcp.org/jsf">
+	
+	<p:commandButton id="addSlice" value="#{bundle['slice.addSlice']}" 
+		rendered="#{sharedData.multiPartCorpus}"
+		action="#{page['addExcerpt']}" 
+		process="@this" update="sliceData sliceOutline" />			
+	<p:commandButton id="" value="#{bundle['slice.removeSlice']}" 
+		rendered="#{sharedData.multiPartCorpus}"
+		action="#{page['removeExcerpt']}" 
+		process="@this" update="sliceData sliceOutline" />			
+	<p:commandButton id="" value="#{bundle['slice.resetAll']}" 
+		rendered="#{sharedData.multiPartCorpus}"
+		action="#{page['reset']}" 
+		process="@this" update="sliceData sliceOutline" />	
+		
+</ui:composition>

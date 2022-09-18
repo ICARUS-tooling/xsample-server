@@ -19,14 +19,12 @@
  */
 package de.unistuttgart.xsample.pages.query;
 
-import static de.unistuttgart.xsample.util.XSampleUtils._long;
 import static de.unistuttgart.xsample.util.XSampleUtils.isNullOrEmpty;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -35,7 +33,6 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.text.StringEscapeUtils;
 
-import de.unistuttgart.xsample.dv.XmpExcerpt;
 import de.unistuttgart.xsample.dv.XmpFragment;
 import de.unistuttgart.xsample.mf.Corpus;
 import de.unistuttgart.xsample.pages.download.DownloadPage;
@@ -48,7 +45,6 @@ import de.unistuttgart.xsample.qe.QueryException;
 import de.unistuttgart.xsample.qe.QueryResult;
 import de.unistuttgart.xsample.qe.Result;
 import de.unistuttgart.xsample.util.BundleUtil;
-import de.unistuttgart.xsample.util.XSampleUtils;
 
 /**
  * @author Markus Gärtner
@@ -261,124 +257,24 @@ public class QueryPage extends AbstractSlicePage {
 		return Arrays.copyOfRange(hits, first, last);
 	}
 	
+	/**
+	 * @see de.unistuttgart.xsample.pages.shared.AbstractSlicePage#asFragments(long, long)
+	 */
 	@Override
-	public void addExcerpt() {
-		final Corpus corpus = selectionData.getSelectedCorpus();
-		if(corpus!=null) {
-			final ExcerptEntry entry = downloadData.findEntry(corpus);
-			long begin = -1, end = -1;
-			if(!resultData.isEmpty() && sliceData.getBegin()>0 && sliceData.getEnd()>0) {
-				begin = sliceData.getBegin();
-				end = sliceData.getEnd();
-				
-				final long[] values = filter(resultData.getMappedResult().getHits(), begin, end);
-				final List<XmpFragment> fragments = XmpFragment.from(values);
-				entry.setFragments(fragments);
-				partData.setExcerpt(FragmentCodec.encodeAll(fragments));
-			} else {
-				entry.clear();
-			}
-			refreshGlobalExcerpt();
-//			System.out.printf("commitExcerpt: part=%s begin=%d end=%d%n",corpus.getId(), begin, end);
-		}
+	protected List<XmpFragment> asFragments(long begin, long end) {
+		final long[] values = filter(resultData.getMappedResult().getHits(), begin, end);
+		return XmpFragment.from(values);
+	}
+	
+	protected boolean canApplySLice() {
+		return !resultData.isEmpty();
 	}
 
 	/** Callback for button to continue workflow */
 	public void next() {
-		// Commit current excerpt since we normal only do this on a selection change!
-//		commitExcerpt();
-		
-		long totalExcerptSize = 0;
-		
-		for(ExcerptEntry entry : allEntries().collect(Collectors.toList())) {
-			final List<XmpFragment> fragments = entry.getFragments();
-			
-			if(fragments==null || fragments.isEmpty()) {
-				entry.clear();
-				continue;
-			}
-			
-			totalExcerptSize += fragments.stream().mapToLong(XmpFragment::size).sum();
-			
-			XmpExcerpt excerpt = findQuota(entry.getCorpusId());
-			
-			/* The following issue should never occur, since we do the same
-			 * validation on the client side to enable/disable the button.
-			 * We need this additional sanity check to defend against bugs 
-			 * or tampering with the JS code on the client side!
-			 */
-			long usedUpSlots = XSampleUtils.combinedSize(fragments, excerpt.getFragments());
-			if(usedUpSlots>entry.getLimit()) {
-				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
-						_long(entry.getLimit()), entry.getCorpusId(), sharedData.getServer(), sharedData.getDataverseUser()));
-				ui.addError(NAV_MSG, BundleUtil.get("slice.msg.quotaExceeded"), 
-						_long(usedUpSlots), _long(entry.getLimit()));
-				return;
-			}
-		}
-		
-		if(totalExcerptSize>0) {
-			forward(DownloadPage.PAGE);
-		}
+		next(NAV_MSG, DownloadPage.PAGE);
 	}
 
-//	/** Callback for button to continue workflow */
-//	public void next() {
-//		
-//		final List<Result> results = queryData.getResult();
-//		if(results.isEmpty()) {
-//			logger.severe("Client side result check failed! <this error needs more log context!!!!>");
-//			Messages.addError(NAV_MSG, BundleUtil.get("query.msg.emptyResult"));
-//			return;
-//		}
-//		
-//		final List<Result> mappedSegments = queryData.getMappedSegments();
-//		if(results.isEmpty()) {
-//			logger.severe("Client side result check failed! <this error needs more log context!!!!>");
-//			Messages.addError(NAV_MSG, BundleUtil.get("query.msg.emptyMapping"));
-//			return;
-//		}
-//		
-//		boolean reset = false;
-//		
-//		final List<XmpFragment> slice = Arrays.asList(XmpFragment.of(
-//				queryData.getBegin(), queryData.getEnd()));
-//		
-//		for(Result mapped : mappedSegments) {
-//			final ExcerptEntry entry = sharedData.findEntry(mapped.getCorpusId());
-//			final List<XmpFragment> quota = entry.getQuota().getFragments();
-//			final List<XmpFragment> rawFragments = XSampleUtils.asFragments(mapped);
-//			final List<XmpFragment> fragments = XSampleUtils.intersect(rawFragments, slice);
-//			
-//			/* The following issue should never occur, since we do the same
-//			 * validation on the client side to enable/disable the button.
-//			 * We need this additional sanity check to defend against bugs 
-//			 * or tampering with the JS code on the client side!
-//			 */
-//			long usedUpSlots = XSampleUtils.combinedSize(fragments, quota);
-//			if(usedUpSlots>entry.getLimit()) {
-//				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
-//						_long(entry.getLimit()), entry.getResource(), sharedData.getServer(), sharedData.getDataverseUser()));
-//				Messages.addError(NAV_MSG, BundleUtil.get("query.msg.quotaExceeded"), 
-//						mapped.getCorpusId(), _long(usedUpSlots), _long(entry.getLimit()));
-//				reset = true;
-//				break;
-//			}
-//			
-//			entry.setFragments(fragments);
-//		}
-//		
-//		// If we failed at some point make sure all excerpts are cleared and we bail
-//		if(reset) {
-//			sharedData.getEntries().forEach(ExcerptEntry::clear);
-//			
-//			return;
-//		}
-//		
-//		// All fine, continue on to download
-//		forward(DownloadPage.PAGE);
-//	}
-	
 	@Override
 	protected void rollBack() {
 		resultData.reset();
