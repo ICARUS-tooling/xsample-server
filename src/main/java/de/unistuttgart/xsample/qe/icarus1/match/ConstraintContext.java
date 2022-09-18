@@ -33,6 +33,7 @@ import de.unistuttgart.xsample.qe.icarus1.match.cs.FeaturesConstraintFactory;
 import de.unistuttgart.xsample.qe.icarus1.match.cs.FormConstraintFactory;
 import de.unistuttgart.xsample.qe.icarus1.match.cs.LemmaConstraintFactory;
 import de.unistuttgart.xsample.qe.icarus1.match.cs.PosConstraintFactory;
+import de.unistuttgart.xsample.qe.icarus1.match.cs.RelationConstraintFactory;
 import de.unistuttgart.xsample.qe.icarus1.match.cs.SentencePropertyConstraintFactory;
 import de.unistuttgart.xsample.qe.icarus1.match.cs.WordPositionConstraintFactory;
 import de.unistuttgart.xsample.qe.icarus1.match.cs.WordPropertyConstraintFactory;
@@ -291,6 +292,8 @@ public class ConstraintContext {
 		context.registerFactory(LanguageConstants.SENTENCE_PROPERTY_KEY, SentencePropertyConstraintFactory.class);
 		context.registerFactory(LanguageConstants.INDEX_KEY, WordPositionConstraintFactory.class);
 		context.registerFactory(LanguageConstants.WORD_PROPERTY_KEY, WordPropertyConstraintFactory.class);
+		
+		context.registerFactory(LanguageConstants.DEPREL_KEY, RelationConstraintFactory.class);
 		//TODO
 		
 		return context;

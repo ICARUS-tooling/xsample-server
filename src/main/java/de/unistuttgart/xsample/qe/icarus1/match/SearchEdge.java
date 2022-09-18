@@ -30,7 +30,7 @@ public class SearchEdge {
 	
 	private String id = "edge_"+idCounter.getAndIncrement(); //$NON-NLS-1$
 
-	private SearchConstraint[] constraints;
+	private SearchConstraint[] constraints = {};
 	
 	private SearchNode source;
 
