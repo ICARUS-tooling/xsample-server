@@ -89,4 +89,8 @@ public final class LanguageConstants {
 	public static final String PARSE_KEY = "parse"; //$NON-NLS-1$
 	public static final String FRAMESET_KEY = "frameset"; //$NON-NLS-1$
 	public static final String SENSE_KEY = "sense"; //$NON-NLS-1$
+	
+	// Properties
+	public static final String SENTENCE_PROPERTY_KEY = "sentenceProperty"; //$NON-NLS-1$
+	public static final String WORD_PROPERTY_KEY = "wordProperty"; //$NON-NLS-1$
 }

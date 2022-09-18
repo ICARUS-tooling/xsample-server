@@ -29,6 +29,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
+import javax.faces.application.FacesMessage;
+import javax.faces.application.FacesMessage.Severity;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.transaction.Transactional;
@@ -74,6 +76,10 @@ public class QueryPage extends AbstractSlicePage {
 	ResultData resultData;
 	@Inject
 	ResultsData resultsData;
+
+	private void queryMessage(Severity severity, String key, Object...args) {
+		ui.addMessage(QUERY_MSG, severity, BundleUtil.get(key), args);
+	}
 	
 	@Override
 	public boolean isAllowEmptySlice() { return true; }
@@ -103,19 +109,19 @@ public class QueryPage extends AbstractSlicePage {
 			logger.log(Level.SEVERE, "Query evaluation failed: "+e.getMessage(), e);
 			String resourceId = e.getResourceId().orElse(sharedData.getManifest().getCorpus().getId());
 			switch (e.getCode()) {
-			case IO_ERROR: ui.addError(QUERY_MSG, "query.msg.loadingError", resourceId); break;
-			case INTERNAL_ERROR: ui.addFatal(QUERY_MSG, "query.msg.internalError", resourceId); break;
-			case SYNTAX_ERROR: ui.addError(QUERY_MSG, "query.msg.invalidQuerySyntax"); break;
-			case UNSUPPORTED_FORMAT: ui.addError(QUERY_MSG, "query.msg.unsupportedFormat", resourceId); break;
-			case SECURITY_ERROR: ui.addError(QUERY_MSG, "query.msg.decryptionFailed", resourceId); break;
-			case RESOURCE_LOCKED: ui.addError(QUERY_MSG, "query.msg.cacheBusy", resourceId); break;
+			case IO_ERROR: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.loadingError", resourceId); break;
+			case INTERNAL_ERROR: queryMessage(FacesMessage.SEVERITY_FATAL, "query.msg.internalError", resourceId); break;
+			case SYNTAX_ERROR: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.invalidQuerySyntax"); break;
+			case UNSUPPORTED_FORMAT: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.unsupportedFormat", resourceId); break;
+			case SECURITY_ERROR: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.decryptionFailed", resourceId); break;
+			case RESOURCE_LOCKED: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.cacheBusy", resourceId); break;
 			default:
 				break;
 			}
 			return;
 		}
 		
-		// DOubles as offset for the new result
+		// Doubles as offset for the new result
 		long rawSegments = 0;
 		FragmentCodec rawHits = new FragmentCodec();
 		boolean hasHits = false;
@@ -146,13 +152,13 @@ public class QueryPage extends AbstractSlicePage {
 				logger.log(Level.SEVERE, "Mapping query results failed: "+e.getMessage(), e);
 				String resourceId = e.getResourceId().orElse(sharedData.getManifest().getCorpus().getId());
 				switch (e.getCode()) {
-				case IO_ERROR: ui.addError(QUERY_MSG, "query.msg.loadingError", resourceId); break;
-				case INTERNAL_ERROR: ui.addFatal(QUERY_MSG, "query.msg.internalError", resourceId); break;
-				case UNSUPPORTED_FORMAT: ui.addError(QUERY_MSG, "query.msg.unsupportedFormat", resourceId); break;
-				case SECURITY_ERROR: ui.addError(QUERY_MSG, "query.msg.decryptionFailed", resourceId); break;
-				case RESOURCE_LOCKED: ui.addError(QUERY_MSG, "query.msg.cacheBusy", resourceId); break;
-				case MISSING_MANIFEST: ui.addError(QUERY_MSG, "query.msg.missingManifest", resourceId); break;
-				case MISSING_MAPPING: ui.addError(QUERY_MSG, "query.msg.missingMapping", resourceId); break;
+				case IO_ERROR: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.loadingError", resourceId); break;
+				case INTERNAL_ERROR: queryMessage(FacesMessage.SEVERITY_FATAL, "query.msg.internalError", resourceId); break;
+				case UNSUPPORTED_FORMAT: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.unsupportedFormat", resourceId); break;
+				case SECURITY_ERROR: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.decryptionFailed", resourceId); break;
+				case RESOURCE_LOCKED: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.cacheBusy", resourceId); break;
+				case MISSING_MANIFEST: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.missingManifest", resourceId); break;
+				case MISSING_MAPPING: queryMessage(FacesMessage.SEVERITY_ERROR, "query.msg.missingMapping", resourceId); break;
 				default:
 					break;
 				}

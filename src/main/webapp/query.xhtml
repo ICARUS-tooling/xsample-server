@@ -52,7 +52,7 @@
 			<p:commandButton id="runQuery" value="#{bundle['query.runQuery']}" 
 					action="#{queryPage.runQuery}" disabled="#{empty queryData.query}"
 					oncomplete="query_refreshAllExcerpts()" process="editor @this" 
-					update="sliceData resultData excerptSlider selectCorpus" />
+					update="sliceData resultData excerptSlider selectCorpus queryMsg" />
 		</div>
 				
 		<p:separator />

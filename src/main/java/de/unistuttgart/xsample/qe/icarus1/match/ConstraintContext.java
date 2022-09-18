@@ -27,7 +27,15 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import de.unistuttgart.xsample.qe.icarus1.LanguageConstants;
+import de.unistuttgart.xsample.qe.icarus1.match.cs.DirectionConstraintFactory;
+import de.unistuttgart.xsample.qe.icarus1.match.cs.DistanceConstraintFactory;
+import de.unistuttgart.xsample.qe.icarus1.match.cs.FeaturesConstraintFactory;
 import de.unistuttgart.xsample.qe.icarus1.match.cs.FormConstraintFactory;
+import de.unistuttgart.xsample.qe.icarus1.match.cs.LemmaConstraintFactory;
+import de.unistuttgart.xsample.qe.icarus1.match.cs.PosConstraintFactory;
+import de.unistuttgart.xsample.qe.icarus1.match.cs.SentencePropertyConstraintFactory;
+import de.unistuttgart.xsample.qe.icarus1.match.cs.WordPositionConstraintFactory;
+import de.unistuttgart.xsample.qe.icarus1.match.cs.WordPropertyConstraintFactory;
 
 
 /**
@@ -274,7 +282,15 @@ public class ConstraintContext {
 	public static ConstraintContext defaultContext() {
 		ConstraintContext context = new ConstraintContext();
 		
+		context.registerFactory(LanguageConstants.DIRECTION_KEY, DirectionConstraintFactory.class);
+		context.registerFactory(LanguageConstants.DISTANCE_KEY, DistanceConstraintFactory.class);
+		context.registerFactory(LanguageConstants.FEATURES_KEY, FeaturesConstraintFactory.class);
 		context.registerFactory(LanguageConstants.FORM_KEY, FormConstraintFactory.class);
+		context.registerFactory(LanguageConstants.LEMMA_KEY, LemmaConstraintFactory.class);
+		context.registerFactory(LanguageConstants.POS_KEY, PosConstraintFactory.class);
+		context.registerFactory(LanguageConstants.SENTENCE_PROPERTY_KEY, SentencePropertyConstraintFactory.class);
+		context.registerFactory(LanguageConstants.INDEX_KEY, WordPositionConstraintFactory.class);
+		context.registerFactory(LanguageConstants.WORD_PROPERTY_KEY, WordPropertyConstraintFactory.class);
 		//TODO
 		
 		return context;
