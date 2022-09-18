@@ -32,8 +32,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -60,6 +60,7 @@ import de.unistuttgart.xsample.qe.icarus1.Icarus1Wrapper;
 import de.unistuttgart.xsample.util.XSampleUtils;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 /**
@@ -130,10 +131,10 @@ public class QueryEngine implements Serializable {
 	
 	/** Maps 0-based hits in the annotation space into 1-based segments of the primary data.
 	 * @throws MappingException */
-	public List<Result> mapSegments(List<QueryResult> results) throws MappingException {
+	public Map<String,Result> mapSegments(List<QueryResult> results) throws MappingException {
 		requireNonNull(results);
 		
-		List<Result> result = new ArrayList<>();
+		Map<String, Result> result = new Object2ObjectOpenHashMap<>();
 		
 		for(QueryResult original : results) {
 			if(original.isEmpty()) {
@@ -171,7 +172,7 @@ public class QueryEngine implements Serializable {
 			}
 			
 			if(!mapped.isEmpty()) {
-				result.add(mapped);
+				result.put(corpusId, mapped);
 			}
 		}
 		

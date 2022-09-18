@@ -22,7 +22,9 @@ package de.unistuttgart.xsample.pages.query;
 import static de.unistuttgart.xsample.util.XSampleUtils.isNullOrEmpty;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -137,9 +139,9 @@ public class QueryPage extends AbstractSlicePage {
 			ui.addInfo(NAV_MSG, BundleUtil.get("query.msg.noHits"), rawQuery);
 		} else {			
 			// Perform mapping
-			List<Result> mappedSegments;
+			Map<String, Result> mappedResults;
 			try {
-				mappedSegments = queryEngine.mapSegments(results);
+				mappedResults = queryEngine.mapSegments(results);
 			} catch (MappingException e) {
 				logger.log(Level.SEVERE, "Mapping query results failed: "+e.getMessage(), e);
 				String resourceId = e.getResourceId().orElse(sharedData.getManifest().getCorpus().getId());
@@ -156,22 +158,24 @@ public class QueryPage extends AbstractSlicePage {
 				}
 				return;
 			}
-			assert mappedSegments.size()==results.size() : "corpus lost in mapping process";
+			assert mappedResults.size()==results.size() : "corpus lost in mapping process";
 			
 			FragmentCodec mappedHits = new FragmentCodec();
 			
-			for (int i = 0; i < results.size() && i < mappedSegments.size(); i++) {
+			for (int i = 0; i < results.size(); i++) {
 				final QueryResult result = results.get(i);
 				final Result raw = result.getResult();
-				final Result mapped = mappedSegments.get(i);
-				final long offset = corpusData.getOffset(raw.getCorpusId());
-				
-//				System.out.printf("part=%s, offset=%d, raw=%s, mapped=%s%n", raw.getCorpusId(), _long(offset), raw, mapped);
-				
-				mappedHits.append(mapped.getHits(), offset);
-				
-				// Update individual parts data
-				resultsData.registerMappedResult(mapped);
+				final Result mapped = mappedResults.get(raw.getCorpusId());
+				if(mapped!=null) {
+					final long offset = corpusData.getOffset(raw.getCorpusId());
+					
+	//				System.out.printf("part=%s, offset=%d, raw=%s, mapped=%s%n", raw.getCorpusId(), _long(offset), raw, mapped);
+					
+					mappedHits.append(mapped.getHits(), offset);
+					
+					// Update individual parts data
+					resultsData.registerMappedResult(mapped);
+				}
 			}
 			
 			resultsData.setMappedHits(mappedHits.toString());
@@ -193,10 +197,11 @@ public class QueryPage extends AbstractSlicePage {
 					.findFirst()
 					.orElse(null);
 		}
-		if(part==null) {
-			return super.resetSelection();
+		if(part!=null) {
+			selectionData.setSelectedCorpus(part);
+			return part;
 		}
-		return part;
+		return super.resetSelection();
 	}
 	
 	@Override
@@ -205,6 +210,10 @@ public class QueryPage extends AbstractSlicePage {
 		
 		super.refreshPart(part, entry);
 		
+		refreshResult(part);
+	}
+	
+	protected void refreshResult(Corpus part) {
 		if(part!=null && resultsData.hasResults(part)) {
 			resultData.setRawSegments(resultsData.getRawSegments(part));
 			Result raw = resultsData.getRawResult(part);
@@ -262,6 +271,9 @@ public class QueryPage extends AbstractSlicePage {
 	 */
 	@Override
 	protected List<XmpFragment> asFragments(long begin, long end) {
+		if(resultData.isEmpty()) {
+			return Collections.emptyList();
+		}
 		final long[] values = filter(resultData.getMappedResult().getHits(), begin, end);
 		return XmpFragment.from(values);
 	}

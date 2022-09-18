@@ -114,10 +114,9 @@ public class XSampleTestUtils {
 				.build();
 	}
 	
-	public static ExcerptEntry createEntry(Corpus corpus, long limit) {
+	public static ExcerptEntry createEntry(Corpus corpus) {
 		ExcerptEntry entry = new ExcerptEntry();
 		entry.setCorpusId(corpus.getId());
-		entry.setLimit(limit);
 		return entry;
 	}
 	

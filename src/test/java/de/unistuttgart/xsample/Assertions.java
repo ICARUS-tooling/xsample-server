@@ -305,12 +305,6 @@ public final class Assertions {
 			return this;
 		}
 		
-		public ExcerptEntryAssert hasLimit(long expected) {
-			isNotNull();
-			assertThat(actual.getLimit()).as("limit").isEqualTo(expected);
-			return this;
-		}
-		
 		public ListAssert<XmpFragment> fragments() {
 			isNotNull();
 			return assertThat(actual.getFragments());

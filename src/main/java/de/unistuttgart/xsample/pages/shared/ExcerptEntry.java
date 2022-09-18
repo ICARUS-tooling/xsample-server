@@ -16,8 +16,6 @@
  */
 package de.unistuttgart.xsample.pages.shared;
 
-import static de.unistuttgart.xsample.util.XSampleUtils._long;
-
 import java.io.Serializable;
 import java.util.List;
 
@@ -36,8 +34,6 @@ public class ExcerptEntry implements Serializable {
 	private String corpusId;
 	/** Designated output */
 	private List<XmpFragment> fragments;
-	/** Limit within the associated corpus */
-	private long limit;
 	/** Caches size of fragments */
 	private long size = -1;
 	
@@ -69,11 +65,8 @@ public class ExcerptEntry implements Serializable {
 		return size;
 	}
 	
-	public long getLimit() { return limit; }
-	public void setLimit(long limit) { this.limit = limit; }
-	
 	@Override
 	public String toString() {
-		return String.format("%s@[corpus=%s, limit=%d, fragments=%s]", getClass().getSimpleName(), corpusId, _long(limit), fragments);
+		return String.format("%s@[corpus=%s, fragments=%s]", getClass().getSimpleName(), corpusId, fragments);
 	}
 }

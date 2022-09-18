@@ -316,7 +316,10 @@ public class WelcomePage extends XsamplePage {
 			}
 		}
 
-		final ExcerptEntry entry = downloadData.findEntry(corpus.getId());
+		ExcerptEntry entry = downloadData.findEntry(corpus);
+		if(entry==null) {
+			entry = downloadData.createEntry(corpus); 
+		}
 		entry.setFragments(fragments);
 		downloadData.setEntries(Arrays.asList(entry));
 		
@@ -990,8 +993,6 @@ public class WelcomePage extends XsamplePage {
 			
 			final ExcerptEntry entry = new ExcerptEntry();
 			entry.setCorpusId(corpus.getId());
-			entry.setLimit(limit);
-			downloadData.addEntry(entry);
 			
 			final long quota = excerpt.size();
 			globalQuota += quota;

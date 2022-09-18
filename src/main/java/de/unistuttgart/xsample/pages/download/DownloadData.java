@@ -65,6 +65,12 @@ public class DownloadData implements DataBean {
 
 	public boolean isIncludeAnnotations() { return includeAnnotations; }
 	public void setIncludeAnnotations(boolean includeAnnotations) { this.includeAnnotations = includeAnnotations; }
+	
+	private void maybeRefreshLookup() {
+		if(lookup.isEmpty() && !entries.isEmpty()) {
+			entries.forEach(e -> lookup.put(e.getCorpusId(), e));
+		}
+	}
 
 	public @Nullable ExcerptEntry findEntry(Corpus corpus) {
 		return findEntry(corpus.getId());
@@ -73,17 +79,32 @@ public class DownloadData implements DataBean {
 	/** Find our entry (if present) matching given corpus id */
 	public @Nullable ExcerptEntry findEntry(String corpusId) {
 		requireNonNull(corpusId);
-		if(lookup.isEmpty() && !entries.isEmpty()) {
-			entries.forEach(e -> lookup.put(e.getCorpusId(), e));
-		}
+		maybeRefreshLookup();
 		return lookup.get(corpusId);
 	}
 
-	public void addEntry(ExcerptEntry entry) { 
-		if(lookup.putIfAbsent(entry.getCorpusId(), entry)!=null)
-			throw new IllegalStateException("Duplicate entry ID: "+entry.getCorpusId());
-		entries.add(requireNonNull(entry)); 
-		size = -1;
+	public ExcerptEntry createEntry(Corpus corpus) {
+		return createEntry(corpus.getId());
+	}
+
+	/** Create a new entry for given corpusi d */
+	public ExcerptEntry createEntry(String corpusId) {
+		requireNonNull(corpusId);
+		maybeRefreshLookup();
+		if(lookup.containsKey(corpusId))
+			throw new IllegalStateException("ENtry already registered for corpus: "+corpusId);
+		ExcerptEntry entry = new ExcerptEntry();
+		entry.setCorpusId(corpusId);
+		entries.add(entry);
+		lookup.put(corpusId, entry);
+		return entry;
+	}
+
+	public void removeEntry(ExcerptEntry entry) {
+		maybeRefreshLookup();
+		if(!lookup.remove(entry.getCorpusId(), entry))
+			throw new IllegalArgumentException("Unknown entry: "+entry);
+		entries.remove(entry);
 	}
 	
 	public long getSize() {
@@ -94,6 +115,7 @@ public class DownloadData implements DataBean {
 	}
 
 	public void clear() {
+		entries.forEach(ExcerptEntry::clear);
 		entries.clear();
 		lookup.clear();
 	}

@@ -51,8 +51,8 @@
 			
 			<p:commandButton id="runQuery" value="#{bundle['query.runQuery']}" 
 					action="#{queryPage.runQuery}" disabled="#{empty queryData.query}"
-					oncomplete="query_refreshAllExcerpts()" process="@form" 
-					update="sliceData resultData excerptSlider" />
+					oncomplete="query_refreshAllExcerpts()" process="editor @this" 
+					update="sliceData resultData excerptSlider selectCorpus" />
 		</div>
 				
 		<p:separator />
@@ -68,7 +68,24 @@
 					<ui:param name="changeHandler" value="#{queryPage}" />
 					<ui:param name="handlerMethod" value="selectionChanged" />
 				</ui:include>	
-				<p:commandButton value="#{bundle['slice.resetAll']}" action="#{queryPage.reset}" process="@this" update="@form" />		
+				<p:commandButton value="#{bundle['slice.addSlice']}" 
+					rendered="#{sharedData.multiPartCorpus}"
+					action="#{queryPage.addExcerpt}" 
+					disabled="#{not queryPage.canAddExcerpt}"
+					process="@this" update="sliceData resultData queryOutline"
+					oncomplete="query_initAllExcerpts()" />			
+				<p:commandButton value="#{bundle['slice.removeSlice']}" 
+					rendered="#{sharedData.multiPartCorpus}"
+					action="#{queryPage.removeExcerpt}" 
+					disabled="#{not queryPage.canRemoveExcerpt}"
+					process="@this" update="sliceData resultData queryOutline"
+					oncomplete="query_initAllExcerpts()" />		
+				<p:commandButton value="#{bundle['slice.resetAll']}" 
+					rendered="#{sharedData.multiPartCorpus}"
+					action="#{queryPage.reset}" 
+					disabled="#{not queryPage.canReset}"
+					process="@this" update="sliceData resultData queryOutline"
+					oncomplete="query_initAllExcerpts()" />	
 			</div>
 			
 			<!-- RAW HITS -->

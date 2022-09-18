@@ -66,7 +66,6 @@ public abstract class AbstractSlicePage extends XsamplePage {
 	protected Stream<ExcerptEntry> allEntries() {
 		return sharedData.getManifest().getAllParts()
 				.stream()
-				.map(Corpus::getId)
 				.map(downloadData::findEntry)
 				.filter(Objects::nonNull);
 	}
@@ -216,7 +215,7 @@ public abstract class AbstractSlicePage extends XsamplePage {
 	
 	/** Reset all slices and refresh shared data */
 	public void reset() {
-		allEntries().forEach(ExcerptEntry::clear);
+		downloadData.clear();
 		refreshSlice(currentEntry());
 		refreshGlobalExcerpt();
 	}
@@ -236,15 +235,18 @@ public abstract class AbstractSlicePage extends XsamplePage {
 	public void addExcerpt() {
 		final Corpus corpus = selectionData.getSelectedCorpus();
 		if(corpus!=null) {
-			final ExcerptEntry entry = downloadData.findEntry(corpus);
+			ExcerptEntry entry = downloadData.findEntry(corpus);
 			long begin = -1, end = -1;
 			if(canApplySlice() && sliceData.getBegin()>0 && sliceData.getEnd()>0) {
+				if(entry==null) {
+					entry = downloadData.createEntry(corpus);
+				}
 				begin = sliceData.getBegin();
 				end = sliceData.getEnd();
 				List<XmpFragment> fragments = asFragments(begin, end);
 				entry.setFragments(fragments);
 				partData.setExcerpt(FragmentCodec.encodeAll(entry.getFragments()));
-			} else {
+			} else if(entry!=null) {
 				entry.clear();
 			}
 			refreshSlice(entry);
@@ -262,8 +264,11 @@ public abstract class AbstractSlicePage extends XsamplePage {
 		final Corpus corpus = selectionData.getSelectedCorpus();
 		if(corpus!=null) {
 			final ExcerptEntry entry = downloadData.findEntry(corpus);
-			entry.clear();
-			refreshSlice(entry);
+			if(entry!=null) {
+				entry.clear();
+				downloadData.removeEntry(entry);
+			}
+			refreshSlice(null);
 			refreshGlobalExcerpt();
 //			System.out.printf("removeExcerpt: part=%s%n",corpus.getId());
 		}
@@ -301,11 +306,12 @@ public abstract class AbstractSlicePage extends XsamplePage {
 			 * or tampering with the JS code on the client side!
 			 */
 			long usedUpSlots = XSampleUtils.combinedSize(fragments, excerpt.getFragments());
-			if(usedUpSlots>entry.getLimit()) {
+			long limit = corpusData.getLimit(entry.getCorpusId());
+			if(usedUpSlots>limit) {
 				logger.severe(String.format("Sanity check on client side failed: quota of %d exceeded for %s at %s by %s", 
-						_long(entry.getLimit()), entry.getCorpusId(), sharedData.getServer(), sharedData.getDataverseUser()));
+						_long(limit), entry.getCorpusId(), sharedData.getServer(), sharedData.getDataverseUser()));
 				ui.addError(clientId, BundleUtil.get("slice.msg.quotaExceeded"), 
-						_long(usedUpSlots), _long(entry.getLimit()));
+						_long(usedUpSlots), _long(limit));
 				return;
 			}
 		}

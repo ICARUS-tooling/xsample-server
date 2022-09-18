@@ -7,6 +7,7 @@
 
 	<h:panelGroup layout="inline" rendered="#{sharedData.multiPartCorpus}">
 		<p:selectOneMenu value="#{selectionData.selectedCorpus}"
+			id="selectCorpus"
 			style="width:500px" filter="true" filterMatchMode="contains"
 			valueChangeListener="#{changeHandler[handlerMethod]}"
 			var="part" converter="corpusConverter">

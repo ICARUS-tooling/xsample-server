@@ -63,7 +63,7 @@ public class ResultData extends EncodedResultData {
 		rawSegments = 0;
 	}
 	
-	public boolean isEmpty() { return rawResult==null || rawResult.isEmpty(); }
+	public boolean isEmpty() { return mappedResult==null || mappedResult.isEmpty(); }
 	
 	@Override
 	public String toString() {

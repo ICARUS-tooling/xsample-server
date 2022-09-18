@@ -68,8 +68,6 @@ class SlicePageTest extends AbstractSlicePageTest<SlicePage> {
 			getCorpusData().registerSegments(corpus.getId(), segments);
 			getCorpusData().registerLimit(corpus.getId(), limit);
 			getCorpusData().registerOffset(corpus.getId(), 0);
-			
-			getDownloadData().addEntry(XSampleTestUtils.createEntry(corpus, limit));
 		}
 
 		@Nested
@@ -181,8 +179,6 @@ class SlicePageTest extends AbstractSlicePageTest<SlicePage> {
 				getCorpusData().registerSegments(corpus.getId(), segments);
 				getCorpusData().registerLimit(corpus.getId(), limit);
 				getCorpusData().registerOffset(corpus.getId(), offset);
-				
-				getDownloadData().addEntry(XSampleTestUtils.createEntry(corpus, limit));
 			}
 			
 			getSharedData().setManifest(XSampleTestUtils.createManifest(Corpus.builder()
